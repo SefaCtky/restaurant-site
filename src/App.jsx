@@ -463,61 +463,109 @@ export default function RestaurantWebsite() {
         <ShoppingCart /> {itemCount}
       </button>
 
-      <section id="accueil" className="relative flex min-h-screen items-center overflow-hidden pt-24">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(251,191,36,0.25),transparent_35%),linear-gradient(to_bottom,rgba(28,25,23,0.3),rgba(12,10,9,1))]" />
-        <div className="absolute right-0 top-24 h-96 w-96 rounded-full bg-amber-400/10 blur-3xl" />
+<section
+  id="accueil"
+  className="relative flex min-h-screen items-center overflow-hidden bg-black pt-24"
+>
+  {/* Fond */}
+  <div className="absolute inset-0">
+    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1529006557810-274b9b2fc783?auto=format&fit=crop&w=1600&q=80')] bg-cover bg-center opacity-20" />
 
-        <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-5 py-20 lg:grid-cols-2">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-          >
-            <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-amber-300/30 bg-amber-300/10 px-4 py-2 text-sm text-amber-200">
-              <Utensils size={16} /> Restaurant HALAL • Kebab fait maison
-            </p>
-            <h1 className="max-w-3xl text-5xl font-black leading-tight tracking-tight md:text-7xl">
-              Le kebab fait maison qui met tout le monde d’accord.
-            </h1>
-            <p className="mt-6 max-w-xl text-lg leading-8 text-stone-300">
-              Viandes sélectionnées, recettes maison, cuisson maîtrisée et restauration 100% HALAL.
-            </p>
-            <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-              <a
-                href="#menu"
-                className="rounded-full bg-amber-400 px-7 py-3 text-center font-semibold text-stone-950 transition hover:bg-amber-300"
-              >
-                Voir le menu
-              </a>
-              <button
-                onClick={() => setCartOpen(true)}
-                className="rounded-full border border-white/20 px-7 py-3 text-center font-semibold text-white transition hover:border-amber-300 hover:text-amber-200"
-              >
-                Voir mon panier
-              </button>
-            </div>
-          </motion.div>
+    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(251,191,36,0.18),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(249,115,22,0.15),transparent_35%),linear-gradient(to_bottom,rgba(0,0,0,0.7),rgba(0,0,0,0.96))]" />
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8 }}
-            className="relative"
-          >
-            <div className="rounded-[2rem] border border-white/10 bg-white/5 p-4 shadow-2xl backdrop-blur">
-              <div className="h-[520px] rounded-[1.5rem] bg-[url('https://images.unsplash.com/photo-1529006557810-274b9b2fc783?auto=format&fit=crop&w=1200&q=80')] bg-cover bg-center" />
-            </div>
-            <div className="absolute -bottom-6 -left-4 rounded-3xl border border-white/10 bg-stone-900/90 p-5 shadow-xl backdrop-blur">
-              <div className="flex items-center gap-1 text-amber-300">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} size={18} fill="currentColor" />
-                ))}
-              </div>
-              <p className="mt-2 text-sm text-stone-300">100% HALAL • Fait maison</p>
-            </div>
-          </motion.div>
+    {/* Glow orange */}
+    <div className="absolute left-10 top-20 h-72 w-72 rounded-full bg-orange-500/20 blur-3xl" />
+    <div className="absolute bottom-10 right-10 h-72 w-72 rounded-full bg-amber-400/10 blur-3xl" />
+  </div>
+
+  <div className="relative mx-auto grid max-w-7xl items-center gap-16 px-5 py-20 lg:grid-cols-2">
+    {/* Texte */}
+    <motion.div
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8 }}
+    >
+      <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-amber-400/20 bg-amber-400/10 px-5 py-2 text-sm text-amber-200 backdrop-blur">
+        <Utensils size={16} />
+        Restaurant HALAL • Fait maison
+      </div>
+
+      <h1 className="max-w-3xl text-5xl font-black leading-tight tracking-tight text-white md:text-7xl">
+        Le goût du vrai
+        <span className="block bg-gradient-to-r from-amber-300 via-orange-400 to-red-500 bg-clip-text text-transparent">
+          kebab maison.
+        </span>
+      </h1>
+
+      <p className="mt-8 max-w-xl text-lg leading-8 text-stone-300">
+        Viandes sélectionnées, recettes maison, cuisson maîtrisée et ambiance
+        authentique. Chez Omer vous propose une expérience street food premium
+        100% HALAL.
+      </p>
+
+      <div className="mt-10 flex flex-col gap-4 sm:flex-row">
+        <a
+          href="#menu"
+          className="rounded-full bg-gradient-to-r from-amber-400 to-orange-500 px-8 py-4 text-center font-black text-black shadow-2xl shadow-orange-500/30 transition hover:scale-105"
+        >
+          Voir le menu
+        </a>
+
+        <button
+          onClick={() => setCartOpen(true)}
+          className="rounded-full border border-white/20 bg-white/5 px-8 py-4 text-center font-bold text-white backdrop-blur transition hover:border-amber-400 hover:bg-white/10"
+        >
+          Voir mon panier
+        </button>
+      </div>
+
+      {/* Stats */}
+      <div className="mt-12 flex flex-wrap gap-5">
+        <div className="rounded-2xl border border-white/10 bg-white/5 px-6 py-4 backdrop-blur">
+          <p className="text-3xl font-black text-amber-300">100%</p>
+          <p className="text-sm text-stone-300">HALAL</p>
         </div>
-      </section>
+
+        <div className="rounded-2xl border border-white/10 bg-white/5 px-6 py-4 backdrop-blur">
+          <p className="text-3xl font-black text-amber-300">Maison</p>
+          <p className="text-sm text-stone-300">Recettes authentiques</p>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-white/5 px-6 py-4 backdrop-blur">
+          <p className="text-3xl font-black text-amber-300">⭐ 5/5</p>
+          <p className="text-sm text-stone-300">Avis clients</p>
+        </div>
+      </div>
+    </motion.div>
+
+    {/* Image */}
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.9 }}
+      className="relative"
+    >
+      <div className="absolute -inset-5 rounded-[3rem] bg-gradient-to-r from-orange-500/20 to-amber-400/20 blur-3xl" />
+
+      <div className="relative overflow-hidden rounded-[3rem] border border-white/10 bg-white/5 p-4 shadow-2xl backdrop-blur">
+        <div className="h-[600px] rounded-[2rem] bg-[url('https://images.unsplash.com/photo-1529006557810-274b9b2fc783?auto=format&fit=crop&w=1200&q=80')] bg-cover bg-center" />
+      </div>
+
+      {/* Badge */}
+      <div className="absolute -bottom-6 left-6 rounded-3xl border border-white/10 bg-black/70 p-5 backdrop-blur-xl">
+        <div className="flex items-center gap-1 text-amber-300">
+          {[...Array(5)].map((_, i) => (
+            <Star key={i} size={18} fill="currentColor" />
+          ))}
+        </div>
+
+        <p className="mt-2 text-sm text-stone-300">
+          Le kebab fait maison • Chez Omer
+        </p>
+      </div>
+    </motion.div>
+  </div>
+</section>
 
       <section id="menu" className="bg-stone-100 px-5 py-24 text-stone-950">
         <div className="mx-auto max-w-7xl">
