@@ -94,135 +94,9 @@ const drinkImageNames = {
   "Ice Tea Pêche": "Ice Tea Pêche",
 };
 
-const menuItems = [
-  {
-    category: "Accompagnements",
-    items: [
-      ["Grande frite", "Portion généreuse", "4,50€", "", "", "/images/accompagnement/Grande-frite.webp"],
-      ["Petite frite", "Portion classique", "3€", "", "", "/images/accompagnement/Petite-frite.webp"],
-      ["Bulgur pilavi", "Boulgour", "3€", "", "", "/images/accompagnement/Bulgur.webp"],
-      ["Pirinç pilavi", "Riz turc", "3€", "", "", "/images/accompagnement/Pilav.webp"],
-    ],
-  },
-  {
-    category: "Soupe",
-    items: [["Mercimek çorbası", "Soupe turque aux lentilles", "5€", "", "", "/images/accompagnement/Soupe/Mercimek-corbasi.webp"]],
-  },
-  {
-    category: "Mezzés et salades",
-    items: [
-      ["Haydari", "Crème de yaourt à l’ail et aux herbes", "3€", "", "", "/images/accompagnement/Mezze/Haydari.png"],
-      ["Ezme", "Concassé de tomates, poivrons et herbes fraîches", "3€", "", "", "/images/accompagnement/Mezze/Ezme.png"],
-      ["Havuç tarator", "Crème de carottes au yaourt", "3€", "", "", "/images/accompagnement/Mezze/Havuç tarator.png"],
-      ["Pembe sultan", "Crème de betterave au yaourt", "3€", "", "", "/images/accompagnement/Mezze/Pembe sultan.png"],
-      ["Çoban salatası", "Salade de tomates, concombres et oignons", "6€", "", "", "/images/accompagnement/Mezze/Çoban salatası.png"],
-      ["Hellim peynirli salata", "Salade au halloumi grillé", "7€", "", "", "/images/accompagnement/Mezze/Hellim peynirli salata.png"],
-      ["Yoğurtlu patlıcan közlemesi", "Aubergine grillée au yaourt", "6€", "", "", "/images/accompagnement/Mezze/Yoğurtlu patlıcan közlemesi.png"],
-    ],
-  },
-  {
-    category: "Assiettes",
-    items: [
-      ["Kebab poulet", "Riz, boulgour ou frites", "13€", "", "assiette-accompagnement"],
-      ["Kebab veau", "Riz, boulgour ou frites", "16€", "", "assiette-accompagnement"],
-      ["Poulet mariné", "Riz, boulgour ou frites", "13€", "", "assiette-accompagnement"],
-      ["Köfte", "Riz, boulgour ou frites", "14€", "", "assiette-accompagnement"],
-      ["Kuşbaşı", "Émincé de viande grillée", "16€", "", "assiette-accompagnement"],
-      ["Ali nazik", "Viande sur purée d’aubergines fumées au yaourt", "16€"],
-      ["Patlicanli iskender", "Viande kebab de veau sur aubergines grillées", "16€"],
-      ["Yogurtlu iskender", "Viande kebab de veau nappée de yaourt", "16€"],
-      ["Bulgurlu iskender", "Viande kebab de veau accompagnée de boulgour", "16€"],
-    ],
-  },
-  {
-    category: "Sandwichs / Dürüms",
-    items: [
-      ["Kebab poulet", "Sandwich ou dürüm\nSalade, tomates et oignons", "7€", "10€", "", "/images/accompagnement/Sandwich-Durum/Sandwich/Kebab poulet.png"],
-      ["Kebab veau", "Sandwich ou dürüm\nSalade, tomates et oignons", "9€", "12€", "", "/images/accompagnement/Sandwich-Durum/Sandwich/Kebab veau.png"],
-      ["Poulet mariné", "Sandwich ou dürüm\nSalade, tomates et oignons", "7€", "10€", "", "/images/accompagnement/Sandwich-Durum/Sandwich/Poulet mariné.png"],
-      ["Köfte", "Sandwich ou dürüm\nSalade, tomates et oignons", "7€", "10€", "", "/images/accompagnement/Sandwich-Durum/Sandwich/Kofte.png"],
-      ["Sucuk", "Sandwich ou dürüm\nSalade, tomates et oignons", "7€", "10€", "", "/images/accompagnement/Sandwich-Durum/Sandwich/Sucuk.png"],
-      ["Tenders", "Dürüm\nSalade, tomates et oignons", "7€", "10€", "durum-only", "/images/accompagnement/Sandwich-Durum/Durum/Tenders.png"],
-      ["Cordon bleu", "Dürüm\nSalade, tomates et oignons", "7€", "10€", "durum-only", "/images/accompagnement/Sandwich-Durum/Durum/Cordon bleu.png"],
-    ],
-  },
-  {
-    category: "Tacos",
-    items: [
-      ["Kebab poulet", "Une galette", "8€", "11€", "tacos-simple", "/images/Tacos/Tacos.png"],
-      ["Kebab veau", "Une galette", "9€", "12€", "tacos-simple", "/images/Tacos/Tacos.png"],
-      ["Poulet mariné", "Une galette", "8€", "11€", "tacos-simple", "/images/Tacos/Tacos.png"],
-      ["Köfte", "Une galette", "9€", "12€", "tacos-simple", "/images/Tacos/Tacos.png"],
-      ["Sucuk", "Une galette", "8€", "11€", "tacos-simple", "/images/Tacos/Tacos.png"],
-      ["Tenders", "Une galette", "8€", "11€", "tacos-simple", "/images/Tacos/Tacos.png"],
-      ["Cordon bleu", "Une galette", "8€", "11€", "tacos-simple", "/images/Tacos/Tacos.png"],
-      ["Steak", "Une galette", "9€", "12€", "tacos-simple", "/images/Tacos/Tacos.png"],
-      ["Maxi tacos", "Deux viandes + deux galettes", "12€", "15€", "maxi-tacos", "/images/Tacos/MaxiTacos.png"],
-    ],
-  },
-  {
-    category: "Burgers",
-    items: [
-      ["Steak 120g", "Salade, tomates, oignons et cheddar", "9€", "12€", "", "/images/Burgers/Steak.png"],
-      ["Poulet", "Salade, tomates, oignons et cheddar", "7€", "10€", "", "/images/Burgers/Poulet.png"],
-    ],
-  },
-  {
-    category: "Tex Mex",
-    items: [
-      ["Kebab poulet petite", "Petite portion", "6€", "", "", "/images/TexMex/Kebab poulet petite.png"],
-      ["Kebab poulet grande", "Grande portion", "12€", "", "", "/images/TexMex/Kebab poulet grande.png"],
-      ["Kebab veau petite", "Petite portion", "7€", "", "", "/images/TexMex/Kebab veau petite.png"],
-      ["Kebab veau grande", "Grande portion", "14€", "", "", "/images/TexMex/Kebab veau grande.png"],
-      ["4 tenders", "Croustillants", "4€", "", "", "/images/TexMex/Quatre tenders.png"],
-      ["8 tenders", "Croustillants", "7€", "", "", "/images/TexMex/Huit tenders.png"],
-    ],
-  },
-  {
-    category: "Menus enfants",
-    items: [
-      ["Menu nuggets", "1 petite frite + 1 compote + 4 nuggets", "10€", "", "menu-enfant", "/images/Menu enfant/Menu nuggets.png"],
-      ["Menu burger", "1 petite frite + 1 compote + 1 burger", "10€", "", "menu-enfant-burger", "/images/Menu enfant/Menu burger.png"],
-    ],
-  },
-  {
-    category: "Boissons",
-    items: [
-      ["Coca Cola", "33cl ou 50cl", "2€", "4€", "drink-size", "/images/Boissons/Canette/Coca cola.png"],
-      ["Coca Cherry", "33cl ou 50cl", "2€", "4€", "drink-size", "/images/Boissons/Canette/Coca cherry.png"],
-      ["Coca Cola Zéro", "33cl ou 50cl", "2€", "4€", "drink-size", "/images/Boissons/Canette/Coca zero.png"],
-      ["Sprite", "33cl ou 50cl", "2€", "4€", "drink-size", "/images/Boissons/Canette/Sprite.png"],
-      ["Orangina", "33cl ou 50cl", "2€", "4€", "drink-size", "/images/Boissons/Canette/Orangina.png"],
-      ["Perrier", "33cl ou 50cl", "2€", "4€", "drink-size", "/images/Boissons/Canette/Perrier.png"],
-      ["Eau", "50cl ou 1L verre consigné", "1,50€", "3€", "water-size", "/images/Boissons/Bouteille Evian 50cl.png"],
-      ["Oasis Tropical", "33cl ou 50cl", "2€", "4€", "drink-size", "/images/Boissons/Canette/Oasis Tropical.png"],
-      ["Oasis Pomme Cassis", "33cl ou 50cl", "2€", "4€", "drink-size", "/images/Boissons/Canette/Oasis Pomme Cassis.png"],
-      ["Fanta orange", "33cl ou 50cl", "2€", "4€", "drink-size", "/images/Boissons/Canette/Fanta orange.png"],
-      ["Schweppes pomme", "33cl ou 50cl", "2€", "4€", "drink-size", "/images/Boissons/Canette/Schweppes pomme.png"],
-      ["Schweppes agrume", "33cl ou 50cl", "2€", "4€", "drink-size", "/images/Boissons/Canette/Schweppes agrume.png"],
-      ["Ice Tea Pêche", "33cl ou 50cl", "2€", "4€", "drink-size", "/images/Boissons/Canette/Ice Tea Pêche.png"],
-      ["Ayran", "Boisson au yaourt salée", "2€", "", "", "/images/Boissons/Ayran.png"],
-    ],
-  },
-  {
-    category: "Desserts",
-    items: [
-      ["Tiramisu", "Dessert maison", "3,50€", "", "", "/images/Dessert/Tiramisu.png"],
-      ["Künefe", "Dessert chaud au fromage et cheveux d’ange", "6,50€", "", "", "/images/Dessert/Kunefe.png"],
-      ["Sütlaç", "Riz au lait turc", "5€", "", "", "/images/Dessert/Sutlac.png"],
-      ["Baklava 2 parts", "Pâte feuilletée à la noix", "4€", "", "", "/images/Dessert/Baklava.png"],
-      ["Tarte Daim", "Dessert gourmand", "3,50€", "", "", "/images/Dessert/Tarte Daim.png"],
-    ],
-  },
-  {
-    category: "Sauces",
-    items: sauces.map((sauce) => [sauce, "", "0,20€"]),
-  },
-];
-
 function parsePrice(price) {
   if (!price) return 0;
-  return Number(price.replace("€", "").replace(",", ".").trim()) || 0;
+  return Number(String(price).replace("€", "").replace(",", ".").trim()) || 0;
 }
 
 function formatPrice(price) {
@@ -230,11 +104,6 @@ function formatPrice(price) {
     style: "currency",
     currency: "EUR",
   }).format(price);
-}
-
-function formatMenuSupplement(price, menuPrice) {
-  const supplement = parsePrice(menuPrice) - parsePrice(price);
-  return supplement > 0 ? `+${formatPrice(supplement)}` : "";
 }
 
 function getCategoryIcon(category) {
@@ -267,12 +136,29 @@ export default function RestaurantWebsite() {
   const [sansSauceFromagere, setSansSauceFromagere] = useState(false);
   const [note, setNote] = useState("");
   const [annonceSite, setAnnonceSite] = useState("");
+  const [produits, setProduits] = useState([]);
+  const [categoriesData, setCategoriesData] = useState([]);
+  const [selectedAdminCategory, setSelectedAdminCategory] = useState("all");
   const [fermetureActive, setFermetureActive] = useState(false);
 
   const nav = ["Accueil", "Menu", "À propos", "Commande", "Contact", "Admin"];
 
   const total = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart]);
   const itemCount = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
+
+  const chargerCategories = async () => {
+    const { data, error } = await supabase
+      .from("categories")
+      .select("*")
+      .order("ordre", { ascending: true });
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    setCategoriesData(data || []);
+  };
 
   const chargerAnnonce = async () => {
     const { data, error } = await supabase
@@ -318,16 +204,68 @@ export default function RestaurantWebsite() {
     }
   };
 
+  const chargerProduits = async () => {
+    const { data, error } = await supabase
+      .from("produits")
+      .select("*")
+      .order("categorie_id", { ascending: true })
+      .order("ordre", { ascending: true });
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    setProduits(data || []);
+  };
+
+  const updateProduit = (id, field, value) => {
+    setProduits((current) =>
+      current.map((produit) =>
+        produit.id === id ? { ...produit, [field]: value } : produit
+      )
+    );
+  };
+
+  const saveProduit = async (produit) => {
+    const { error } = await supabase
+      .from("produits")
+      .update({
+        nom: produit.nom,
+        description: produit.description,
+        prix: produit.prix,
+        prix_menu: produit.prix_menu,
+        type: produit.type,
+        image: produit.image,
+        ordre: produit.ordre,
+        actif: produit.actif,
+        in_stock: produit.in_stock ?? true,
+        categorie_id: produit.categorie_id,
+      })
+      .eq("id", produit.id);
+
+    if (error) {
+      console.error(error);
+      alert("Erreur lors de l’enregistrement ❌");
+    } else {
+      alert("Produit enregistré ✅");
+      chargerProduits();
+    }
+  };
+
   useEffect(() => {
     chargerAnnonce();
     chargerFermeture();
+    chargerCategories();
+    chargerProduits();
   }, []);
 
   const isSimpleTacos = (product) => product?.type === "tacos-simple";
   const isMaxiTacos = (product) => product?.type === "maxi-tacos";
   const needsTacosMeatChoice = (product) => isSimpleTacos(product) || isMaxiTacos(product);
 
-  const needsSauceChoice = (category, productName = "") => {
+  const needsSauceChoice = (category, productName = "", productType = "") => {
+    if (productType === "frite-sauce") return true;
     if (["Boissons", "Desserts", "Soupe", "Sauces", "Mezzés et salades", "Assiettes"].includes(category)) return false;
     if (category === "Accompagnements" && !["Grande frite", "Petite frite"].includes(productName)) return false;
     return true;
@@ -360,8 +298,10 @@ export default function RestaurantWebsite() {
   const needsSansSauceFromagere = (product) => product?.category === "Tacos";
 
   const openProduct = (product, category) => {
-    const [name, desc, price, menuPrice, type, image] = product;
+    const [name, desc, price, menuPrice, type, image, inStock] = product;
     if (!price) return;
+    if (inStock === false) return;
+
     setSelectedProduct({
       name,
       desc,
@@ -372,7 +312,9 @@ export default function RestaurantWebsite() {
       category,
       type: type || "",
       image: image || "",
+      in_stock: inStock ?? true,
     });
+
     setSelectedSaucesSandwich([]);
     setSelectedSaucesFrites([]);
     setSelectedCrudites([]);
@@ -385,6 +327,7 @@ export default function RestaurantWebsite() {
     setExtraCheddar(false);
     setSansSauceFromagere(false);
     setNote("");
+
     if (type === "tacos-simple") setSelectedMeats([{ name, extra: 0, locked: true }]);
     else setSelectedMeats([]);
   };
@@ -467,11 +410,13 @@ export default function RestaurantWebsite() {
 
   const isAddDisabled =
     selectedProduct &&
-    ((needsTacosMeatChoice(selectedProduct) && selectedMeats.length === 0) ||
+    (selectedProduct.in_stock === false ||
+      (needsTacosMeatChoice(selectedProduct) && selectedMeats.length === 0) ||
       (needsAccompagnementChoice(selectedProduct) && !accompagnementChoice));
 
   const addToCart = () => {
     if (!selectedProduct) return;
+    if (selectedProduct.in_stock === false) return;
     if (needsTacosMeatChoice(selectedProduct) && selectedMeats.length === 0) return;
     if (needsAccompagnementChoice(selectedProduct) && !accompagnementChoice) return;
 
@@ -694,58 +639,184 @@ export default function RestaurantWebsite() {
   );
 
   const MenuPage = () => (
-    <main className="px-5 py-16">
-      <PageTitle eyebrow="Notre carte" title="Menu Chez Omer" text="Cliquez sur une catégorie pour voir les produits. Recliquez dessus pour refermer." />
-      <div className="mx-auto max-w-7xl space-y-5">
-        {menuItems.map((section) => {
-          const expanded = activeCategory === section.category;
-          return (
-            <div key={section.category} className={`overflow-hidden rounded-[2rem] border transition ${expanded ? "border-yellow-400 bg-white text-stone-950" : "border-yellow-500/20 bg-black/60 text-white"}`}>
-              <button onClick={() => setActiveCategory(expanded ? null : section.category)} className="flex w-full items-center justify-between gap-4 p-6 text-left">
-                <span className="flex items-center gap-4 text-2xl font-black">{getCategoryIcon(section.category)} {section.category}</span>
-                <span className={`rounded-full px-4 py-2 text-sm font-black ${expanded ? "bg-black text-yellow-300" : "bg-yellow-400 text-black"}`}>{expanded ? "Fermer" : "Voir"}</span>
-              </button>
-              {expanded && (
-                <div className="grid gap-4 border-t border-stone-200 p-6 md:grid-cols-2 lg:grid-cols-3">
-                  {section.items.map(([name, desc, price, menuPrice, type, image]) => (
-                    <div key={`${section.category}-${name}-${desc}`} className="rounded-2xl border border-stone-200 bg-stone-50 p-5 shadow-sm">
-                      {image && <img src={image} alt={name} className="mb-4 h-40 w-full rounded-2xl object-cover" />}
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <h3 className="text-xl font-black">{name}</h3>
-                          {desc && <p className="mt-2 whitespace-pre-line text-sm leading-6 text-stone-600">{desc}</p>}
-                          {menuPrice && type !== "drink-size" && type !== "water-size" && <p className="mt-2 text-sm font-black text-yellow-700">Menu : {menuPrice} ({formatMenuSupplement(price, menuPrice)} de plus)</p>}
-                          {type === "tacos-simple" && <p className="mt-2 text-sm font-black text-red-700">Jusqu’à 2 viandes • 2ème viande +2€</p>}
-                          {type === "maxi-tacos" && <p className="mt-2 text-sm font-black text-red-700">Jusqu’à 3 viandes • 3ème viande +2€</p>}
-                        </div>
-                        <p className="whitespace-nowrap text-xl font-black text-yellow-700">{price}</p>
-                      </div>
-                      {price && (
-                        <button onClick={() => openProduct([name, desc, price, menuPrice, type, image], section.category)} className="mt-5 inline-flex items-center gap-2 rounded-full bg-black px-5 py-3 text-sm font-black text-white transition hover:bg-yellow-400 hover:text-black">
-                          <Plus size={16} /> Ajouter
-                        </button>
+  <main className="px-5 py-16">
+    <PageTitle
+      eyebrow="Notre carte"
+      title="Menu Chez Omer"
+      text="Cliquez sur une catégorie pour voir les produits."
+    />
+
+    <div className="mx-auto max-w-7xl space-y-5">
+      {categoriesData.map((section) => {
+        const expanded = activeCategory === section.nom;
+
+        const produitsCategorie = produits.filter(
+          (p) => p.categorie_id === section.id && p.actif === true
+        );
+
+        return (
+          <div
+            key={section.id}
+            className={`overflow-hidden rounded-[2rem] border transition ${
+              expanded
+                ? "border-yellow-400 bg-white text-stone-950"
+                : "border-yellow-500/20 bg-black/60 text-white"
+            }`}
+          >
+            <button
+              onClick={() => setActiveCategory(expanded ? null : section.nom)}
+              className="flex w-full items-center justify-between gap-4 p-6 text-left"
+            >
+              <span className="flex items-center gap-4 text-2xl font-black">
+                {getCategoryIcon(section.nom)}
+                {section.nom}
+              </span>
+
+              <span
+                className={`rounded-full px-4 py-2 text-sm font-black ${
+                  expanded ? "bg-black text-yellow-300" : "bg-yellow-400 text-black"
+                }`}
+              >
+                {expanded ? "Fermer" : "Voir"}
+              </span>
+            </button>
+
+            {expanded && (
+              <div className="grid gap-4 border-t border-stone-200 p-6 md:grid-cols-2 lg:grid-cols-3">
+                {produitsCategorie.map((produit) => {
+                  const isOutOfStock = produit.in_stock === false;
+
+                  return (
+                    <div
+                      key={produit.id}
+                      className="relative overflow-hidden rounded-2xl border border-stone-200 bg-stone-50 p-5 shadow-sm"
+                    >
+                      {isOutOfStock && (
+                        <>
+                          <div className="absolute inset-0 z-10 rounded-2xl bg-white/45 backdrop-grayscale" />
+
+                          <div className="absolute left-3 top-3 z-30 rounded-full bg-stone-900/85 px-3 py-1.5 text-[11px] font-black uppercase tracking-wide text-white shadow-lg">
+                            Revient prochainement
+                          </div>
+
+                          <div className="absolute left-1/2 top-20 z-30 w-[88%] -translate-x-1/2 overflow-hidden rounded-2xl border border-yellow-200 bg-gradient-to-r from-[#8a5a00] via-[#ffd86b] to-[#8a5a00] px-5 py-3 text-center shadow-[0_0_20px_rgba(255,215,0,0.55)]">
+                            <div className="absolute inset-0 bg-[linear-gradient(120deg,transparent,rgba(255,255,255,0.50),transparent)] opacity-70" />
+
+                            <span
+                              className="relative text-xl font-black tracking-wide text-[#3b2200]"
+                              style={{
+                                fontFamily: "'Trebuchet MS', 'Arial Black', sans-serif",
+                                textShadow: "0 1px 2px rgba(255,255,255,0.45)",
+                              }}
+                            >
+                              ✨ Victime de son succès ✨
+                            </span>
+                          </div>
+                        </>
                       )}
+
+                      {produit.image && (
+                        <img
+                          src={produit.image}
+                          alt={produit.nom}
+                          className={`mb-4 h-40 w-full rounded-2xl object-cover ${
+                            isOutOfStock ? "grayscale" : ""
+                          }`}
+                        />
+                      )}
+
+                      <div className={`flex items-start justify-between gap-4 ${isOutOfStock ? "grayscale opacity-60" : ""}`}>
+                        <div>
+                          <h3 className="text-xl font-black">{produit.nom}</h3>
+
+                          {produit.description && (
+                            <p className="mt-2 whitespace-pre-line text-sm leading-6 text-stone-600">
+                              {produit.description}
+                            </p>
+                          )}
+                        </div>
+
+                        <p className="whitespace-nowrap text-xl font-black text-yellow-700">
+                          {produit.prix}€
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          if (isOutOfStock) return;
+
+                          openProduct(
+                            [
+                              produit.nom,
+                              produit.description,
+                              `${produit.prix}€`,
+                              produit.prix_menu ? `${produit.prix_menu}€` : "",
+                              produit.type || "",
+                              produit.image || "",
+                              produit.in_stock ?? true,
+                            ],
+                            section.nom
+                          );
+                        }}
+                        disabled={isOutOfStock}
+                        className={`mt-5 inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-black transition ${
+                          isOutOfStock
+                            ? "cursor-not-allowed bg-stone-400 text-white"
+                            : "bg-black text-white hover:bg-yellow-400 hover:text-black"
+                        }`}
+                      >
+                        <Plus size={16} />
+                        {isOutOfStock ? "Bientôt de retour" : "Ajouter"}
+                      </button>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </main>
-  );
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  </main>
+);
 
   const AProposPage = () => (
     <main className="px-5 py-16">
-      <PageTitle eyebrow="À propos" title="Le goût du vrai kebab maison" text="Une identité forte, une cuisine généreuse et une ambiance inspirée de notre carte noire et jaune." />
+      <PageTitle
+        eyebrow="À propos"
+        title="Le goût du vrai kebab maison"
+        text="Une identité forte, une cuisine généreuse et une ambiance inspirée de notre carte noire et jaune."
+      />
+
       <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-2">
-        <div className="rounded-[2rem] border border-yellow-500/20 bg-black/60 p-5"><img src={BACKGROUND_IMAGE} alt="Carte Chez Omer" className="h-full w-full rounded-[1.5rem] object-cover" /></div>
+        <div className="rounded-[2rem] border border-yellow-500/20 bg-black/60 p-5">
+          <img
+            src={BACKGROUND_IMAGE}
+            alt="Carte Chez Omer"
+            className="h-full w-full rounded-[1.5rem] object-cover"
+          />
+        </div>
+
         <div className="flex flex-col justify-center rounded-[2rem] border border-yellow-500/20 bg-black/60 p-8">
-          <h2 className="text-4xl font-black text-yellow-300">Chez Omer Restaurant</h2>
-          <p className="mt-6 text-lg leading-8 text-stone-300">Nous vous accueillons avec des kebabs, tacos, assiettes et burgers 100% HALAL. Notre objectif : un service rapide, généreux et une qualité constante.</p>
+          <h2 className="text-4xl font-black text-yellow-300">
+            Chez Omer Restaurant
+          </h2>
+
+          <p className="mt-6 text-lg leading-8 text-stone-300">
+            Nous vous accueillons avec des kebabs, tacos, assiettes et burgers
+            100% HALAL. Notre objectif : un service rapide, généreux et une
+            qualité constante.
+          </p>
+
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            {["100% HALAL", "Viande sélectionnée", "Fait maison"].map((item) => <div key={item} className="rounded-2xl border border-yellow-500/20 bg-white/5 p-4 text-center font-black text-yellow-300">{item}</div>)}
+            {["100% HALAL", "Viande sélectionnée", "Fait maison"].map((item) => (
+              <div
+                key={item}
+                className="rounded-2xl border border-yellow-500/20 bg-white/5 p-4 text-center font-black text-yellow-300"
+              >
+                {item}
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -754,20 +825,49 @@ export default function RestaurantWebsite() {
 
   const CommandePage = () => (
     <main className="px-5 py-16">
-      <PageTitle eyebrow="Commande" title="Commander chez Chez Omer" text="Ajoutez vos produits au panier puis envoyez la commande par WhatsApp." />
+      <PageTitle
+        eyebrow="Commande"
+        title="Commander chez Chez Omer"
+        text="Ajoutez vos produits au panier puis envoyez la commande par WhatsApp."
+      />
+
       <div className="mx-auto max-w-3xl rounded-[2rem] border border-yellow-500/20 bg-black/60 p-8">
         {fermetureActive && (
           <div className="mb-6 rounded-3xl border border-red-500 bg-red-600 px-6 py-4 text-center text-lg font-black text-white">
             Commandes temporairement fermées
           </div>
         )}
-        {cart.length === 0 ? <p className="text-center text-stone-400">Votre panier est vide.</p> : (
+
+        {cart.length === 0 ? (
+          <p className="text-center text-stone-400">Votre panier est vide.</p>
+        ) : (
           <div className="space-y-4">
-            {cart.map((item) => <div key={item.id} className="rounded-2xl bg-white/10 p-4"><div className="flex justify-between gap-4"><p className="font-bold">{item.quantity}x {item.name}</p><p className="font-black text-yellow-300">{formatPrice(item.price * item.quantity)}</p></div></div>)}
-            <div className="flex items-center justify-between border-t border-yellow-500/20 pt-4 text-2xl font-black"><span>Total</span><span>{formatPrice(total)}</span></div>
+            {cart.map((item) => (
+              <div key={item.id} className="rounded-2xl bg-white/10 p-4">
+                <div className="flex justify-between gap-4">
+                  <p className="font-bold">
+                    {item.quantity}x {item.name}
+                  </p>
+                  <p className="font-black text-yellow-300">
+                    {formatPrice(item.price * item.quantity)}
+                  </p>
+                </div>
+              </div>
+            ))}
+
+            <div className="flex items-center justify-between border-t border-yellow-500/20 pt-4 text-2xl font-black">
+              <span>Total</span>
+              <span>{formatPrice(total)}</span>
+            </div>
           </div>
         )}
-        <button onClick={() => setCartOpen(true)} className="mt-6 w-full rounded-full bg-yellow-400 px-6 py-4 font-black text-black hover:bg-yellow-300">Ouvrir le panier</button>
+
+        <button
+          onClick={() => setCartOpen(true)}
+          className="mt-6 w-full rounded-full bg-yellow-400 px-6 py-4 font-black text-black hover:bg-yellow-300"
+        >
+          Ouvrir le panier
+        </button>
       </div>
     </main>
   );
@@ -795,7 +895,7 @@ export default function RestaurantWebsite() {
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
-    const [isLogged, setIsLogged] = useState(false);
+    const [isLogged, setIsLogged] = useState(localStorage.getItem("adminLogged") === "true");
     const [annonceAccueil, setAnnonceAccueil] = useState("");
     const [saveMessage, setSaveMessage] = useState("");
 
@@ -803,19 +903,18 @@ export default function RestaurantWebsite() {
       setLoading(true);
       setMessage("");
 
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
         setMessage("Email ou mot de passe incorrect");
-        console.error(error);
         setIsLogged(false);
       } else {
-        console.log("ADMIN CONNECTÉ :", data);
         setMessage("Connexion réussie ✅");
         setIsLogged(true);
+        localStorage.setItem("adminLogged", "true");
       }
 
       setLoading(false);
@@ -824,13 +923,11 @@ export default function RestaurantWebsite() {
     const saveAnnonce = async () => {
       setSaveMessage("");
 
-      const { error } = await supabase
-        .from("annonces")
-        .insert({
-          titre: "Annonce accueil",
-          contenu: annonceAccueil,
-          actif: true,
-        });
+      const { error } = await supabase.from("annonces").insert({
+        titre: "Annonce accueil",
+        contenu: annonceAccueil,
+        actif: true,
+      });
 
       if (error) {
         console.error(error);
@@ -841,20 +938,81 @@ export default function RestaurantWebsite() {
       }
     };
 
+    const ajouterProduit = async () => {
+      const categorieId =
+        selectedAdminCategory === "all"
+          ? categoriesData[0]?.id
+          : Number(selectedAdminCategory);
+
+      if (!categorieId) {
+        alert("Aucune catégorie trouvée ❌");
+        return;
+      }
+
+      const nouveauProduit = {
+        nom: "Nouveau produit",
+        description: "",
+        prix: 0,
+        prix_menu: 0,
+        image: "",
+        type: "",
+        actif: true,
+        in_stock: true,
+        ordre: 999,
+        categorie_id: categorieId,
+      };
+
+      const { error } = await supabase
+        .from("produits")
+        .insert([nouveauProduit])
+        .select();
+
+      if (error) {
+        console.error("ERREUR SUPABASE :", error);
+        alert(error.message);
+      } else {
+        alert("Produit créé ✅");
+        chargerProduits();
+      }
+    };
+
     return (
       <main className="px-5 py-16">
-        <PageTitle eyebrow="Administration" title="Espace Admin" text="Connexion sécurisée Chez Omer" />
+        <PageTitle
+          eyebrow="Administration"
+          title="Espace Admin"
+          text="Connexion sécurisée Chez Omer"
+        />
 
         {!isLogged && (
           <div className="mx-auto max-w-md rounded-[2rem] border border-yellow-500/20 bg-black/60 p-8">
             <h2 className="text-2xl font-black text-yellow-300">Connexion</h2>
 
             <div className="mt-6 space-y-4">
-              <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-2xl border border-yellow-500/20 bg-black px-5 py-4 text-white outline-none focus:border-yellow-400" />
-              <input type="password" placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full rounded-2xl border border-yellow-500/20 bg-black px-5 py-4 text-white outline-none focus:border-yellow-400" />
-              <button onClick={login} disabled={loading} className="w-full rounded-full bg-yellow-400 px-6 py-4 font-black text-black hover:bg-yellow-300">
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full rounded-2xl border border-yellow-500/20 bg-black px-5 py-4 text-white outline-none focus:border-yellow-400"
+              />
+
+              <input
+                type="password"
+                placeholder="Mot de passe"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-2xl border border-yellow-500/20 bg-black px-5 py-4 text-white outline-none focus:border-yellow-400"
+              />
+
+              <button
+                onClick={login}
+                disabled={loading}
+                className="w-full rounded-full bg-yellow-400 px-6 py-4 font-black text-black hover:bg-yellow-300"
+              >
                 {loading ? "Connexion..." : "Se connecter"}
               </button>
+
               {message && <p className="text-center text-sm text-white">{message}</p>}
             </div>
           </div>
@@ -864,28 +1022,220 @@ export default function RestaurantWebsite() {
           <div className="mx-auto max-w-5xl px-5 py-12">
             <h2 className="text-3xl font-black text-yellow-300">Panneau admin</h2>
 
+            <button
+              onClick={() => {
+                localStorage.removeItem("adminLogged");
+                setIsLogged(false);
+              }}
+              className="mt-4 rounded-full bg-red-600 px-6 py-3 font-black text-white hover:bg-red-500"
+            >
+              Se déconnecter
+            </button>
+
             <div className="mt-8 grid gap-6 md:grid-cols-2">
               <div className="rounded-3xl border border-yellow-500/20 bg-white/5 p-6">
                 <h3 className="text-xl font-black text-white">Annonce accueil</h3>
-                <p className="mt-2 text-stone-400">Ici tu pourras écrire un message visible sur l’accueil.</p>
-                <textarea value={annonceAccueil} onChange={(e) => setAnnonceAccueil(e.target.value)} className="mt-4 min-h-32 w-full rounded-2xl border border-yellow-500/20 bg-black px-4 py-3 text-white outline-none" placeholder="Exemple : Fermeture exceptionnelle ce soir à 20h..." />
-                <button onClick={saveAnnonce} className="mt-4 rounded-full bg-yellow-400 px-6 py-3 font-black text-black">Enregistrer</button>
-                {saveMessage && <p className="mt-3 text-sm font-bold text-yellow-300">{saveMessage}</p>}
+                <p className="mt-2 text-stone-400">
+                  Ici tu peux écrire un message visible sur l’accueil.
+                </p>
+
+                <textarea
+                  value={annonceAccueil}
+                  onChange={(e) => setAnnonceAccueil(e.target.value)}
+                  className="mt-4 min-h-32 w-full rounded-2xl border border-yellow-500/20 bg-black px-4 py-3 text-white outline-none"
+                  placeholder="Exemple : Fermeture exceptionnelle ce soir à 20h..."
+                />
+
+                <button
+                  onClick={saveAnnonce}
+                  className="mt-4 rounded-full bg-yellow-400 px-6 py-3 font-black text-black"
+                >
+                  Enregistrer
+                </button>
+
+                {saveMessage && (
+                  <p className="mt-3 text-sm font-bold text-yellow-300">
+                    {saveMessage}
+                  </p>
+                )}
               </div>
 
               <div className="rounded-3xl border border-yellow-500/20 bg-white/5 p-6">
-                <h3 className="text-xl font-black text-white">Fermeture exceptionnelle</h3>
-                <p className="mt-2 text-stone-400">Active ou désactive un message de fermeture.</p>
+                <h3 className="text-xl font-black text-white">
+                  Fermeture exceptionnelle
+                </h3>
+
+                <p className="mt-2 text-stone-400">
+                  Active ou désactive un message de fermeture.
+                </p>
+
                 <button
                   onClick={async () => {
                     const newValue = !fermetureActive;
                     setFermetureActive(newValue);
                     await saveFermeture(newValue);
                   }}
-                  className={`mt-4 rounded-full px-6 py-3 font-black text-white ${fermetureActive ? "bg-green-500" : "bg-red-500"}`}
+                  className={`mt-4 rounded-full px-6 py-3 font-black text-white ${
+                    fermetureActive ? "bg-green-500" : "bg-red-500"
+                  }`}
                 >
                   {fermetureActive ? "Désactiver fermeture" : "Activer fermeture"}
                 </button>
+              </div>
+            </div>
+
+            <div className="mt-10 rounded-3xl border border-yellow-500/20 bg-white/5 p-6">
+              <h3 className="text-2xl font-black text-yellow-300">
+                Produits Supabase
+              </h3>
+
+              <p className="mt-2 text-stone-400">
+                Choisis une catégorie, puis ajoute ou modifie les produits.
+              </p>
+
+              <select
+                value={selectedAdminCategory}
+                onChange={(e) => setSelectedAdminCategory(e.target.value)}
+                className="mt-4 w-full rounded-2xl border border-yellow-500/20 bg-black px-5 py-4 text-white"
+              >
+                <option value="all">Toutes les catégories</option>
+                {categoriesData.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.nom}
+                  </option>
+                ))}
+              </select>
+
+              <button
+                onClick={ajouterProduit}
+                className="mt-4 rounded-full bg-green-500 px-6 py-3 font-black text-white hover:bg-green-400"
+              >
+                + Ajouter un produit
+              </button>
+
+              <div className="mt-6 space-y-4">
+                {produits
+                  .filter((produit) =>
+                    selectedAdminCategory === "all"
+                      ? true
+                      : produit.categorie_id === Number(selectedAdminCategory)
+                  )
+                  .map((produit) => (
+                    <div
+                      key={produit.id}
+                      className="rounded-2xl border border-yellow-500/20 bg-black p-4"
+                    >
+                      <label className="text-sm font-bold text-yellow-300">
+                        Nom
+                      </label>
+                      <input
+                        type="text"
+                        defaultValue={produit.nom || ""}
+                        onBlur={(e) => updateProduit(produit.id, "nom", e.target.value)}
+                        className="mt-2 w-full rounded-xl bg-white/10 px-4 py-3 text-white"
+                      />
+
+                      <label className="mt-4 block text-sm font-bold text-yellow-300">
+                        Description
+                      </label>
+                      <textarea
+                        defaultValue={produit.description || ""}
+                        onBlur={(e) => updateProduit(produit.id, "description", e.target.value)}
+                        className="mt-2 min-h-24 w-full rounded-xl bg-white/10 px-4 py-3 text-white"
+                      />
+
+                      <div className="mt-4 grid gap-3 md:grid-cols-2">
+                        <div>
+                          <label className="text-sm font-bold text-yellow-300">
+                            Prix
+                          </label>
+                          <input
+                            type="text"
+                            defaultValue={produit.prix || ""}
+                            onBlur={(e) => updateProduit(produit.id, "prix", e.target.value)}
+                            className="mt-2 w-full rounded-xl bg-white/10 px-4 py-3 text-white"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-bold text-yellow-300">
+                            Prix menu
+                          </label>
+                          <input
+                            type="text"
+                            defaultValue={produit.prix_menu || ""}
+                            onBlur={(e) => updateProduit(produit.id, "prix_menu", e.target.value)}
+                            className="mt-2 w-full rounded-xl bg-white/10 px-4 py-3 text-white"
+                          />
+                        </div>
+                      </div>
+
+                      <label className="mt-4 block text-sm font-bold text-yellow-300">
+                        Image
+                      </label>
+                      <input
+                        type="text"
+                        defaultValue={produit.image || ""}
+                        onBlur={(e) => updateProduit(produit.id, "image", e.target.value)}
+                        className="mt-2 w-full rounded-xl bg-white/10 px-4 py-3 text-white"
+                      />
+
+                      {produit.image && (
+                        <img
+                          src={produit.image}
+                          alt={produit.nom}
+                          className="mt-4 h-40 w-full rounded-2xl object-cover"
+                        />
+                      )}
+
+                      <label className="mt-4 block text-sm font-bold text-yellow-300">
+                        Type
+                      </label>
+                      <input
+                        type="text"
+                        defaultValue={produit.type || ""}
+                        onBlur={(e) => updateProduit(produit.id, "type", e.target.value)}
+                        className="mt-2 w-full rounded-xl bg-white/10 px-4 py-3 text-white"
+                      />
+
+                      <label className="mt-4 block text-sm font-bold text-yellow-300">
+                        Ordre
+                      </label>
+                      <input
+                        type="number"
+                        defaultValue={produit.ordre || 0}
+                        onBlur={(e) => updateProduit(produit.id, "ordre", Number(e.target.value))}
+                        className="mt-2 w-full rounded-xl bg-white/10 px-4 py-3 text-white"
+                      />
+
+                      <div className="mt-4 flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          checked={produit.actif ?? true}
+                          onChange={(e) => updateProduit(produit.id, "actif", e.target.checked)}
+                          className="h-5 w-5"
+                        />
+                        <span className="font-bold text-white">Produit actif</span>
+                      </div>
+
+                      <label className="mt-3 flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          checked={produit.in_stock ?? true}
+                          onChange={(e) => updateProduit(produit.id, "in_stock", e.target.checked)}
+                          className="h-5 w-5"
+                        />
+                        <span className="font-bold text-white">En stock</span>
+                      </label>
+
+                      <button
+                        onClick={() => saveProduit(produit)}
+                        className="mt-4 rounded-full bg-yellow-400 px-5 py-3 font-black text-black"
+                      >
+                        Enregistrer
+                      </button>
+                    </div>
+                  ))}
               </div>
             </div>
           </div>
@@ -946,7 +1296,7 @@ export default function RestaurantWebsite() {
                 {isMaxiTacos(selectedProduct) && <div className="mt-7"><h4 className="font-black">Choix des viandes</h4><p className="mt-1 text-sm text-stone-600">Choisissez jusqu’à 3 viandes. La 3ème viande ajoute +2€.</p><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">{maxiTacosMeats.map((meat) => { const active = selectedMeats.some((item) => item.name === meat.name); const disabled = !active && selectedMeats.length >= 3; return <button key={meat.name} onClick={() => toggleMeat(meat)} disabled={disabled} className={`rounded-2xl border px-4 py-3 text-sm font-bold transition ${active ? "border-yellow-500 bg-yellow-400 text-black" : disabled ? "cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-yellow-400"}`}>{meat.name}</button>; })}</div><p className="mt-3 text-sm font-bold text-yellow-700">Viandes sélectionnées : {selectedMeats.length}/3</p></div>}
                 {needsBreadChoice(selectedProduct) && <div className="mt-7"><h4 className="font-black">Choisissez votre pain</h4><div className="mt-4 flex gap-3">{["Sandwich", "Dürüm"].map((choice) => <button key={choice} onClick={() => setBreadChoice(choice)} className={`rounded-2xl border px-5 py-3 font-bold transition ${breadChoice === choice ? "border-yellow-500 bg-yellow-400 text-black" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-yellow-400"}`}>{choice}</button>)}</div></div>}
                 {needsCruditeChoice(selectedProduct) && <div className="mt-7"><h4 className="font-black">Options</h4><p className="mt-1 text-sm text-stone-600">Sélectionnez ce que vous ne voulez pas dans votre plat.</p><div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">{getCruditeList(selectedProduct).map((option) => <button key={option} onClick={() => toggleCrudite(option)} className={`rounded-2xl border px-4 py-3 text-sm font-bold transition ${selectedCrudites.includes(option) ? "border-red-500 bg-red-500 text-white" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-red-400"}`}>{option}</button>)}</div></div>}
-                {needsSauceChoice(selectedProduct.category, selectedProduct.name) && <div className="mt-7"><h4 className="font-black">Sauces</h4><p className="mt-1 text-sm text-stone-600">2 sauces au choix incluses. À partir de la 3ème : +0,20€ par sauce.</p><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">{sauces.map((sauce) => <button key={`sandwich-${sauce}`} onClick={() => toggleSauce(sauce, "sandwich")} className={`rounded-2xl border px-4 py-3 text-sm font-bold transition ${selectedSaucesSandwich.includes(sauce) ? "border-yellow-500 bg-yellow-400 text-black" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-yellow-400"}`}>{sauce}</button>)}</div>{supplementSaucesSandwich > 0 && <p className="mt-3 text-sm font-bold text-red-600">Supplément sauces : {formatPrice(supplementSaucesSandwich)}</p>}{formulaChoice === "Menu" && selectedProduct.category !== "Accompagnements" && <div className="mt-7"><h4 className="font-black">Sauces frites</h4><p className="mt-1 text-sm text-stone-600">2 sauces au choix incluses. À partir de la 3ème : +0,20€ par sauce.</p><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">{sauces.map((sauce) => <button key={`frites-${sauce}`} onClick={() => toggleSauce(sauce, "frites")} className={`rounded-2xl border px-4 py-3 text-sm font-bold transition ${selectedSaucesFrites.includes(sauce) ? "border-yellow-500 bg-yellow-400 text-black" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-yellow-400"}`}>{sauce}</button>)}</div></div>}</div>}
+                {needsSauceChoice(selectedProduct.category, selectedProduct.name, selectedProduct.type) && <div className="mt-7"><h4 className="font-black">Sauces</h4><p className="mt-1 text-sm text-stone-600">2 sauces au choix incluses. À partir de la 3ème : +0,20€ par sauce.</p><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">{sauces.map((sauce) => <button key={`sandwich-${sauce}`} onClick={() => toggleSauce(sauce, "sandwich")} className={`rounded-2xl border px-4 py-3 text-sm font-bold transition ${selectedSaucesSandwich.includes(sauce) ? "border-yellow-500 bg-yellow-400 text-black" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-yellow-400"}`}>{sauce}</button>)}</div>{supplementSaucesSandwich > 0 && <p className="mt-3 text-sm font-bold text-red-600">Supplément sauces : {formatPrice(supplementSaucesSandwich)}</p>}{formulaChoice === "Menu" && selectedProduct.category !== "Accompagnements" && <div className="mt-7"><h4 className="font-black">Sauces frites</h4><p className="mt-1 text-sm text-stone-600">2 sauces au choix incluses. À partir de la 3ème : +0,20€ par sauce.</p><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">{sauces.map((sauce) => <button key={`frites-${sauce}`} onClick={() => toggleSauce(sauce, "frites")} className={`rounded-2xl border px-4 py-3 text-sm font-bold transition ${selectedSaucesFrites.includes(sauce) ? "border-yellow-500 bg-yellow-400 text-black" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-yellow-400"}`}>{sauce}</button>)}</div></div>}</div>}
                 <div className="mt-7"><h4 className="font-black">Note</h4><textarea value={note} onChange={(e) => setNote(e.target.value)} className="mt-3 min-h-24 w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 outline-none focus:border-yellow-500" placeholder="Exemple : bien cuit, sauce à part..." /></div>
                 <button onClick={addToCart} disabled={isAddDisabled} className={`mt-6 w-full rounded-full px-6 py-4 font-black transition ${isAddDisabled ? "cursor-not-allowed bg-stone-300 text-stone-500" : "bg-black text-white hover:bg-yellow-400 hover:text-black"}`}>Ajouter au panier • {formatPrice(selectedProductPrice)}</button>
               </div>
