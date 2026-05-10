@@ -1,25 +1,28 @@
 import { supabase } from "./supabase";
-import React, { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import AccueilPage from "./pages/AccueilPage";
+import MenuPage from "./pages/MenuPage";
+import AProposPage from "./pages/AProposPage";
+import CommandePage from "./pages/CommandePage";
+import StaffCommandesPage from "./pages/StaffCommandesPage";
+import ContactPage from "./pages/ContactPage";
+import PointagePage from "./pages/PointagePage";
+import AdminPage from "./pages/AdminPage";
+import ConnexionPage from "./pages/ConnexionPage";
+import ProductModal from "./components/ProductModal";
+import CartDrawer from "./components/CartDrawer";
+import MobileCartButton from "./components/MobileCartButton";
+import Footer from "./components/Footer";
+import Header from "./components/Header";
 import {
-  Menu,
-  X,
-  MapPin,
-  Clock,
-  Phone,
-  Mail,
   Utensils,
   Sandwich,
   Soup,
   CupSoda,
   CakeSlice,
   UtensilsCrossed,
-  CalendarDays,
-  ShoppingCart,
-  Plus,
-  Minus,
-  Trash2,
-  MessageCircle,
+  Bell,
+  BellOff,
 } from "lucide-react";
 
 const restaurantAddress = "15 Rue de Belfort, 90400 Sevenans";
@@ -140,23 +143,144 @@ export default function RestaurantWebsite() {
   const [categoriesData, setCategoriesData] = useState([]);
   const [selectedAdminCategory, setSelectedAdminCategory] = useState("all");
   const [fermetureActive, setFermetureActive] = useState(false);
+  const [user, setUser] = useState(null);
+  const [userRole, setUserRole] = useState("client");
+  const [loadingAuth, setLoadingAuth] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const [newOrderFlash, setNewOrderFlash] = useState(false);
+  const audioContextRef = useRef(null);
+  const soundEnabledRef = useRef(false);
 
-  const nav = ["Accueil", "Menu", "À propos", "Commande", "Contact", "Admin"];
+  useEffect(() => {
+    soundEnabledRef.current = soundEnabled;
+  }, [soundEnabled]);
+
+  const nav = [
+    "Accueil",
+    "Menu",
+    "À propos",
+    "Commande",
+    "Contact",
+    ...(userRole === "admin" || userRole === "employe" ? ["Pointage", "Commandes"] : []),
+    ...(userRole === "admin" ? ["Admin"] : []),
+    ...(!user ? ["Connexion"] : []),
+  ];
 
   const total = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart]);
   const itemCount = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
 
-  const chargerCategories = async () => {
-    const { data, error } = await supabase
-      .from("categories")
-      .select("*")
-      .order("ordre", { ascending: true });
+  const creerAudioContext = async () => {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
 
+    if (!AudioContextClass) {
+      alert("Votre navigateur ne permet pas d'activer le son ❌");
+      return null;
+    }
+
+    const context = audioContextRef.current || new AudioContextClass();
+
+    if (context.state === "suspended") {
+      await context.resume();
+    }
+
+    audioContextRef.current = context;
+    return context;
+  };
+
+  const jouerBipTest = (context) => {
+    const oscillator = context.createOscillator();
+    const gainNode = context.createGain();
+
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(880, context.currentTime);
+
+    gainNode.gain.setValueAtTime(0.001, context.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.2, context.currentTime + 0.02);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.25);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(context.destination);
+
+    oscillator.start();
+    oscillator.stop(context.currentTime + 0.25);
+  };
+
+  const playNotificationSound = () => {
+    if (!soundEnabledRef.current || !audioContextRef.current) return;
+
+    const audioContext = audioContextRef.current;
+
+    const playBeep = (startTime, frequency) => {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(frequency, startTime);
+
+      gainNode.gain.setValueAtTime(0.001, startTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.35, startTime + 0.02);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.35);
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.start(startTime);
+      oscillator.stop(startTime + 0.4);
+    };
+
+    const now = audioContext.currentTime;
+    playBeep(now, 900);
+    playBeep(now + 0.45, 1200);
+    playBeep(now + 0.9, 900);
+  };
+
+  const activerSonCommandes = async () => {
+    if (soundEnabledRef.current) {
+      soundEnabledRef.current = false;
+      setSoundEnabled(false);
+      setNewOrderFlash(false);
+      return;
+    }
+
+    const context = await creerAudioContext();
+    if (!context) return;
+
+    soundEnabledRef.current = true;
+    setSoundEnabled(true);
+    jouerBipTest(context);
+  };
+
+  useEffect(() => {
+    if (!["admin", "employe"].includes(userRole)) return;
+
+    const channel = supabase
+      .channel("app-commandes-sound-global")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "commandes",
+        },
+        () => {
+          playNotificationSound();
+          setNewOrderFlash(true);
+          setTimeout(() => setNewOrderFlash(false), 6000);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userRole]);
+
+  const chargerCategories = async () => {
+    const { data, error } = await supabase.from("categories").select("*").order("ordre", { ascending: true });
     if (error) {
       console.error(error);
       return;
     }
-
     setCategoriesData(data || []);
   };
 
@@ -173,35 +297,21 @@ export default function RestaurantWebsite() {
       return;
     }
 
-    if (data && data.length > 0) {
-      setAnnonceSite(data[0].contenu);
-    }
+    setAnnonceSite(data && data.length > 0 ? data[0].contenu : "");
   };
 
   const chargerFermeture = async () => {
-    const { data, error } = await supabase
-      .from("settings")
-      .select("fermeture_active")
-      .eq("id", 1)
-      .single();
-
+    const { data, error } = await supabase.from("settings").select("fermeture_active").eq("id", 1).single();
     if (error) {
       console.error(error);
       return;
     }
-
     setFermetureActive(Boolean(data?.fermeture_active));
   };
 
   const saveFermeture = async (value) => {
-    const { error } = await supabase
-      .from("settings")
-      .update({ fermeture_active: value })
-      .eq("id", 1);
-
-    if (error) {
-      console.error(error);
-    }
+    const { error } = await supabase.from("settings").update({ fermeture_active: value }).eq("id", 1);
+    if (error) console.error(error);
   };
 
   const chargerProduits = async () => {
@@ -220,11 +330,7 @@ export default function RestaurantWebsite() {
   };
 
   const updateProduit = (id, field, value) => {
-    setProduits((current) =>
-      current.map((produit) =>
-        produit.id === id ? { ...produit, [field]: value } : produit
-      )
-    );
+    setProduits((current) => current.map((produit) => (produit.id === id ? { ...produit, [field]: value } : produit)));
   };
 
   const saveProduit = async (produit) => {
@@ -253,6 +359,46 @@ export default function RestaurantWebsite() {
     }
   };
 
+  const verifierSession = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      setUser(null);
+      setUserRole("client");
+      setLoadingAuth(false);
+      return "client";
+    }
+
+    setUser(user);
+
+    const { data, error } = await supabase.from("profiles").select("id, nom, role").eq("id", user.id).maybeSingle();
+
+    if (error || !data) {
+      console.error(error);
+      setUserRole("client");
+      setLoadingAuth(false);
+      return "client";
+    }
+
+    setUserRole(data.role);
+    setLoadingAuth(false);
+    return data.role;
+  };
+
+  useEffect(() => {
+    verifierSession();
+
+    const { data: listener } = supabase.auth.onAuthStateChange(() => {
+      verifierSession();
+    });
+
+    return () => {
+      listener?.subscription?.unsubscribe();
+    };
+  }, []);
+
   useEffect(() => {
     chargerAnnonce();
     chargerFermeture();
@@ -276,8 +422,10 @@ export default function RestaurantWebsite() {
     if (product.type === "menu-enfant-burger") return true;
     if (product.type === "assiette-accompagnement") return true;
     if (product.category === "Burgers") return true;
+
     const assiettesSansCrudites = ["Ali nazik", "Patlicanli iskender", "Yogurtlu iskender", "Bulgurlu iskender"];
     if (product.category === "Assiettes" && assiettesSansCrudites.includes(product.name)) return false;
+
     return ["Sandwichs / Dürüms", "Tacos"].includes(product.category);
   };
 
@@ -299,6 +447,7 @@ export default function RestaurantWebsite() {
 
   const openProduct = (product, category) => {
     const [name, desc, price, menuPrice, type, image, inStock] = product;
+
     if (!price) return;
     if (inStock === false) return;
 
@@ -328,8 +477,11 @@ export default function RestaurantWebsite() {
     setSansSauceFromagere(false);
     setNote("");
 
-    if (type === "tacos-simple") setSelectedMeats([{ name, extra: 0, locked: true }]);
-    else setSelectedMeats([]);
+    if (type === "tacos-simple") {
+      setSelectedMeats([{ name, extra: 0, locked: true }]);
+    } else {
+      setSelectedMeats([]);
+    }
   };
 
   const toggleSauce = (sauce, type) => {
@@ -346,8 +498,10 @@ export default function RestaurantWebsite() {
       const existingMeat = current.find((item) => item.name === meat.name);
       if (existingMeat?.locked) return current;
       if (existingMeat) return current.filter((item) => item.name !== meat.name);
+
       const maxMeats = isSimpleTacos(selectedProduct) ? 2 : 3;
       if (current.length >= maxMeats) return current;
+
       return [...current, meat];
     });
   };
@@ -380,15 +534,11 @@ export default function RestaurantWebsite() {
     if (selectedProduct.category === "Boissons") {
       if (selectedProduct.name === "Ayran") return "/images/Boissons/Ayran.png";
       if (selectedProduct.name === "Eau") {
-        return waterSizeChoice === "1L verre consigné"
-          ? "/images/Boissons/Bouteille Evian 1l.png"
-          : "/images/Boissons/Bouteille Evian 50cl.png";
+        return waterSizeChoice === "1L verre consigné" ? "/images/Boissons/Bouteille Evian 1l.png" : "/images/Boissons/Bouteille Evian 50cl.png";
       }
       if (needsDrinkSizeChoice(selectedProduct)) {
         const imageName = drinkImageNames[selectedProduct.name] || selectedProduct.name;
-        return drinkSizeChoice === "50cl"
-          ? `/images/Boissons/Bouteille/${imageName}.png`
-          : `/images/Boissons/Canette/${imageName}.png`;
+        return drinkSizeChoice === "50cl" ? `/images/Boissons/Bouteille/${imageName}.png` : `/images/Boissons/Canette/${imageName}.png`;
       }
     }
 
@@ -429,9 +579,7 @@ export default function RestaurantWebsite() {
         category: selectedProduct.category,
         price: selectedProductPrice,
         formulaChoice:
-          hasFormulaChoice(selectedProduct) && !needsDrinkSizeChoice(selectedProduct) && !needsWaterSizeChoice(selectedProduct)
-            ? formulaChoice
-            : "",
+          hasFormulaChoice(selectedProduct) && !needsDrinkSizeChoice(selectedProduct) && !needsWaterSizeChoice(selectedProduct) ? formulaChoice : "",
         drinkSizeChoice: needsDrinkSizeChoice(selectedProduct) ? drinkSizeChoice : "",
         waterSizeChoice: needsWaterSizeChoice(selectedProduct) ? waterSizeChoice : "",
         menuEnfantBoisson: needsMenuEnfantDrink(selectedProduct) ? menuEnfantBoisson : "",
@@ -456,12 +604,12 @@ export default function RestaurantWebsite() {
   };
 
   const changeQuantity = (id, delta) => {
-    setCart((current) =>
-      current.map((item) => (item.id === id ? { ...item, quantity: item.quantity + delta } : item)).filter((item) => item.quantity > 0)
-    );
+    setCart((current) => current.map((item) => (item.id === id ? { ...item, quantity: item.quantity + delta } : item)).filter((item) => item.quantity > 0));
   };
 
-  const removeItem = (id) => setCart((current) => current.filter((item) => item.id !== id));
+  const removeItem = (id) => {
+    setCart((current) => current.filter((item) => item.id !== id));
+  };
 
   const orderLines = cart
     .map((item) => {
@@ -474,15 +622,16 @@ export default function RestaurantWebsite() {
       const choix = item.breadChoice ? `\n  Choix : ${item.breadChoice}` : "";
       const accompagnement = item.accompagnementChoice ? `\n  Accompagnement : ${item.accompagnementChoice}` : "";
       const meats = item.meats?.length
-        ? `\n  Viandes : ${item.meats.map((meat) => `${meat.name}`).join(", ")}${
-            item.tacosSimple && item.meats.length === 2 ? " | 2ème viande (+2€)" : ""
-          }${!item.tacosSimple && item.meats.length === 3 ? " | 3ème viande (+2€)" : ""}`
+        ? `\n  Viandes : ${item.meats.map((meat) => `${meat.name}`).join(", ")}${item.tacosSimple && item.meats.length === 2 ? " | 2ème viande (+2€)" : ""}${
+            !item.tacosSimple && item.meats.length === 3 ? " | 3ème viande (+2€)" : ""
+          }`
         : "";
       const crudites = item.crudites?.length ? `\n  Options : ${item.crudites.join(", ")}` : "";
       const saucesSandwichText = item.saucesSandwich?.length ? `\n  Sauces : ${item.saucesSandwich.join(", ")}` : "";
       const saucesFritesText = item.saucesFrites?.length ? `\n  Sauces frites : ${item.saucesFrites.join(", ")}` : "";
       const supplementSaucesText = item.supplementSauces > 0 ? `\n  Supplément sauces : ${formatPrice(item.supplementSauces)}` : "";
       const noteText = item.note ? `\n  Note : ${item.note}` : "";
+
       return `- ${item.quantity}x ${item.name} (${item.category}) - ${formatPrice(
         item.price * item.quantity
       )}${formule}${formatBoisson}${formatEau}${boissonEnfant}${cheddar}${sansFromagere}${choix}${accompagnement}${meats}${crudites}${saucesSandwichText}${saucesFritesText}${supplementSaucesText}${noteText}`;
@@ -497,760 +646,89 @@ export default function RestaurantWebsite() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const Header = () => (
-    <header className="sticky top-0 z-50 border-b border-yellow-500/20 bg-black/90 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-3">
-        <button onClick={() => showPage("Accueil")} className="flex items-center gap-3">
-          <img src={LOGO} alt="Chez Omer" className="h-14 w-14 rounded-full object-cover ring-2 ring-yellow-500/50" />
-          <span className="hidden text-xl font-black uppercase tracking-wide text-yellow-400 sm:block">Chez Omer</span>
-        </button>
+  const CurrentPage = () => {
+    if (activePage === "Menu") {
+      return (
+        <MenuPage
+          categoriesData={categoriesData}
+          activeCategory={activeCategory}
+          setActiveCategory={setActiveCategory}
+          produits={produits}
+          getCategoryIcon={getCategoryIcon}
+          openProduct={openProduct}
+        />
+      );
+    }
 
-        <nav className="hidden items-center gap-2 md:flex">
-          {nav.map((item) => (
-            <button
-              key={item}
-              onClick={() => showPage(item)}
-              className={`rounded-full px-5 py-2 text-sm font-bold transition ${
-                activePage === item ? "bg-yellow-400 text-black" : "text-stone-300 hover:bg-white/10 hover:text-yellow-300"
-              }`}
-            >
-              {item}
-            </button>
-          ))}
-        </nav>
+    if (activePage === "À propos") return <AProposPage BACKGROUND_IMAGE={BACKGROUND_IMAGE} />;
 
-        <button
-          onClick={() => setCartOpen(true)}
-          className="relative hidden rounded-full bg-yellow-400 px-5 py-3 font-black text-black shadow-lg shadow-yellow-500/20 transition hover:bg-yellow-300 md:inline-flex md:items-center md:gap-2"
-        >
-          <ShoppingCart size={18} /> Panier
-          {itemCount > 0 && <span className="absolute -right-2 -top-2 rounded-full bg-red-600 px-2 py-0.5 text-xs text-white">{itemCount}</span>}
-        </button>
+    if (activePage === "Commande") {
+      return (
+        <CommandePage
+          fermetureActive={fermetureActive}
+          cart={cart}
+          formatPrice={formatPrice}
+          total={total}
+          setCartOpen={setCartOpen}
+        />
+      );
+    }
 
-        <button className="rounded-xl bg-white/10 p-3 md:hidden" onClick={() => setOpen(!open)} aria-label="Menu">
-          {open ? <X /> : <Menu />}
-        </button>
-      </div>
+    if (activePage === "Contact") {
+      return <ContactPage restaurantAddress={restaurantAddress} phoneNumber={phoneNumber} whatsappNumber={whatsappNumber} />;
+    }
 
-      {open && (
-        <div className="border-t border-yellow-500/20 bg-black px-5 py-4 md:hidden">
-          <div className="flex flex-col gap-3">
-            {nav.map((item) => (
-              <button key={item} onClick={() => showPage(item)} className="rounded-xl bg-white/5 px-4 py-3 text-left font-bold text-stone-200">
-                {item}
-              </button>
-            ))}
-            <button onClick={() => setCartOpen(true)} className="rounded-xl bg-yellow-400 px-4 py-3 font-black text-black">
-              Voir le panier ({itemCount})
-            </button>
-          </div>
-        </div>
-      )}
-    </header>
-  );
+    if (activePage === "Pointage") return <PointagePage supabase={supabase} />;
 
-  const PageTitle = ({ eyebrow, title, text }) => (
-    <div className="mx-auto mb-12 max-w-3xl text-center">
-      <p className="text-sm font-black uppercase tracking-[0.35em] text-yellow-400">{eyebrow}</p>
-      <h1 className="mt-4 text-4xl font-black uppercase tracking-tight text-white md:text-6xl">{title}</h1>
-      {text && <p className="mt-5 text-lg leading-8 text-stone-300">{text}</p>}
-    </div>
-  );
+    if (activePage === "Commandes") {
+      return (
+        <StaffCommandesPage
+          supabase={supabase}
+          userRole={userRole}
+          formatPrice={formatPrice}
+          soundEnabled={soundEnabled}
+          activerSonCommandes={activerSonCommandes}
+        />
+      );
+    }
 
-  const AccueilPage = () => (
-    <main>
-      <section className="relative overflow-hidden px-5 py-16 md:py-24">
-        <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-2">
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
-            {fermetureActive && (
-              <div className="mb-6 rounded-3xl border border-red-500 bg-red-600 px-6 py-4 text-center text-lg font-black text-white shadow-xl">
-                🚫 Fermeture exceptionnelle — les commandes sont temporairement indisponibles.
-              </div>
-            )}
+    if (activePage === "Admin") {
+      return (
+        <AdminPage
+          supabase={supabase}
+          userRole={userRole}
+          verifierSession={verifierSession}
+          chargerAnnonce={chargerAnnonce}
+          fermetureActive={fermetureActive}
+          setFermetureActive={setFermetureActive}
+          saveFermeture={saveFermeture}
+          categoriesData={categoriesData}
+          selectedAdminCategory={selectedAdminCategory}
+          setSelectedAdminCategory={setSelectedAdminCategory}
+          produits={produits}
+          updateProduit={updateProduit}
+          saveProduit={saveProduit}
+          chargerProduits={chargerProduits}
+        />
+      );
+    }
 
-            {annonceSite && (
-              <div className="mb-6 rounded-3xl border border-yellow-400 bg-yellow-400 px-6 py-4 text-center text-lg font-black text-black shadow-xl shadow-yellow-500/20">
-                ⚠️ {annonceSite}
-              </div>
-            )}
-
-            <a
-              href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent("Bonjour Chez Omer, je souhaite réserver une table.")}`}
-              target="_blank"
-              rel="noreferrer"
-              className="mb-7 block max-w-3xl overflow-hidden rounded-3xl border-2 border-yellow-300 bg-yellow-400 py-4 shadow-[0_0_30px_rgba(250,204,21,0.35)] transition hover:bg-yellow-300"
-            >
-              <div className="whitespace-nowrap text-2xl font-black uppercase tracking-wide text-black md:text-3xl" style={{ animation: "reservationMarquee 13s linear infinite" }}>
-                🔥 Pour réserver votre table cliquez ici ! • 🔥 Pour réserver votre table cliquez ici ! • 🔥 Pour réserver votre table cliquez ici ! •
-              </div>
-            </a>
-
-            <div className="mb-6 inline-flex rounded-full border border-yellow-500/40 bg-yellow-500/10 px-6 py-3 text-base font-black text-yellow-300 shadow-lg shadow-yellow-500/10 md:text-lg">
-              Restaurant HALAL • Le kebab fait maison
-            </div>
-            <h1 className="text-6xl font-black uppercase leading-none tracking-tight text-white md:text-8xl">
-              CHEZ OMER
-              <br />
-              <span className="bg-gradient-to-r from-yellow-300 via-yellow-400 to-orange-500 bg-clip-text text-transparent">RESTAURANT</span>
-            </h1>
-            <p className="mt-7 max-w-2xl text-2xl font-semibold leading-10 text-yellow-100">
-              Viande sélectionnée, fait maison, cuisson maîtrisée et qualité premium. Sur place ou à emporter à Sevenans.
-            </p>
-
-            <div className="mt-8 flex flex-wrap gap-4">
-              <button onClick={() => showPage("Menu")} className="rounded-full bg-yellow-400 px-8 py-4 font-black text-black shadow-xl shadow-yellow-500/20 transition hover:bg-yellow-300">
-                Voir le menu
-              </button>
-              <button onClick={() => showPage("Commande")} className="rounded-full border border-yellow-500/30 bg-white/5 px-8 py-4 font-black text-white transition hover:bg-white/10">
-                Commander
-              </button>
-            </div>
-          </motion.div>
-          <motion.div initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }} className="relative">
-            <div className="absolute -inset-8 rounded-full bg-yellow-500/20 blur-3xl" />
-            <img src={LOGO} alt="Chez Omer" className="relative mx-auto max-h-[520px] w-full object-contain drop-shadow-[0_0_35px_rgba(250,204,21,0.15)]" />
-            <div className="absolute bottom-6 right-6 rounded-full border border-yellow-400/50 bg-black/85 px-5 py-4 text-center text-yellow-300 shadow-lg">
-              <p className="text-3xl font-black">حلال</p>
-              <p className="text-sm font-black uppercase">Halal</p>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      <section className="px-5 pb-20">
-        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-2">
-          <div className="rounded-[2rem] border border-yellow-500/20 bg-black/60 p-6 shadow-xl">
-            <h2 className="mb-4 flex items-center gap-3 text-2xl font-black text-yellow-300"><MapPin /> Nous trouver</h2>
-            <p className="mb-5 text-lg font-bold text-white">{restaurantAddress}</p>
-            <iframe title="Carte Chez Omer Sevenans" src="https://www.google.com/maps?q=15%20Rue%20de%20Belfort%2090400%20Sevenans&output=embed" className="h-80 w-full rounded-[1.5rem] border border-yellow-500/20" loading="lazy" />
-          </div>
-          <div className="rounded-[2rem] border border-yellow-500/20 bg-black/60 p-6 shadow-xl">
-            <h2 className="mb-4 text-2xl font-black text-yellow-300">Infos pratiques</h2>
-            <div className="space-y-4 text-lg text-stone-200">
-              <p className="flex items-center gap-3"><Clock className="text-yellow-400" /> Mardi au dimanche : 11h00 – 22h00</p>
-              <p className="flex items-center gap-3"><Phone className="text-yellow-400" /> {phoneNumber}</p>
-              <p className="flex items-center gap-3"><MapPin className="text-yellow-400" /> {restaurantAddress}</p>
-            </div>
-            <button onClick={() => showPage("Contact")} className="mt-8 rounded-full bg-yellow-400 px-7 py-3 font-black text-black hover:bg-yellow-300">Page contact</button>
-          </div>
-        </div>
-      </section>
-    </main>
-  );
-
-  const MenuPage = () => (
-  <main className="px-5 py-16">
-    <PageTitle
-      eyebrow="Notre carte"
-      title="Menu Chez Omer"
-      text="Cliquez sur une catégorie pour voir les produits."
-    />
-
-    <div className="mx-auto max-w-7xl space-y-5">
-      {categoriesData.map((section) => {
-        const expanded = activeCategory === section.nom;
-
-        const produitsCategorie = produits.filter(
-          (p) => p.categorie_id === section.id && p.actif === true
-        );
-
-        return (
-          <div
-            key={section.id}
-            className={`overflow-hidden rounded-[2rem] border transition ${
-              expanded
-                ? "border-yellow-400 bg-white text-stone-950"
-                : "border-yellow-500/20 bg-black/60 text-white"
-            }`}
-          >
-            <button
-              onClick={() => setActiveCategory(expanded ? null : section.nom)}
-              className="flex w-full items-center justify-between gap-4 p-6 text-left"
-            >
-              <span className="flex items-center gap-4 text-2xl font-black">
-                {getCategoryIcon(section.nom)}
-                {section.nom}
-              </span>
-
-              <span
-                className={`rounded-full px-4 py-2 text-sm font-black ${
-                  expanded ? "bg-black text-yellow-300" : "bg-yellow-400 text-black"
-                }`}
-              >
-                {expanded ? "Fermer" : "Voir"}
-              </span>
-            </button>
-
-            {expanded && (
-              <div className="grid gap-4 border-t border-stone-200 p-6 md:grid-cols-2 lg:grid-cols-3">
-                {produitsCategorie.map((produit) => {
-                  const isOutOfStock = produit.in_stock === false;
-
-                  return (
-                    <div
-                      key={produit.id}
-                      className="relative overflow-hidden rounded-2xl border border-stone-200 bg-stone-50 p-5 shadow-sm"
-                    >
-                      {isOutOfStock && (
-                        <>
-                          <div className="absolute inset-0 z-10 rounded-2xl bg-white/45 backdrop-grayscale" />
-
-                          <div className="absolute left-3 top-3 z-30 rounded-full bg-stone-900/85 px-3 py-1.5 text-[11px] font-black uppercase tracking-wide text-white shadow-lg">
-                            Revient prochainement
-                          </div>
-
-                          <div className="absolute left-1/2 top-20 z-30 w-[88%] -translate-x-1/2 overflow-hidden rounded-2xl border border-yellow-200 bg-gradient-to-r from-[#8a5a00] via-[#ffd86b] to-[#8a5a00] px-5 py-3 text-center shadow-[0_0_20px_rgba(255,215,0,0.55)]">
-                            <div className="absolute inset-0 bg-[linear-gradient(120deg,transparent,rgba(255,255,255,0.50),transparent)] opacity-70" />
-
-                            <span
-                              className="relative text-xl font-black tracking-wide text-[#3b2200]"
-                              style={{
-                                fontFamily: "'Trebuchet MS', 'Arial Black', sans-serif",
-                                textShadow: "0 1px 2px rgba(255,255,255,0.45)",
-                              }}
-                            >
-                              ✨ Victime de son succès ✨
-                            </span>
-                          </div>
-                        </>
-                      )}
-
-                      {produit.image && (
-                        <img
-                          src={produit.image}
-                          alt={produit.nom}
-                          className={`mb-4 h-40 w-full rounded-2xl object-cover ${
-                            isOutOfStock ? "grayscale" : ""
-                          }`}
-                        />
-                      )}
-
-                      <div className={`flex items-start justify-between gap-4 ${isOutOfStock ? "grayscale opacity-60" : ""}`}>
-                        <div>
-                          <h3 className="text-xl font-black">{produit.nom}</h3>
-
-                          {produit.description && (
-                            <p className="mt-2 whitespace-pre-line text-sm leading-6 text-stone-600">
-                              {produit.description}
-                            </p>
-                          )}
-                        </div>
-
-                        <p className="whitespace-nowrap text-xl font-black text-yellow-700">
-                          {produit.prix}€
-                        </p>
-                      </div>
-
-                      <button
-                        onClick={() => {
-                          if (isOutOfStock) return;
-
-                          openProduct(
-                            [
-                              produit.nom,
-                              produit.description,
-                              `${produit.prix}€`,
-                              produit.prix_menu ? `${produit.prix_menu}€` : "",
-                              produit.type || "",
-                              produit.image || "",
-                              produit.in_stock ?? true,
-                            ],
-                            section.nom
-                          );
-                        }}
-                        disabled={isOutOfStock}
-                        className={`mt-5 inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-black transition ${
-                          isOutOfStock
-                            ? "cursor-not-allowed bg-stone-400 text-white"
-                            : "bg-black text-white hover:bg-yellow-400 hover:text-black"
-                        }`}
-                      >
-                        <Plus size={16} />
-                        {isOutOfStock ? "Bientôt de retour" : "Ajouter"}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  </main>
-);
-
-  const AProposPage = () => (
-    <main className="px-5 py-16">
-      <PageTitle
-        eyebrow="À propos"
-        title="Le goût du vrai kebab maison"
-        text="Une identité forte, une cuisine généreuse et une ambiance inspirée de notre carte noire et jaune."
-      />
-
-      <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-2">
-        <div className="rounded-[2rem] border border-yellow-500/20 bg-black/60 p-5">
-          <img
-            src={BACKGROUND_IMAGE}
-            alt="Carte Chez Omer"
-            className="h-full w-full rounded-[1.5rem] object-cover"
-          />
-        </div>
-
-        <div className="flex flex-col justify-center rounded-[2rem] border border-yellow-500/20 bg-black/60 p-8">
-          <h2 className="text-4xl font-black text-yellow-300">
-            Chez Omer Restaurant
-          </h2>
-
-          <p className="mt-6 text-lg leading-8 text-stone-300">
-            Nous vous accueillons avec des kebabs, tacos, assiettes et burgers
-            100% HALAL. Notre objectif : un service rapide, généreux et une
-            qualité constante.
-          </p>
-
-          <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            {["100% HALAL", "Viande sélectionnée", "Fait maison"].map((item) => (
-              <div
-                key={item}
-                className="rounded-2xl border border-yellow-500/20 bg-white/5 p-4 text-center font-black text-yellow-300"
-              >
-                {item}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </main>
-  );
-
-  const CommandePage = () => (
-    <main className="px-5 py-16">
-      <PageTitle
-        eyebrow="Commande"
-        title="Commander chez Chez Omer"
-        text="Ajoutez vos produits au panier puis envoyez la commande par WhatsApp."
-      />
-
-      <div className="mx-auto max-w-3xl rounded-[2rem] border border-yellow-500/20 bg-black/60 p-8">
-        {fermetureActive && (
-          <div className="mb-6 rounded-3xl border border-red-500 bg-red-600 px-6 py-4 text-center text-lg font-black text-white">
-            Commandes temporairement fermées
-          </div>
-        )}
-
-        {cart.length === 0 ? (
-          <p className="text-center text-stone-400">Votre panier est vide.</p>
-        ) : (
-          <div className="space-y-4">
-            {cart.map((item) => (
-              <div key={item.id} className="rounded-2xl bg-white/10 p-4">
-                <div className="flex justify-between gap-4">
-                  <p className="font-bold">
-                    {item.quantity}x {item.name}
-                  </p>
-                  <p className="font-black text-yellow-300">
-                    {formatPrice(item.price * item.quantity)}
-                  </p>
-                </div>
-              </div>
-            ))}
-
-            <div className="flex items-center justify-between border-t border-yellow-500/20 pt-4 text-2xl font-black">
-              <span>Total</span>
-              <span>{formatPrice(total)}</span>
-            </div>
-          </div>
-        )}
-
-        <button
-          onClick={() => setCartOpen(true)}
-          className="mt-6 w-full rounded-full bg-yellow-400 px-6 py-4 font-black text-black hover:bg-yellow-300"
-        >
-          Ouvrir le panier
-        </button>
-      </div>
-    </main>
-  );
-
-  const ContactPage = () => (
-    <main className="px-5 py-16">
-      <PageTitle eyebrow="Contact" title="Nous contacter" text="Retrouvez Chez Omer à Sevenans." />
-      <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-2">
-        <div className="rounded-[2rem] border border-yellow-500/20 bg-black/60 p-8">
-          <div className="space-y-5 text-lg text-stone-200">
-            <p className="flex items-center gap-3"><MapPin className="text-yellow-400" /> {restaurantAddress}</p>
-            <p className="flex items-center gap-3"><Phone className="text-yellow-400" /> {phoneNumber}</p>
-            <p className="flex items-center gap-3"><Mail className="text-yellow-400" /> contact@chezomer.fr</p>
-            <p className="flex items-center gap-3"><CalendarDays className="text-yellow-400" /> Ouvert du mardi au dimanche, 11h00 – 22h00</p>
-          </div>
-          <a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noreferrer" className="mt-8 inline-flex items-center gap-2 rounded-full bg-yellow-400 px-7 py-4 font-black text-black hover:bg-yellow-300"><MessageCircle /> WhatsApp</a>
-        </div>
-        <iframe title="Carte Chez Omer Sevenans" src="https://www.google.com/maps?q=15%20Rue%20de%20Belfort%2090400%20Sevenans&output=embed" className="h-[420px] w-full rounded-[2rem] border border-yellow-500/20" loading="lazy" />
-      </div>
-    </main>
-  );
-
-  const AdminPage = () => {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState("");
-    const [isLogged, setIsLogged] = useState(localStorage.getItem("adminLogged") === "true");
-    const [annonceAccueil, setAnnonceAccueil] = useState("");
-    const [saveMessage, setSaveMessage] = useState("");
-
-    const login = async () => {
-      setLoading(true);
-      setMessage("");
-
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        setMessage("Email ou mot de passe incorrect");
-        setIsLogged(false);
-      } else {
-        setMessage("Connexion réussie ✅");
-        setIsLogged(true);
-        localStorage.setItem("adminLogged", "true");
-      }
-
-      setLoading(false);
-    };
-
-    const saveAnnonce = async () => {
-      setSaveMessage("");
-
-      const { error } = await supabase.from("annonces").insert({
-        titre: "Annonce accueil",
-        contenu: annonceAccueil,
-        actif: true,
-      });
-
-      if (error) {
-        console.error(error);
-        setSaveMessage("Erreur lors de l’enregistrement ❌");
-      } else {
-        setSaveMessage("Annonce enregistrée ✅");
-        chargerAnnonce();
-      }
-    };
-
-    const ajouterProduit = async () => {
-      const categorieId =
-        selectedAdminCategory === "all"
-          ? categoriesData[0]?.id
-          : Number(selectedAdminCategory);
-
-      if (!categorieId) {
-        alert("Aucune catégorie trouvée ❌");
-        return;
-      }
-
-      const nouveauProduit = {
-        nom: "Nouveau produit",
-        description: "",
-        prix: 0,
-        prix_menu: 0,
-        image: "",
-        type: "",
-        actif: true,
-        in_stock: true,
-        ordre: 999,
-        categorie_id: categorieId,
-      };
-
-      const { error } = await supabase
-        .from("produits")
-        .insert([nouveauProduit])
-        .select();
-
-      if (error) {
-        console.error("ERREUR SUPABASE :", error);
-        alert(error.message);
-      } else {
-        alert("Produit créé ✅");
-        chargerProduits();
-      }
-    };
+    if (activePage === "Connexion") {
+      return <ConnexionPage supabase={supabase} verifierSession={verifierSession} setActivePage={setActivePage} />;
+    }
 
     return (
-      <main className="px-5 py-16">
-        <PageTitle
-          eyebrow="Administration"
-          title="Espace Admin"
-          text="Connexion sécurisée Chez Omer"
-        />
-
-        {!isLogged && (
-          <div className="mx-auto max-w-md rounded-[2rem] border border-yellow-500/20 bg-black/60 p-8">
-            <h2 className="text-2xl font-black text-yellow-300">Connexion</h2>
-
-            <div className="mt-6 space-y-4">
-              <input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-2xl border border-yellow-500/20 bg-black px-5 py-4 text-white outline-none focus:border-yellow-400"
-              />
-
-              <input
-                type="password"
-                placeholder="Mot de passe"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-2xl border border-yellow-500/20 bg-black px-5 py-4 text-white outline-none focus:border-yellow-400"
-              />
-
-              <button
-                onClick={login}
-                disabled={loading}
-                className="w-full rounded-full bg-yellow-400 px-6 py-4 font-black text-black hover:bg-yellow-300"
-              >
-                {loading ? "Connexion..." : "Se connecter"}
-              </button>
-
-              {message && <p className="text-center text-sm text-white">{message}</p>}
-            </div>
-          </div>
-        )}
-
-        {isLogged && (
-          <div className="mx-auto max-w-5xl px-5 py-12">
-            <h2 className="text-3xl font-black text-yellow-300">Panneau admin</h2>
-
-            <button
-              onClick={() => {
-                localStorage.removeItem("adminLogged");
-                setIsLogged(false);
-              }}
-              className="mt-4 rounded-full bg-red-600 px-6 py-3 font-black text-white hover:bg-red-500"
-            >
-              Se déconnecter
-            </button>
-
-            <div className="mt-8 grid gap-6 md:grid-cols-2">
-              <div className="rounded-3xl border border-yellow-500/20 bg-white/5 p-6">
-                <h3 className="text-xl font-black text-white">Annonce accueil</h3>
-                <p className="mt-2 text-stone-400">
-                  Ici tu peux écrire un message visible sur l’accueil.
-                </p>
-
-                <textarea
-                  value={annonceAccueil}
-                  onChange={(e) => setAnnonceAccueil(e.target.value)}
-                  className="mt-4 min-h-32 w-full rounded-2xl border border-yellow-500/20 bg-black px-4 py-3 text-white outline-none"
-                  placeholder="Exemple : Fermeture exceptionnelle ce soir à 20h..."
-                />
-
-                <button
-                  onClick={saveAnnonce}
-                  className="mt-4 rounded-full bg-yellow-400 px-6 py-3 font-black text-black"
-                >
-                  Enregistrer
-                </button>
-
-                {saveMessage && (
-                  <p className="mt-3 text-sm font-bold text-yellow-300">
-                    {saveMessage}
-                  </p>
-                )}
-              </div>
-
-              <div className="rounded-3xl border border-yellow-500/20 bg-white/5 p-6">
-                <h3 className="text-xl font-black text-white">
-                  Fermeture exceptionnelle
-                </h3>
-
-                <p className="mt-2 text-stone-400">
-                  Active ou désactive un message de fermeture.
-                </p>
-
-                <button
-                  onClick={async () => {
-                    const newValue = !fermetureActive;
-                    setFermetureActive(newValue);
-                    await saveFermeture(newValue);
-                  }}
-                  className={`mt-4 rounded-full px-6 py-3 font-black text-white ${
-                    fermetureActive ? "bg-green-500" : "bg-red-500"
-                  }`}
-                >
-                  {fermetureActive ? "Désactiver fermeture" : "Activer fermeture"}
-                </button>
-              </div>
-            </div>
-
-            <div className="mt-10 rounded-3xl border border-yellow-500/20 bg-white/5 p-6">
-              <h3 className="text-2xl font-black text-yellow-300">
-                Produits Supabase
-              </h3>
-
-              <p className="mt-2 text-stone-400">
-                Choisis une catégorie, puis ajoute ou modifie les produits.
-              </p>
-
-              <select
-                value={selectedAdminCategory}
-                onChange={(e) => setSelectedAdminCategory(e.target.value)}
-                className="mt-4 w-full rounded-2xl border border-yellow-500/20 bg-black px-5 py-4 text-white"
-              >
-                <option value="all">Toutes les catégories</option>
-                {categoriesData.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.nom}
-                  </option>
-                ))}
-              </select>
-
-              <button
-                onClick={ajouterProduit}
-                className="mt-4 rounded-full bg-green-500 px-6 py-3 font-black text-white hover:bg-green-400"
-              >
-                + Ajouter un produit
-              </button>
-
-              <div className="mt-6 space-y-4">
-                {produits
-                  .filter((produit) =>
-                    selectedAdminCategory === "all"
-                      ? true
-                      : produit.categorie_id === Number(selectedAdminCategory)
-                  )
-                  .map((produit) => (
-                    <div
-                      key={produit.id}
-                      className="rounded-2xl border border-yellow-500/20 bg-black p-4"
-                    >
-                      <label className="text-sm font-bold text-yellow-300">
-                        Nom
-                      </label>
-                      <input
-                        type="text"
-                        defaultValue={produit.nom || ""}
-                        onBlur={(e) => updateProduit(produit.id, "nom", e.target.value)}
-                        className="mt-2 w-full rounded-xl bg-white/10 px-4 py-3 text-white"
-                      />
-
-                      <label className="mt-4 block text-sm font-bold text-yellow-300">
-                        Description
-                      </label>
-                      <textarea
-                        defaultValue={produit.description || ""}
-                        onBlur={(e) => updateProduit(produit.id, "description", e.target.value)}
-                        className="mt-2 min-h-24 w-full rounded-xl bg-white/10 px-4 py-3 text-white"
-                      />
-
-                      <div className="mt-4 grid gap-3 md:grid-cols-2">
-                        <div>
-                          <label className="text-sm font-bold text-yellow-300">
-                            Prix
-                          </label>
-                          <input
-                            type="text"
-                            defaultValue={produit.prix || ""}
-                            onBlur={(e) => updateProduit(produit.id, "prix", e.target.value)}
-                            className="mt-2 w-full rounded-xl bg-white/10 px-4 py-3 text-white"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="text-sm font-bold text-yellow-300">
-                            Prix menu
-                          </label>
-                          <input
-                            type="text"
-                            defaultValue={produit.prix_menu || ""}
-                            onBlur={(e) => updateProduit(produit.id, "prix_menu", e.target.value)}
-                            className="mt-2 w-full rounded-xl bg-white/10 px-4 py-3 text-white"
-                          />
-                        </div>
-                      </div>
-
-                      <label className="mt-4 block text-sm font-bold text-yellow-300">
-                        Image
-                      </label>
-                      <input
-                        type="text"
-                        defaultValue={produit.image || ""}
-                        onBlur={(e) => updateProduit(produit.id, "image", e.target.value)}
-                        className="mt-2 w-full rounded-xl bg-white/10 px-4 py-3 text-white"
-                      />
-
-                      {produit.image && (
-                        <img
-                          src={produit.image}
-                          alt={produit.nom}
-                          className="mt-4 h-40 w-full rounded-2xl object-cover"
-                        />
-                      )}
-
-                      <label className="mt-4 block text-sm font-bold text-yellow-300">
-                        Type
-                      </label>
-                      <input
-                        type="text"
-                        defaultValue={produit.type || ""}
-                        onBlur={(e) => updateProduit(produit.id, "type", e.target.value)}
-                        className="mt-2 w-full rounded-xl bg-white/10 px-4 py-3 text-white"
-                      />
-
-                      <label className="mt-4 block text-sm font-bold text-yellow-300">
-                        Ordre
-                      </label>
-                      <input
-                        type="number"
-                        defaultValue={produit.ordre || 0}
-                        onBlur={(e) => updateProduit(produit.id, "ordre", Number(e.target.value))}
-                        className="mt-2 w-full rounded-xl bg-white/10 px-4 py-3 text-white"
-                      />
-
-                      <div className="mt-4 flex items-center gap-3">
-                        <input
-                          type="checkbox"
-                          checked={produit.actif ?? true}
-                          onChange={(e) => updateProduit(produit.id, "actif", e.target.checked)}
-                          className="h-5 w-5"
-                        />
-                        <span className="font-bold text-white">Produit actif</span>
-                      </div>
-
-                      <label className="mt-3 flex items-center gap-3">
-                        <input
-                          type="checkbox"
-                          checked={produit.in_stock ?? true}
-                          onChange={(e) => updateProduit(produit.id, "in_stock", e.target.checked)}
-                          className="h-5 w-5"
-                        />
-                        <span className="font-bold text-white">En stock</span>
-                      </label>
-
-                      <button
-                        onClick={() => saveProduit(produit)}
-                        className="mt-4 rounded-full bg-yellow-400 px-5 py-3 font-black text-black"
-                      >
-                        Enregistrer
-                      </button>
-                    </div>
-                  ))}
-              </div>
-            </div>
-          </div>
-        )}
-      </main>
+      <AccueilPage
+        supabase={supabase}
+        fermetureActive={fermetureActive}
+        annonceSite={annonceSite}
+        whatsappNumber={whatsappNumber}
+        showPage={showPage}
+        LOGO={LOGO}
+        restaurantAddress={restaurantAddress}
+        phoneNumber={phoneNumber}
+      />
     );
-  };
-
-  const CurrentPage = () => {
-    if (activePage === "Menu") return <MenuPage />;
-    if (activePage === "À propos") return <AProposPage />;
-    if (activePage === "Commande") return <CommandePage />;
-    if (activePage === "Contact") return <ContactPage />;
-    if (activePage === "Admin") return <AdminPage />;
-    return <AccueilPage />;
   };
 
   return (
@@ -1259,69 +737,116 @@ export default function RestaurantWebsite() {
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(234,179,8,0.18),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(249,115,22,0.13),transparent_36%),linear-gradient(to_bottom,#050505,#0a0803,#000)]" />
       <div className="fixed inset-0 -z-10 opacity-[0.07] bg-[url('/carte-visite.png')] bg-cover bg-center" />
       <style>{`@keyframes reservationMarquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }`}</style>
-      <Header />
-      <button onClick={() => setCartOpen(true)} className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-yellow-400 px-5 py-4 font-black text-black shadow-2xl md:hidden"><ShoppingCart /> {itemCount}</button>
+
+      <Header
+        LOGO={LOGO}
+        nav={nav}
+        activePage={activePage}
+        showPage={showPage}
+        user={user}
+        setUser={setUser}
+        setUserRole={setUserRole}
+        setActivePage={setActivePage}
+        setOpen={setOpen}
+        open={open}
+        itemCount={itemCount}
+        setCartOpen={setCartOpen}
+        supabase={supabase}
+      />
+
+      {["admin", "employe"].includes(userRole) && (
+        <button
+          onClick={activerSonCommandes}
+          className={`fixed bottom-5 left-5 z-[80] flex items-center gap-2 rounded-full px-5 py-3 font-black shadow-2xl transition ${
+            soundEnabled
+              ? newOrderFlash
+                ? "bg-red-600 text-white animate-pulse"
+                : "bg-green-600 text-white hover:bg-green-500"
+              : "bg-blue-600 text-white hover:bg-blue-500"
+          }`}
+        >
+          {soundEnabled ? <Bell size={18} /> : <BellOff size={18} />}
+          {soundEnabled
+            ? newOrderFlash
+              ? "Nouvelle commande !"
+              : "Désactiver son commandes"
+            : "Activer son commandes"}
+        </button>
+      )}
+
+      <MobileCartButton itemCount={itemCount} setCartOpen={setCartOpen} />
       <CurrentPage />
-      <footer className="border-t border-yellow-500/20 px-5 py-10"><div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-5 text-center text-stone-400 md:flex-row md:text-left"><div className="flex items-center gap-3"><img src={LOGO} alt="Logo Chez Omer" className="h-12 w-12 rounded-full object-cover" /><div><p className="font-black text-yellow-300">Chez Omer</p><p>Le kebab fait maison • Restaurant HALAL</p></div></div><p>© 2026 Chez Omer. Tous droits réservés.</p></div></footer>
+      <Footer LOGO={LOGO} />
 
-      {selectedProduct && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 px-4 backdrop-blur">
-          <div className="max-h-[86vh] w-full max-w-6xl overflow-y-auto rounded-[2rem] bg-white p-6 text-stone-950 shadow-2xl">
-            <div className="grid items-start gap-7 lg:grid-cols-[420px_1fr]">
-              {getDynamicImage() && <div className="sticky top-0 self-start overflow-hidden rounded-3xl bg-white p-2"><img src={getDynamicImage()} alt={selectedProduct.name} className="h-auto max-h-[360px] w-full rounded-2xl object-contain" /></div>}
-              <div>
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-black uppercase tracking-[0.2em] text-yellow-700">Ajouter au panier</p>
-                    <h3 className="mt-2 text-3xl font-black">{selectedProduct.name}</h3>
-                    {selectedProduct.desc && <p className="mt-2 whitespace-pre-line text-stone-600">{selectedProduct.desc}</p>}
-                    <p className="mt-3 text-2xl font-black text-yellow-700">{formatPrice(selectedProductPrice)}</p>
-                    {selectedProduct.type === "durum-only" && <p className="mt-1 text-sm font-bold text-yellow-700">Dürüm imposé pour ce produit</p>}
-                    {isSimpleTacos(selectedProduct) && selectedMeats.length === 2 && <p className="mt-1 text-sm font-bold text-red-600">2ème viande : +2,00 €</p>}
-                    {isMaxiTacos(selectedProduct) && selectedMeats.length === 3 && <p className="mt-1 text-sm font-bold text-red-600">3ème viande : +2,00 €</p>}
-                    {extraCheddar && <p className="mt-1 text-sm font-bold text-red-600">Supplément cheddar : +2,00 €</p>}
-                    {supplementSaucesTotal > 0 && <p className="mt-1 text-sm font-bold text-red-600">Supplément sauces : +{formatPrice(supplementSaucesTotal)}</p>}
-                  </div>
-                  <button onClick={() => setSelectedProduct(null)} className="rounded-full bg-stone-100 p-3 hover:bg-stone-200"><X /></button>
-                </div>
+      <ProductModal
+        selectedProduct={selectedProduct}
+        setSelectedProduct={setSelectedProduct}
+        getDynamicImage={getDynamicImage}
+        formatPrice={formatPrice}
+        selectedProductPrice={selectedProductPrice}
+        isSimpleTacos={isSimpleTacos}
+        isMaxiTacos={isMaxiTacos}
+        selectedMeats={selectedMeats}
+        extraCheddar={extraCheddar}
+        supplementSaucesTotal={supplementSaucesTotal}
+        needsDrinkSizeChoice={needsDrinkSizeChoice}
+        drinkSizeChoice={drinkSizeChoice}
+        setDrinkSizeChoice={setDrinkSizeChoice}
+        needsWaterSizeChoice={needsWaterSizeChoice}
+        waterSizeChoice={waterSizeChoice}
+        setWaterSizeChoice={setWaterSizeChoice}
+        hasFormulaChoice={hasFormulaChoice}
+        formulaChoice={formulaChoice}
+        setFormulaChoice={setFormulaChoice}
+        needsMenuEnfantDrink={needsMenuEnfantDrink}
+        menuEnfantBoissons={menuEnfantBoissons}
+        menuEnfantBoisson={menuEnfantBoisson}
+        setMenuEnfantBoisson={setMenuEnfantBoisson}
+        needsExtraCheddar={needsExtraCheddar}
+        setExtraCheddar={setExtraCheddar}
+        needsSansSauceFromagere={needsSansSauceFromagere}
+        sansSauceFromagere={sansSauceFromagere}
+        setSansSauceFromagere={setSansSauceFromagere}
+        needsAccompagnementChoice={needsAccompagnementChoice}
+        accompagnementOptions={accompagnementOptions}
+        accompagnementChoice={accompagnementChoice}
+        setAccompagnementChoice={setAccompagnementChoice}
+        tacosMeats={tacosMeats}
+        maxiTacosMeats={maxiTacosMeats}
+        toggleMeat={toggleMeat}
+        needsBreadChoice={needsBreadChoice}
+        breadChoice={breadChoice}
+        setBreadChoice={setBreadChoice}
+        needsCruditeChoice={needsCruditeChoice}
+        getCruditeList={getCruditeList}
+        selectedCrudites={selectedCrudites}
+        toggleCrudite={toggleCrudite}
+        needsSauceChoice={needsSauceChoice}
+        sauces={sauces}
+        selectedSaucesSandwich={selectedSaucesSandwich}
+        selectedSaucesFrites={selectedSaucesFrites}
+        toggleSauce={toggleSauce}
+        supplementSaucesSandwich={supplementSaucesSandwich}
+        note={note}
+        setNote={setNote}
+        addToCart={addToCart}
+        isAddDisabled={isAddDisabled}
+      />
 
-                {needsDrinkSizeChoice(selectedProduct) && <div className="mt-7"><h4 className="font-black">Choisissez le format</h4><div className="mt-4 grid grid-cols-2 gap-3"><button onClick={() => setDrinkSizeChoice("33cl")} className={`rounded-2xl border px-5 py-3 font-bold transition ${drinkSizeChoice === "33cl" ? "border-yellow-500 bg-yellow-400 text-black" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-yellow-400"}`}>33cl • {selectedProduct.basePriceLabel}</button><button onClick={() => setDrinkSizeChoice("50cl")} className={`rounded-2xl border px-5 py-3 font-bold transition ${drinkSizeChoice === "50cl" ? "border-yellow-500 bg-yellow-400 text-black" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-yellow-400"}`}>50cl • {selectedProduct.menuPriceLabel}</button></div></div>}
-                {needsWaterSizeChoice(selectedProduct) && <div className="mt-7"><h4 className="font-black">Choisissez le format</h4><div className="mt-4 grid grid-cols-2 gap-3"><button onClick={() => setWaterSizeChoice("50cl")} className={`rounded-2xl border px-5 py-3 font-bold transition ${waterSizeChoice === "50cl" ? "border-yellow-500 bg-yellow-400 text-black" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-yellow-400"}`}>50cl • {selectedProduct.basePriceLabel}</button><button onClick={() => setWaterSizeChoice("1L verre consigné")} className={`rounded-2xl border px-5 py-3 font-bold transition ${waterSizeChoice === "1L verre consigné" ? "border-yellow-500 bg-yellow-400 text-black" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-yellow-400"}`}>1L verre consigné • {selectedProduct.menuPriceLabel}</button></div></div>}
-                {hasFormulaChoice(selectedProduct) && !needsDrinkSizeChoice(selectedProduct) && !needsWaterSizeChoice(selectedProduct) && <div className="mt-7"><h4 className="font-black">Formule</h4><p className="mt-1 text-sm text-stone-600">Le menu ajoute une boisson et une frite.</p><div className="mt-4 grid grid-cols-2 gap-3"><button onClick={() => setFormulaChoice("Seul")} className={`rounded-2xl border px-5 py-3 font-bold transition ${formulaChoice === "Seul" ? "border-yellow-500 bg-yellow-400 text-black" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-yellow-400"}`}>Seul • {selectedProduct.basePriceLabel}</button><button onClick={() => setFormulaChoice("Menu")} className={`rounded-2xl border px-5 py-3 font-bold transition ${formulaChoice === "Menu" ? "border-yellow-500 bg-yellow-400 text-black" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-yellow-400"}`}>Menu • {selectedProduct.menuPriceLabel}</button></div></div>}
-                {needsMenuEnfantDrink(selectedProduct) && <div className="mt-7"><h4 className="font-black">Choisissez la boisson</h4><div className="mt-4 grid grid-cols-2 gap-3">{menuEnfantBoissons.map((choice) => <button key={choice} onClick={() => setMenuEnfantBoisson(choice)} className={`rounded-2xl border px-5 py-3 font-bold transition ${menuEnfantBoisson === choice ? "border-yellow-500 bg-yellow-400 text-black" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-yellow-400"}`}>{choice}</button>)}</div></div>}
-                {needsExtraCheddar(selectedProduct) && <div className="mt-7"><h4 className="font-black">Supplément</h4><button onClick={() => setExtraCheddar(!extraCheddar)} className={`mt-4 rounded-2xl border px-5 py-3 font-bold transition ${extraCheddar ? "border-yellow-500 bg-yellow-400 text-black" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-yellow-400"}`}>Supplément cheddar +2€</button></div>}
-                {needsSansSauceFromagere(selectedProduct) && <div className="mt-7"><h4 className="font-black">Allergène lactose</h4><button onClick={() => setSansSauceFromagere(!sansSauceFromagere)} className={`mt-4 rounded-2xl border px-5 py-3 font-bold transition ${sansSauceFromagere ? "border-red-500 bg-red-500 text-white" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-red-400"}`}>Sans sauce fromagère</button></div>}
-                {needsAccompagnementChoice(selectedProduct) && <div className="mt-7"><h4 className="font-black">Choisissez votre accompagnement</h4><div className="mt-4 grid grid-cols-3 gap-3">{accompagnementOptions.map((choice) => <button key={choice} onClick={() => setAccompagnementChoice(choice)} className={`rounded-2xl border px-5 py-3 font-bold transition ${accompagnementChoice === choice ? "border-yellow-500 bg-yellow-400 text-black" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-yellow-400"}`}>{choice}</button>)}</div></div>}
-                {isSimpleTacos(selectedProduct) && <div className="mt-7"><h4 className="font-black">Choix des viandes</h4><p className="mt-1 text-sm text-stone-600">Choisissez 1 ou 2 viandes maximum. La 2ème viande ajoute +2€.</p><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">{tacosMeats.map((meat) => { const selectedMeat = selectedMeats.find((item) => item.name === meat.name); const active = Boolean(selectedMeat); const locked = Boolean(selectedMeat?.locked); const disabled = locked || (!active && selectedMeats.length >= 2); return <button key={meat.name} onClick={() => toggleMeat(meat)} disabled={disabled} className={`rounded-2xl border px-4 py-3 text-sm font-bold transition ${active ? "border-yellow-500 bg-yellow-400 text-black" : disabled ? "cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-yellow-400"}`}>{meat.name}{locked ? " • inclus" : ""}</button>; })}</div><p className="mt-3 text-sm font-bold text-yellow-700">Viandes sélectionnées : {selectedMeats.length}/2{selectedMeats.length === 2 ? " • 2ème viande +2€" : ""}</p></div>}
-                {isMaxiTacos(selectedProduct) && <div className="mt-7"><h4 className="font-black">Choix des viandes</h4><p className="mt-1 text-sm text-stone-600">Choisissez jusqu’à 3 viandes. La 3ème viande ajoute +2€.</p><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">{maxiTacosMeats.map((meat) => { const active = selectedMeats.some((item) => item.name === meat.name); const disabled = !active && selectedMeats.length >= 3; return <button key={meat.name} onClick={() => toggleMeat(meat)} disabled={disabled} className={`rounded-2xl border px-4 py-3 text-sm font-bold transition ${active ? "border-yellow-500 bg-yellow-400 text-black" : disabled ? "cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-yellow-400"}`}>{meat.name}</button>; })}</div><p className="mt-3 text-sm font-bold text-yellow-700">Viandes sélectionnées : {selectedMeats.length}/3</p></div>}
-                {needsBreadChoice(selectedProduct) && <div className="mt-7"><h4 className="font-black">Choisissez votre pain</h4><div className="mt-4 flex gap-3">{["Sandwich", "Dürüm"].map((choice) => <button key={choice} onClick={() => setBreadChoice(choice)} className={`rounded-2xl border px-5 py-3 font-bold transition ${breadChoice === choice ? "border-yellow-500 bg-yellow-400 text-black" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-yellow-400"}`}>{choice}</button>)}</div></div>}
-                {needsCruditeChoice(selectedProduct) && <div className="mt-7"><h4 className="font-black">Options</h4><p className="mt-1 text-sm text-stone-600">Sélectionnez ce que vous ne voulez pas dans votre plat.</p><div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">{getCruditeList(selectedProduct).map((option) => <button key={option} onClick={() => toggleCrudite(option)} className={`rounded-2xl border px-4 py-3 text-sm font-bold transition ${selectedCrudites.includes(option) ? "border-red-500 bg-red-500 text-white" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-red-400"}`}>{option}</button>)}</div></div>}
-                {needsSauceChoice(selectedProduct.category, selectedProduct.name, selectedProduct.type) && <div className="mt-7"><h4 className="font-black">Sauces</h4><p className="mt-1 text-sm text-stone-600">2 sauces au choix incluses. À partir de la 3ème : +0,20€ par sauce.</p><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">{sauces.map((sauce) => <button key={`sandwich-${sauce}`} onClick={() => toggleSauce(sauce, "sandwich")} className={`rounded-2xl border px-4 py-3 text-sm font-bold transition ${selectedSaucesSandwich.includes(sauce) ? "border-yellow-500 bg-yellow-400 text-black" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-yellow-400"}`}>{sauce}</button>)}</div>{supplementSaucesSandwich > 0 && <p className="mt-3 text-sm font-bold text-red-600">Supplément sauces : {formatPrice(supplementSaucesSandwich)}</p>}{formulaChoice === "Menu" && selectedProduct.category !== "Accompagnements" && <div className="mt-7"><h4 className="font-black">Sauces frites</h4><p className="mt-1 text-sm text-stone-600">2 sauces au choix incluses. À partir de la 3ème : +0,20€ par sauce.</p><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">{sauces.map((sauce) => <button key={`frites-${sauce}`} onClick={() => toggleSauce(sauce, "frites")} className={`rounded-2xl border px-4 py-3 text-sm font-bold transition ${selectedSaucesFrites.includes(sauce) ? "border-yellow-500 bg-yellow-400 text-black" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-yellow-400"}`}>{sauce}</button>)}</div></div>}</div>}
-                <div className="mt-7"><h4 className="font-black">Note</h4><textarea value={note} onChange={(e) => setNote(e.target.value)} className="mt-3 min-h-24 w-full rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 outline-none focus:border-yellow-500" placeholder="Exemple : bien cuit, sauce à part..." /></div>
-                <button onClick={addToCart} disabled={isAddDisabled} className={`mt-6 w-full rounded-full px-6 py-4 font-black transition ${isAddDisabled ? "cursor-not-allowed bg-stone-300 text-stone-500" : "bg-black text-white hover:bg-yellow-400 hover:text-black"}`}>Ajouter au panier • {formatPrice(selectedProductPrice)}</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {cartOpen && (
-        <div className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm">
-          <div className="ml-auto flex h-full w-full max-w-xl flex-col bg-stone-950 text-stone-100 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-yellow-500/20 p-5"><h3 className="text-2xl font-black">Votre panier</h3><button onClick={() => setCartOpen(false)} className="rounded-full bg-white/10 p-3 hover:bg-white/20"><X /></button></div>
-            <div className="flex-1 overflow-auto p-5">
-              {cart.length === 0 ? <div className="rounded-[2rem] border border-yellow-500/20 bg-white/5 p-8 text-center"><ShoppingCart className="mx-auto mb-4 text-yellow-300" size={42} /><p className="text-lg font-bold">Votre panier est vide.</p><p className="mt-2 text-stone-400">Ajoutez un produit depuis le menu.</p></div> : <div className="space-y-4">{cart.map((item) => <div key={item.id} className="rounded-[1.5rem] border border-yellow-500/20 bg-white/5 p-5"><div className="flex items-start justify-between gap-4"><div><h4 className="font-black">{item.name}</h4><p className="text-sm text-stone-400">{item.category}</p>{item.formulaChoice && <p className="mt-1 text-sm text-yellow-300">Formule : {item.formulaChoice}</p>}{item.drinkSizeChoice && <p className="mt-1 text-sm text-yellow-300">Format : {item.drinkSizeChoice}</p>}{item.waterSizeChoice && <p className="mt-1 text-sm text-yellow-300">Format : {item.waterSizeChoice}</p>}{item.menuEnfantBoisson && <p className="mt-1 text-sm text-yellow-300">Boisson : {item.menuEnfantBoisson}</p>}{item.extraCheddar && <p className="mt-1 text-sm text-yellow-300">Supplément cheddar : +2,00 €</p>}{item.sansSauceFromagere && <p className="mt-1 text-sm text-yellow-300">Sans sauce fromagère</p>}{item.breadChoice && <p className="mt-1 text-sm text-yellow-300">Choix : {item.breadChoice}</p>}{item.accompagnementChoice && <p className="mt-1 text-sm text-yellow-300">Accompagnement : {item.accompagnementChoice}</p>}{item.meats?.length > 0 && <p className="mt-1 text-sm text-yellow-300">Viandes : {item.meats.map((meat) => `${meat.name}`).join(", ")}{item.tacosSimple && item.meats.length === 2 ? " | 2ème viande (+2€)" : ""}{!item.tacosSimple && item.meats.length === 3 ? " | 3ème viande (+2€)" : ""}</p>}</div><button onClick={() => removeItem(item.id)} className="text-red-300 hover:text-red-200"><Trash2 size={18} /></button></div>{item.crudites?.length > 0 && <p className="mt-3 text-sm text-stone-300">Options : {item.crudites.join(", ")}</p>}{item.saucesSandwich?.length > 0 && <p className="mt-3 text-sm text-stone-300">Sauces : {item.saucesSandwich.join(", ")}</p>}{item.saucesFrites?.length > 0 && <p className="mt-3 text-sm text-stone-300">Sauces frites : {item.saucesFrites.join(", ")}</p>}{item.supplementSauces > 0 && <p className="mt-2 text-sm font-bold text-red-300">Supplément sauces : {formatPrice(item.supplementSauces)}</p>}{item.note && <p className="mt-2 text-sm text-stone-300">Note : {item.note}</p>}<div className="mt-4 flex items-center justify-between"><div className="flex items-center gap-3"><button onClick={() => changeQuantity(item.id, -1)} className="rounded-full bg-white/10 p-2 hover:bg-white/20"><Minus size={16} /></button><span className="font-black">{item.quantity}</span><button onClick={() => changeQuantity(item.id, 1)} className="rounded-full bg-white/10 p-2 hover:bg-white/20"><Plus size={16} /></button></div><p className="font-black text-yellow-300">{formatPrice(item.price * item.quantity)}</p></div></div>)}</div>}
-            </div>
-            <div className="border-t border-yellow-500/20 p-5">
-              <div className="mb-4 flex items-center justify-between text-2xl font-black"><span>Total</span><span>{formatPrice(total)}</span></div>
-              <a href={cart.length > 0 && !fermetureActive ? `https://wa.me/${whatsappNumber}?text=${orderMessage}` : undefined} target="_blank" rel="noreferrer" className={`block rounded-full px-6 py-4 text-center font-black transition ${cart.length > 0 && !fermetureActive ? "bg-yellow-400 text-black hover:bg-yellow-300" : "pointer-events-none bg-white/10 text-stone-500"}`}>
-                {fermetureActive ? "Commandes temporairement fermées" : "Envoyer la commande WhatsApp"}
-              </a>
-              <p className="mt-3 text-center text-xs text-stone-500">Paiement en ligne à ajouter à l’étape suivante.</p>
-            </div>
-          </div>
-        </div>
-      )}
+      <CartDrawer
+        setCart={setCart}
+        supabase={supabase}
+        cartOpen={cartOpen}
+        setCartOpen={setCartOpen}
+        cart={cart}
+        removeItem={removeItem}
+        changeQuantity={changeQuantity}
+        formatPrice={formatPrice}
+        total={total}
+        fermetureActive={fermetureActive}
+        whatsappNumber={whatsappNumber}
+        orderMessage={orderMessage}
+      />
     </div>
   );
 }
