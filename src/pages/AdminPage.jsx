@@ -26,6 +26,118 @@ export default function AdminPage({
   const [profiles, setProfiles] = useState([]);
   const [messageProfiles, setMessageProfiles] = useState("");
   const isLogged = userRole === "admin";
+  const [showPointageForce, setShowPointageForce] = useState(false);
+  const [employeSelectionne, setEmployeSelectionne] = useState("");
+  const [datePointage, setDatePointage] = useState("");
+  const [heureDebut, setHeureDebut] = useState("");
+  const [heureFin, setHeureFin] = useState("");
+  const [messagePointageForce, setMessagePointageForce] = useState("");
+  const [planningEmployes, setPlanningEmployes] = useState([]);
+  const [messagePlanning, setMessagePlanning] = useState("");
+  const [employePlanningOuvert, setEmployePlanningOuvert] = useState(null);
+
+const joursPlanning = [
+  "Lundi",
+  "Mardi",
+  "Mercredi",
+  "Jeudi",
+  "Vendredi",
+  "Samedi",
+  "Dimanche",
+];
+
+const chargerPlanning = async () => {
+  const { data, error } = await supabase
+    .from("planning_employes")
+    .select("*");
+
+  if (error) {
+    console.error(error);
+    setMessagePlanning("Erreur chargement planning.");
+    return;
+  }
+
+  setPlanningEmployes(data || []);
+};
+
+const getPlanningJour = (employeId, jour) => {
+  return planningEmployes.find(
+    (p) => p.employe_id === employeId && p.jour_semaine === jour
+  );
+};
+
+const updatePlanningLocal = (employeId, jour, field, value) => {
+  setPlanningEmployes((current) => {
+    const existing = current.find(
+      (p) => p.employe_id === employeId && p.jour_semaine === jour
+    );
+
+    if (existing) {
+      return current.map((p) =>
+        p.employe_id === employeId && p.jour_semaine === jour
+          ? { ...p, [field]: value }
+          : p
+      );
+    }
+
+    return [
+      ...current,
+      {
+        employe_id: employeId,
+        jour_semaine: jour,
+        debut_matin: "",
+        fin_matin: "",
+        debut_soir: "",
+        fin_soir: "",
+        [field]: value,
+      },
+    ];
+  });
+};
+
+const copierJourSurSemaine = (employeId, jourSource) => {
+  const planningSource = getPlanningJour(employeId, jourSource);
+
+  if (!planningSource) {
+    alert("Aucun horaire à copier pour ce jour ❌");
+    return;
+  }
+
+  joursPlanning.forEach((jour) => {
+    updatePlanningLocal(employeId, jour, "debut_matin", planningSource.debut_matin || "");
+    updatePlanningLocal(employeId, jour, "fin_matin", planningSource.fin_matin || "");
+    updatePlanningLocal(employeId, jour, "debut_soir", planningSource.debut_soir || "");
+    updatePlanningLocal(employeId, jour, "fin_soir", planningSource.fin_soir || "");
+  });
+};
+
+const sauvegarderPlanning = async () => {
+  setMessagePlanning("");
+
+  const lignes = planningEmployes.map((p) => ({
+    employe_id: p.employe_id,
+    jour_semaine: p.jour_semaine,
+    debut_matin: p.debut_matin || null,
+    fin_matin: p.fin_matin || null,
+    debut_soir: p.debut_soir || null,
+    fin_soir: p.fin_soir || null,
+  }));
+
+  const { error } = await supabase
+    .from("planning_employes")
+    .upsert(lignes, {
+      onConflict: "employe_id,jour_semaine",
+    });
+
+  if (error) {
+    console.error(error);
+    setMessagePlanning("Erreur lors de l’enregistrement.");
+    return;
+  }
+
+  setMessagePlanning("Planning enregistré avec succès ✅");
+  chargerPlanning();
+};
 
   const chargerProfiles = async () => {
     setMessageProfiles("");
@@ -56,6 +168,27 @@ export default function AdminPage({
       .from("profiles")
       .update({ role })
       .eq("id", id);
+
+      if (role === "employe") {
+  const profile = profiles.find((p) => p.id === id);
+
+  await supabase.from("employes").upsert({
+    auth_user_id: id,
+    nom:
+      `${profile?.prenom || ""} ${profile?.nom_famille || ""}`.trim() ||
+      profile?.nom ||
+      "Employé",
+    email: profile?.email || "",
+    actif: true,
+  });
+}
+
+if (role !== "employe") {
+  await supabase
+    .from("employes")
+    .delete()
+    .eq("auth_user_id", id);
+}
 
     if (error) {
       console.error(error);
@@ -151,6 +284,7 @@ export default function AdminPage({
       chargerDemandesPointage();
       chargerAvisClients();
       chargerProfiles();
+      chargerPlanning();
     }
   }, [isLogged]);
 
@@ -248,6 +382,11 @@ export default function AdminPage({
     }
 
     if (statut === "acceptee") {
+
+      console.log("DEMANDE ACCEPTÉE :", demande);
+      console.log("Arrivée demandée :", demande.arrivee_demandee);
+      console.log("Départ demandé :", demande.depart_demandee);
+
       const { error: updatePointageError } = await supabase
         .from("pointages")
         .update({
@@ -494,6 +633,7 @@ export default function AdminPage({
         "Temps travaillé": calculateWorkedTime(pointage.arrivee, pointage.depart),
         Statut: pointage.depart ? "Hors service" : "En service",
       };
+      
     });
 
     if (lignes.length === 0) {
@@ -513,6 +653,45 @@ export default function AdminPage({
     XLSX.utils.book_append_sheet(classeur, feuille, "Pointages");
     XLSX.writeFile(classeur, "pointages-chez-omer.xlsx");
   };
+
+  const ajouterPointageForce = async () => {
+  if (
+    !employeSelectionne ||
+    !datePointage ||
+    !heureDebut ||
+    !heureFin
+  ) {
+    setMessagePointageForce("Veuillez remplir tous les champs.");
+    return;
+  }
+
+  const debut = `${datePointage}T${heureDebut}:00`;
+  const fin = `${datePointage}T${heureFin}:00`;
+
+  const { error } = await supabase.from("pointages").insert([
+    {
+      employe_id: employeSelectionne,
+      arrivee: debut,
+      depart: fin,
+      force_admin: true,
+    },
+  ]);
+
+  if (error) {
+    console.error(error);
+    setMessagePointageForce("Erreur lors du pointage.");
+    return;
+  }
+
+  setMessagePointageForce("Pointage ajouté avec succès.");
+
+  setEmployeSelectionne("");
+  setDatePointage("");
+  setHeureDebut("");
+  setHeureFin("");
+
+  chargerPointages();
+};
 
   const demandesEnAttente = demandesPointage.filter(
     (demande) => demande.statut === "en_attente"
@@ -539,6 +718,43 @@ export default function AdminPage({
 
     return filtreOK && rechercheOK;
   });
+const supprimerCompte = async (userId) => {
+  const confirmation = window.confirm(
+    "Voulez-vous vraiment supprimer définitivement ce compte ?"
+  );
+
+  if (!confirmation) return;
+
+  const { data: sessionData } = await supabase.auth.getSession();
+
+  if (!sessionData?.session?.access_token) {
+    alert("Erreur : session admin introuvable.");
+    return;
+  }
+
+  const { data, error } = await supabase.functions.invoke("delete-user", {
+    body: { user_id: userId },
+    headers: {
+      Authorization: `Bearer ${sessionData.session.access_token}`,
+    },
+  });
+
+  if (error) {
+    console.error("Erreur suppression compte :", error);
+    alert("Erreur suppression : " + error.message);
+    setMessageProfiles("Erreur lors de la suppression du compte.");
+    return;
+  }
+
+  if (data?.success === false) {
+    alert("Erreur suppression : " + data.error);
+    setMessageProfiles(data.error);
+    return;
+  }
+
+  setMessageProfiles("Compte supprimé avec succès.");
+  await chargerProfiles();
+};
 
   return (
     <main className="px-5 py-16">
@@ -618,6 +834,17 @@ export default function AdminPage({
               }`}
             >
               Employés
+            </button>
+
+            <button
+              onClick={() => setAdminTab("planning")}
+              className={`rounded-full px-6 py-3 font-black ${
+                adminTab === "planning"
+                  ? "bg-yellow-400 text-black"
+                  : "bg-white/10 text-white hover:bg-white/20"
+              }`}
+            >
+              Planning équipe
             </button>
 
             <button
@@ -1060,6 +1287,167 @@ export default function AdminPage({
             </div>
           )}
 
+{adminTab === "planning" && (
+  <div className="mt-8 rounded-3xl border border-yellow-500/20 bg-white/5 p-6">
+    <div className="flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <h3 className="text-2xl font-black text-yellow-300">
+          Planning équipe
+        </h3>
+
+        <p className="mt-2 text-sm text-stone-400">
+          Définis les horaires autorisés pour le pointage des employés.
+        </p>
+      </div>
+
+      <button
+        onClick={sauvegarderPlanning}
+        className="rounded-full bg-yellow-400 px-6 py-3 font-black text-black hover:bg-yellow-300"
+      >
+        Enregistrer le planning
+      </button>
+    </div>
+
+    {messagePlanning && (
+      <p className="mt-4 font-bold text-yellow-300">{messagePlanning}</p>
+    )}
+
+    <div className="mt-6 space-y-8">
+      {profiles
+        .filter((profile) => profile.role === "employe")
+        .map((employe) => (
+          <div
+  key={employe.id}
+  className="rounded-3xl border border-yellow-500/20 bg-black p-5"
+>
+  <button
+    type="button"
+    onClick={() =>
+      setEmployePlanningOuvert((current) =>
+        current === employe.id ? null : employe.id
+      )
+    }
+    className="flex w-full items-center justify-between text-left"
+  >
+    <h4 className="text-xl font-black text-white">
+      {employe.nom || employe.email}
+    </h4>
+
+    <span className="rounded-full bg-yellow-400 px-4 py-2 text-sm font-black text-black">
+      {employePlanningOuvert === employe.id ? "Fermer" : "Ouvrir"}
+    </span>
+  </button>
+            
+            {employePlanningOuvert === employe.id && (
+            <div className="mt-5 overflow-x-auto">
+              <table className="w-full min-w-[800px] text-left text-sm">
+                <thead>
+                  <tr className="text-yellow-300">
+                    <th className="p-3">Jour</th>
+                    <th className="p-3">Début matinée</th>
+                    <th className="p-3">Fin matinée</th>
+                    <th className="p-3">Début soirée</th>
+                    <th className="p-3">Fin soirée</th>
+                    <th className="p-3">Action</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {joursPlanning.map((jour) => {
+                    const planning = getPlanningJour(employe.id, jour);
+
+                    return (
+                      <tr
+                        key={jour}
+                        className="border-t border-yellow-500/10"
+                      >
+                        <td className="p-3 font-bold text-white">{jour}</td>
+
+                        <td className="p-3">
+                          <input
+                            type="time"
+                            value={planning?.debut_matin || ""}
+                            onChange={(e) =>
+                              updatePlanningLocal(
+                                employe.id,
+                                jour,
+                                "debut_matin",
+                                e.target.value
+                              )
+                            }
+                            className="w-full rounded-xl bg-white/10 px-3 py-2 text-white"
+                          />
+                        </td>
+
+                        <td className="p-3">
+                          <input
+                            type="time"
+                            value={planning?.fin_matin || ""}
+                            onChange={(e) =>
+                              updatePlanningLocal(
+                                employe.id,
+                                jour,
+                                "fin_matin",
+                                e.target.value
+                              )
+                            }
+                            className="w-full rounded-xl bg-white/10 px-3 py-2 text-white"
+                          />
+                        </td>
+
+                        <td className="p-3">
+                          <input
+                            type="time"
+                            value={planning?.debut_soir || ""}
+                            onChange={(e) =>
+                              updatePlanningLocal(
+                                employe.id,
+                                jour,
+                                "debut_soir",
+                                e.target.value
+                              )
+                            }
+                            className="w-full rounded-xl bg-white/10 px-3 py-2 text-white"
+                          />
+                        </td>
+
+                        <td className="p-3">
+                          <input
+                            type="time"
+                            value={planning?.fin_soir || ""}
+                            onChange={(e) =>
+                              updatePlanningLocal(
+                                employe.id,
+                                jour,
+                                "fin_soir",
+                                e.target.value
+                              )
+                            }
+                            className="w-full rounded-xl bg-white/10 px-3 py-2 text-white"
+                          />
+                        </td>
+                        <td className="p-3">
+                          <button
+                            type="button"
+                            onClick={() => copierJourSurSemaine(employe.id, jour)}
+                            className="rounded-full bg-yellow-400 px-4 py-2 text-sm font-black text-black hover:bg-yellow-300"
+                          >
+                            Copier semaine
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            )}
+          </div>
+        ))}
+    </div>
+  </div>
+)}
+
           {adminTab === "comptes" && (
             <div className="mt-8 rounded-3xl border border-yellow-500/20 bg-white/5 p-6">
               <div className="flex flex-wrap items-center justify-between gap-4">
@@ -1091,6 +1479,7 @@ export default function AdminPage({
                   <p className="text-stone-400">Aucun compte trouvé.</p>
                 ) : (
                   profiles.map((profile) => (
+                    
                     <div
                       key={profile.id}
                       className="rounded-2xl border border-yellow-500/20 bg-black p-4"
@@ -1132,7 +1521,7 @@ export default function AdminPage({
                           >
                             Employé
                           </button>
-
+                            
                           <button
                             onClick={() => changerRole(profile.id, "admin")}
                             className={`rounded-full px-4 py-2 font-black ${
@@ -1143,7 +1532,18 @@ export default function AdminPage({
                           >
                             Admin
                           </button>
-                        </div>
+                        <button
+  type="button"
+  onClick={(e) => {
+    e.stopPropagation();
+    supprimerCompte(profile.id);
+  }}
+  className="rounded-full bg-red-700 px-4 py-2 font-black text-white hover:bg-red-600"
+>
+  Supprimer
+</button>
+
+</div>
                       </div>
                     </div>
                   ))
@@ -1287,6 +1687,15 @@ export default function AdminPage({
                           <p className="mt-2 text-stone-300">
                             Motif : {demande.motif}
                           </p>
+                          <div className="mt-4 rounded-2xl border border-yellow-500/20 bg-white/5 p-4 text-sm text-stone-300">
+                            <p className="font-black text-yellow-300">Pointage actuel</p>
+                            <p>Arrivée : {formatDateHeure(demande.arrivee_actuelle)}</p>
+                            <p>Départ : {formatDateHeure(demande.depart_actuel)}</p>
+
+                            <p className="mt-3 font-black text-green-400">Modification demandée</p>
+                            <p>Nouvelle arrivée : {formatDateHeure(demande.arrivee_demandee)}</p>
+                            <p>Nouveau départ : {formatDateHeure(demande.depart_demandee)}</p>
+                          </div>
 
                           <textarea
                             value={reponsesDemandes[demande.id] || ""}
@@ -1361,23 +1770,30 @@ export default function AdminPage({
                   </h3>
 
                   <div className="flex flex-wrap gap-3">
-                    <button
-                      onClick={() => {
-                        chargerEmployes();
-                        chargerPointages();
-                      }}
-                      className="rounded-full bg-yellow-400 px-5 py-3 font-black text-black"
-                    >
-                      Actualiser
-                    </button>
+  <button
+    onClick={() => {
+      chargerEmployes();
+      chargerPointages();
+    }}
+    className="rounded-full bg-yellow-400 px-5 py-3 font-black text-black"
+  >
+    Actualiser
+  </button>
 
-                    <button
-                      onClick={exporterPointagesExcel}
-                      className="rounded-full bg-green-600 px-5 py-3 font-black text-white hover:bg-green-500"
-                    >
-                      Exporter Excel
-                    </button>
-                  </div>
+  <button
+    onClick={exporterPointagesExcel}
+    className="rounded-full bg-green-600 px-5 py-3 font-black text-white hover:bg-green-500"
+  >
+    Exporter Excel
+  </button>
+
+  <button
+    onClick={() => setShowPointageForce(true)}
+    className="rounded-full bg-blue-600 px-5 py-3 font-black text-white hover:bg-blue-500"
+  >
+    Ajouter
+  </button>
+</div>
                 </div>
 
                 <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -1502,6 +1918,78 @@ export default function AdminPage({
           )}
         </div>
       )}
+    {showPointageForce && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+    <div className="w-full max-w-md rounded-3xl bg-zinc-900 p-6 text-white shadow-2xl">
+
+      <h2 className="mb-6 text-2xl font-bold text-yellow-400">
+        Pointage forcé
+      </h2>
+
+      <div className="space-y-4">
+
+        <select
+          value={employeSelectionne}
+          onChange={(e) => setEmployeSelectionne(e.target.value)}
+          className="w-full rounded-xl bg-zinc-800 p-3"
+        >
+          <option value="">Choisir un employé</option>
+
+          {(listeEmployes || []).map((employe) => (
+            <option key={employe.id} value={employe.id}>
+              {employe.nom}
+            </option>
+          ))}
+        </select>
+
+        <input
+          type="date"
+          value={datePointage}
+          onChange={(e) => setDatePointage(e.target.value)}
+          className="w-full rounded-xl bg-zinc-800 p-3"
+        />
+
+        <input
+          type="time"
+          value={heureDebut}
+          onChange={(e) => setHeureDebut(e.target.value)}
+          className="w-full rounded-xl bg-zinc-800 p-3"
+        />
+
+        <input
+          type="time"
+          value={heureFin}
+          onChange={(e) => setHeureFin(e.target.value)}
+          className="w-full rounded-xl bg-zinc-800 p-3"
+        />
+
+        {messagePointageForce && (
+          <p className="text-sm text-yellow-400">
+            {messagePointageForce}
+          </p>
+        )}
+
+        <div className="flex gap-3 pt-4">
+
+          <button
+            onClick={ajouterPointageForce}
+            className="flex-1 rounded-xl bg-green-600 py-3 font-bold hover:bg-green-700"
+          >
+            Valider
+          </button>
+
+          <button
+            onClick={() => setShowPointageForce(false)}
+            className="flex-1 rounded-xl bg-red-600 py-3 font-bold hover:bg-red-700"
+          >
+            Fermer
+          </button>
+
+        </div>
+      </div>
+    </div>
+  </div>
+)}  
     </main>
   );
 }

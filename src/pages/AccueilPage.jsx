@@ -196,12 +196,7 @@ export default function AccueilPage({
               Voir le menu
             </button>
 
-            <button
-              onClick={() => showPage("Commande")}
-              className="rounded-full border border-yellow-500/40 bg-black px-8 py-4 font-black text-white hover:bg-white/10"
-            >
-              Commander
-            </button>
+            
           </div>
         </motion.div>
 

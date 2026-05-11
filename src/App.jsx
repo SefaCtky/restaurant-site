@@ -1,9 +1,9 @@
 import { supabase } from "./supabase";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import AccueilPage from "./pages/AccueilPage";
+import HistoriqueCommandesPage from "./pages/HistoriqueCommandesPage";
 import MenuPage from "./pages/MenuPage";
 import AProposPage from "./pages/AProposPage";
-import CommandePage from "./pages/CommandePage";
 import StaffCommandesPage from "./pages/StaffCommandesPage";
 import ContactPage from "./pages/ContactPage";
 import PointagePage from "./pages/PointagePage";
@@ -159,7 +159,7 @@ export default function RestaurantWebsite() {
     "Accueil",
     "Menu",
     "À propos",
-    "Commande",
+    ...(user ? ["Historique"] : []),
     "Contact",
     ...(userRole === "admin" || userRole === "employe" ? ["Pointage", "Commandes"] : []),
     ...(userRole === "admin" ? ["Admin"] : []),
@@ -660,19 +660,19 @@ export default function RestaurantWebsite() {
       );
     }
 
-    if (activePage === "À propos") return <AProposPage BACKGROUND_IMAGE={BACKGROUND_IMAGE} />;
+    if (activePage === "Historique") {
+  return (
+    <HistoriqueCommandesPage
+      supabase={supabase}
+      user={user}
+      formatPrice={formatPrice}
+      setCart={setCart}
+      setCartOpen={setCartOpen}
+    />
+  );
+}
 
-    if (activePage === "Commande") {
-      return (
-        <CommandePage
-          fermetureActive={fermetureActive}
-          cart={cart}
-          formatPrice={formatPrice}
-          total={total}
-          setCartOpen={setCartOpen}
-        />
-      );
-    }
+    if (activePage === "À propos") return <AProposPage BACKGROUND_IMAGE={BACKGROUND_IMAGE} />;
 
     if (activePage === "Contact") {
       return <ContactPage restaurantAddress={restaurantAddress} phoneNumber={phoneNumber} whatsappNumber={whatsappNumber} />;
@@ -834,6 +834,7 @@ export default function RestaurantWebsite() {
       />
 
       <CartDrawer
+        user={user}
         setCart={setCart}
         supabase={supabase}
         cartOpen={cartOpen}

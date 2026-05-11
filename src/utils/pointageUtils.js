@@ -1,15 +1,22 @@
-export function calculateWorkedTime(start, end) {
-  if (!start || !end) return "En cours";
+export function calculateWorkedTime(arrivee, depart) {
+  if (!arrivee || !depart) return "En cours";
 
-  const startDate = new Date(start);
-  const endDate = new Date(end);
+  const start = new Date(arrivee);
+  const end = new Date(depart);
 
-  const diffMs = endDate - startDate;
-  if (diffMs <= 0) return "Erreur";
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    return "Erreur";
+  }
 
-  const totalMinutes = Math.floor(diffMs / 1000 / 60);
-  const hours = Math.floor(totalMinutes / 60);
+  const diffMs = end.getTime() - start.getTime();
+
+  if (diffMs < 0) {
+    return "Erreur";
+  }
+
+  const totalMinutes = Math.floor(diffMs / 60000);
+  const heures = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
 
-  return `${hours}h${minutes.toString().padStart(2, "0")}`;
+  return `${heures}h${String(minutes).padStart(2, "0")}`;
 }

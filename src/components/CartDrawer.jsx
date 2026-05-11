@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { X, ShoppingCart, Trash2, Minus, Plus } from "lucide-react";
 
 export default function CartDrawer({
+  user,
   cartOpen,
   setCartOpen,
   cart,
@@ -24,7 +25,26 @@ export default function CartDrawer({
 
     setSendingOrder(true);
 
-    const numeroCommande = `OMER-${Date.now()}`;
+    const maintenant = new Date();
+
+    const annee = maintenant.getFullYear();
+    const mois = String(maintenant.getMonth() + 1).padStart(2, "0");
+
+    const debutMois = new Date(annee, maintenant.getMonth(), 1)
+      .toISOString();
+
+    const finMois = new Date(annee, maintenant.getMonth() + 1, 1)
+      .toISOString();
+
+    const { count } = await supabase
+      .from("commandes")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", debutMois)
+      .lt("created_at", finMois);
+
+    const prochainNumero = String((count || 0) + 1).padStart(5, "0");
+
+    const numeroCommande = `OMER-${annee}-${mois}-${prochainNumero}`;
 
     const contenuCommande = cart.map((item) => ({
       nom: item.name,
@@ -48,8 +68,11 @@ export default function CartDrawer({
       note: item.note || "",
     }));
 
+    console.log("USER COMMANDE :", user);
+
     const { error } = await supabase.from("commandes").insert({
       numero_commande: numeroCommande,
+      user_id: user?.id || null,
       contenu: contenuCommande,
       total,
       statut: "En attente",

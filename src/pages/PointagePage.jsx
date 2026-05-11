@@ -31,6 +31,7 @@ export default function PointagePage({ supabase }) {
   const [demandeDepart, setDemandeDepart] = useState("");
   const [demandeMotif, setDemandeMotif] = useState("");
   const [savingDemande, setSavingDemande] = useState(false);
+  const [planningSemaine, setPlanningSemaine] = useState([]);
 
   useEffect(() => {
     verifierUtilisateur();
@@ -60,9 +61,14 @@ export default function PointagePage({ supabase }) {
     }
 
     setEmployeConnecte(data);
-    await chargerHistorique(data.id);
-    await chargerDemandesModification(data.id);
-    setLoadingEmploye(false);
+await chargerHistorique(data.id);
+await chargerDemandesModification(data.id);
+
+console.log("EMPLOYE CONNECTE :", data);
+
+await chargerPlanningSemaine(data.auth_user_id);
+
+setLoadingEmploye(false);
   };
 
   const chargerHistorique = async (employeId) => {
@@ -95,6 +101,24 @@ export default function PointagePage({ supabase }) {
     setDemandesModification(data || []);
   };
 
+  const chargerPlanningSemaine = async (authUserId) => {
+  const { data, error } = await supabase
+    .from("planning_employes")
+    .select("*")
+    .eq("employe_id", authUserId);
+
+  console.log("ID utilisé planning :", authUserId);
+  console.log("Planning reçu :", data);
+  console.log("Erreur planning :", error);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  setPlanningSemaine(data || []);
+};
+
   const pointer = async () => {
     if (!employeConnecte) {
       alert("Aucun employé connecté ❌");
@@ -121,6 +145,80 @@ export default function PointagePage({ supabase }) {
           alert(`Vous devez être au restaurant pour pointer ❌ Distance actuelle : ${Math.round(distance)} m`);
           return;
         }
+
+        const maintenant = new Date();
+
+const jours = [
+  "Dimanche",
+  "Lundi",
+  "Mardi",
+  "Mercredi",
+  "Jeudi",
+  "Vendredi",
+  "Samedi",
+];
+
+const jourActuel = jours[maintenant.getDay()];
+
+const heureActuelle =
+  String(maintenant.getHours()).padStart(2, "0") +
+  ":" +
+  String(maintenant.getMinutes()).padStart(2, "0");
+
+const { data: planning, error: planningError } = await supabase
+  .from("planning_employes")
+  .select("*")
+  .eq("employe_id", employeConnecte.auth_user_id)
+  .eq("jour_semaine", jourActuel)
+  .maybeSingle();
+
+if (planningError) {
+  console.error(planningError);
+  alert("Erreur lors de la vérification du planning ❌");
+  return;
+}
+
+if (!planning) {
+  alert("Aucun horaire de pointage prévu aujourd’hui ❌");
+  return;
+}
+
+const heureEnMinutes = (heure) => {
+  const [h, m] = heure.slice(0, 5).split(":").map(Number);
+  return h * 60 + m;
+};
+
+const maintenantMinutes =
+  maintenant.getHours() * 60 + maintenant.getMinutes();
+
+const margeAvant = 5;
+const margeApres = 5;
+
+const autorise =
+  (planning.debut_matin &&
+    planning.fin_matin &&
+    maintenantMinutes >=
+      heureEnMinutes(planning.debut_matin) - margeAvant &&
+    maintenantMinutes <=
+      heureEnMinutes(planning.fin_matin) + margeApres) ||
+
+  (planning.debut_soir &&
+    planning.fin_soir &&
+    maintenantMinutes >=
+      heureEnMinutes(planning.debut_soir) - margeAvant &&
+    maintenantMinutes <=
+      heureEnMinutes(planning.fin_soir) + margeApres);
+
+if (!autorise) {
+  alert(
+    `Vous ne pouvez pas pointer en dehors de vos horaires ❌\n\nAujourd’hui (${jourActuel}) :\nMatin : ${
+      planning.debut_matin || "--:--"
+    } - ${planning.fin_matin || "--:--"}\nSoir : ${
+      planning.debut_soir || "--:--"
+    } - ${planning.fin_soir || "--:--"}`
+  );
+  return;
+}
 
         const { data: dernierPointage, error: lastError } = await supabase
           .from("pointages")
@@ -294,6 +392,39 @@ export default function PointagePage({ supabase }) {
 
           {estEnService && <p className="mt-3 text-sm font-bold text-green-400">Arrivée enregistrée à {formatHeure(pointageActif.arrivee)}</p>}
         </div>
+
+          <div className="mt-6 rounded-2xl border border-yellow-500/20 bg-black p-5">
+  <h3 className="text-xl font-black text-yellow-300">
+    Mon planning de la semaine
+  </h3>
+
+  <div className="mt-4 space-y-3">
+    {["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"].map(
+      (jour) => {
+        const planning = planningSemaine.find(
+          (p) => p.jour_semaine === jour
+        );
+
+        return (
+          <div
+            key={jour}
+            className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white/5 px-4 py-3"
+          >
+            <span className="font-black text-white">{jour}</span>
+
+            <span className="text-sm font-bold text-stone-300">
+              Matin : {planning?.debut_matin?.slice(0, 5) || "--:--"} -{" "}
+              {planning?.fin_matin?.slice(0, 5) || "--:--"} | Soir :{" "}
+              {planning?.debut_soir?.slice(0, 5) || "--:--"} -{" "}
+              {planning?.fin_soir?.slice(0, 5) || "--:--"}
+            </span>
+          </div>
+        );
+      }
+    )}
+  </div>
+</div>
+
 
         <button
           onClick={pointer}
