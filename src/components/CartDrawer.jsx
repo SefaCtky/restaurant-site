@@ -36,15 +36,31 @@ export default function CartDrawer({
     const finMois = new Date(annee, maintenant.getMonth() + 1, 1)
       .toISOString();
 
-    const { count } = await supabase
-      .from("commandes")
-      .select("*", { count: "exact", head: true })
-      .gte("created_at", debutMois)
-      .lt("created_at", finMois);
+    const prefix = `OMER-${annee}-${mois}-`;
 
-    const prochainNumero = String((count || 0) + 1).padStart(5, "0");
+const { data: derniereCommande, error: numeroError } = await supabase
+  .from("commandes")
+  .select("numero_commande")
+  .like("numero_commande", `${prefix}%`)
+  .order("numero_commande", { ascending: false })
+  .limit(1);
 
-    const numeroCommande = `OMER-${annee}-${mois}-${prochainNumero}`;
+if (numeroError) {
+  console.error(numeroError);
+  alert("Erreur génération numéro de commande ❌");
+  return;
+}
+
+let dernierNumero = 0;
+
+if (derniereCommande?.length > 0) {
+  dernierNumero =
+    parseInt(derniereCommande[0].numero_commande.split("-")[3], 10) || 0;
+}
+
+const prochainNumero = String(dernierNumero + 1).padStart(5, "0");
+
+const numeroCommande = `${prefix}${prochainNumero}`;
 
     const contenuCommande = cart.map((item) => ({
       nom: item.name,

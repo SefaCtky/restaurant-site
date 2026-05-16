@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import PageTitle from "../components/PageTitle";
 import { calculateWorkedTime } from "../utils/pointageUtils";
+import * as XLSX from "xlsx";
 
 function calculDistance(lat1, lon1, lat2, lon2) {
   const R = 6371e3;
@@ -32,11 +33,17 @@ export default function PointagePage({ supabase }) {
   const [demandeMotif, setDemandeMotif] = useState("");
   const [savingDemande, setSavingDemande] = useState(false);
   const [planningSemaine, setPlanningSemaine] = useState([]);
+  const [mesPointages, setMesPointages] = useState([]);
+  const [mesDemandes, setMesDemandes] = useState([]);
+  const [loadingHistorique, setLoadingHistorique] = useState(false);
+  const [moisExport, setMoisExport] = useState(
+    new Date().toISOString().slice(0, 7)
+  );
 
   useEffect(() => {
     verifierUtilisateur();
   }, []);
-
+  
   const verifierUtilisateur = async () => {
     const {
       data: { user },
@@ -63,6 +70,8 @@ export default function PointagePage({ supabase }) {
     setEmployeConnecte(data);
 await chargerHistorique(data.id);
 await chargerDemandesModification(data.id);
+setMesPointages(data ? await chargerMesPointagesEmploye(data.id) : []);
+setMesDemandes(data ? await chargerMesDemandesEmploye(data.id) : []);
 
 console.log("EMPLOYE CONNECTE :", data);
 
@@ -100,6 +109,42 @@ setLoadingEmploye(false);
 
     setDemandesModification(data || []);
   };
+
+  const chargerMesPointagesEmploye = async (employeId) => {
+  setLoadingHistorique(true);
+
+  const { data, error } = await supabase
+    .from("pointages")
+    .select("*")
+    .eq("employe_id", employeId)
+    .order("arrivee", { ascending: false })
+    .limit(30);
+
+  if (error) {
+    console.error(error);
+    setLoadingHistorique(false);
+    return [];
+  }
+
+  setLoadingHistorique(false);
+  return data || [];
+};
+
+  const chargerMesDemandesEmploye = async (employeId) => {
+  const { data, error } = await supabase
+    .from("demandes_modification_pointage")
+    .select("*")
+    .eq("employe_id", employeId)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  if (error) {
+    console.error(error);
+    return [];
+  }
+
+  return data || [];
+};
 
   const chargerPlanningSemaine = async (authUserId) => {
   const { data, error } = await supabase
@@ -265,6 +310,8 @@ if (!autorise) {
 
         await chargerHistorique(employeConnecte.id);
         await chargerDemandesModification(employeConnecte.id);
+        setMesPointages(await chargerMesPointagesEmploye(employeConnecte.id));
+        setMesDemandes(await chargerMesDemandesEmploye(employeConnecte.id));
       },
       (error) => {
         console.error(error);
@@ -363,6 +410,42 @@ if (!autorise) {
   const pointageActif = historique.find((pointage) => !pointage.depart);
   const estEnService = Boolean(pointageActif);
 
+const exporterPointagesMois = () => {
+  if (!moisExport) {
+    alert("Choisis un mois à exporter ❌");
+    return;
+  }
+
+  const pointagesDuMois = historique.filter((p) => {
+    if (!p.arrivee) return false;
+    return p.arrivee.slice(0, 7) === moisExport;
+  });
+
+  if (pointagesDuMois.length === 0) {
+    alert("Aucun pointage trouvé pour ce mois ❌");
+    return;
+  }
+
+  const lignes = pointagesDuMois.map((p) => ({
+    Date: new Date(p.arrivee).toLocaleDateString("fr-FR"),
+    Arrivée: p.arrivee ? formatHeure(p.arrivee) : "",
+    Départ: p.depart ? formatHeure(p.depart) : "En cours",
+    "Temps travaillé": p.arrivee && p.depart
+      ? calculateWorkedTime(p.arrivee, p.depart)
+      : "En cours",
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(lignes);
+  const workbook = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Pointages");
+
+  XLSX.writeFile(
+    workbook,
+    `pointages_${employeConnecte?.nom || "employe"}_${moisExport}.xlsx`
+  );
+};
+
   return (
     <main className="px-5 py-16">
       <PageTitle
@@ -437,7 +520,173 @@ if (!autorise) {
         </button>
 
         {messagePointage && <p className="mt-4 text-center font-bold text-yellow-300">{messagePointage}</p>}
+<div className="mt-8 rounded-2xl border border-yellow-500/30 bg-black p-5">
+  <h3 className="text-xl font-black text-yellow-300">
+    Exporter mes pointages
+  </h3>
 
+  <div className="mt-4 flex flex-wrap gap-3">
+
+    <select
+      value={moisExport.split("-")[1]}
+      onChange={(e) => {
+        const annee = moisExport.split("-")[0];
+        setMoisExport(`${annee}-${e.target.value}`);
+      }}
+      className="rounded-full bg-black px-5 py-3 font-bold text-white border border-yellow-500/30"
+    >
+      <option value="01">Janvier</option>
+      <option value="02">Février</option>
+      <option value="03">Mars</option>
+      <option value="04">Avril</option>
+      <option value="05">Mai</option>
+      <option value="06">Juin</option>
+      <option value="07">Juillet</option>
+      <option value="08">Août</option>
+      <option value="09">Septembre</option>
+      <option value="10">Octobre</option>
+      <option value="11">Novembre</option>
+      <option value="12">Décembre</option>
+    </select>
+
+    <select
+      value={moisExport.split("-")[0]}
+      onChange={(e) => {
+        const mois = moisExport.split("-")[1];
+        setMoisExport(`${e.target.value}-${mois}`);
+      }}
+      className="rounded-full bg-black px-5 py-3 font-bold text-white border border-yellow-500/30"
+    >
+      {[2026, 2027, 2028, 2029, 2030].map((annee) => (
+        <option key={annee} value={annee}>
+          {annee}
+        </option>
+      ))}
+    </select>
+
+    <button
+      onClick={exporterPointagesMois}
+      className="rounded-full bg-yellow-400 px-5 py-3 font-black text-black hover:bg-yellow-300"
+    >
+      Exporter en Excel
+    </button>
+
+  </div>
+</div>
+<div className="mt-8 bg-neutral-900 border border-yellow-500/30 rounded-2xl p-5">
+  <h2 className="text-xl font-bold text-yellow-400 mb-4">
+    Mes derniers pointages
+  </h2>
+
+  {loadingHistorique ? (
+    <p className="text-gray-300">Chargement de tes pointages...</p>
+  ) : mesPointages.length === 0 ? (
+    <p className="text-gray-400">Aucun pointage trouvé.</p>
+  ) : (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm text-left">
+        <thead>
+          <tr className="text-yellow-400 border-b border-yellow-500/30">
+            <th className="py-2">Jour</th>
+            <th className="py-2">Arrivée</th>
+            <th className="py-2">Départ</th>
+            <th className="py-2">Temps travaillé</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {mesPointages.map((p) => (
+            <tr key={p.id} className="border-b border-white/10 text-gray-200">
+              <td className="py-2">
+                {p.arrivee
+                   ? new Date(p.arrivee).toLocaleDateString("fr-FR")
+                   : "-"}
+              </td>
+
+              <td className="py-2">
+                {p.arrivee
+                  ? new Date(p.arrivee).toLocaleTimeString("fr-FR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : "-"}
+              </td>
+
+              <td className="py-2">
+                {p.depart
+                  ? new Date(p.depart).toLocaleTimeString("fr-FR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : "-"}
+              </td>
+
+              <td className="py-2">
+                {p.arrivee && p.depart
+                  ? calculateWorkedTime(p.arrivee, p.depart)
+                  : "En cours"}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</div>
+
+<div className="mt-6 bg-neutral-900 border border-orange-500/30 rounded-2xl p-5">
+  <h2 className="text-xl font-bold text-orange-400 mb-4">
+    Mes demandes de modification
+  </h2>
+
+  {mesDemandes.length === 0 ? (
+    <p className="text-gray-400">Aucune demande envoyée.</p>
+  ) : (
+    <div className="space-y-3">
+      {mesDemandes.map((d) => (
+        <div
+          key={d.id}
+          className="bg-black/40 border border-white/10 rounded-xl p-4"
+        >
+          <div className="flex justify-between items-center mb-2">
+            <p className="text-white font-semibold">
+              Demande du{" "}
+              {d.created_at
+                ? new Date(d.created_at).toLocaleDateString("fr-FR")
+                : "-"}
+            </p>
+
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-bold ${
+                d.statut === "acceptee"
+                  ? "bg-green-600 text-white"
+                  : d.statut === "refusee"
+                  ? "bg-red-600 text-white"
+                  : "bg-yellow-500 text-black"
+              }`}
+            >
+              {d.statut === "acceptee"
+                ? "Acceptée"
+                : d.statut === "refusee"
+                ? "Refusée"
+                : "En attente"}
+            </span>
+          </div>
+
+          <p className="text-gray-300 text-sm">
+            Motif : {d.motif || "Non renseigné"}
+          </p>
+
+          {d.reponse_admin && (
+            <p className="text-gray-300 text-sm mt-2">
+              Réponse admin : {d.reponse_admin}
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
+  )}
+</div>
         <div className="mt-10">
           <h3 className="text-xl font-black text-white">Historique</h3>
 

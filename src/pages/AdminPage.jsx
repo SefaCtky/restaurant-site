@@ -35,6 +35,25 @@ export default function AdminPage({
   const [planningEmployes, setPlanningEmployes] = useState([]);
   const [messagePlanning, setMessagePlanning] = useState("");
   const [employePlanningOuvert, setEmployePlanningOuvert] = useState(null);
+  const [statsCommandes, setStatsCommandes] = useState({
+  caJour: 0,
+  nbCommandesJour: 0,
+  panierMoyen: 0,
+  produitTop: "Aucun",
+  quantiteTop: 0,
+  heureRush: "Aucune",
+  nbCommandesRush: 0,
+  rushBase: "",
+});
+  const [commandesStats, setCommandesStats] = useState([]);
+const [anneesStatsOuvertes, setAnneesStatsOuvertes] = useState({});
+const [moisStatsOuverts, setMoisStatsOuverts] = useState({});
+
+  const formatMontant = (montant) =>
+    new Intl.NumberFormat("fr-FR", {
+      style: "currency",
+      currency: "EUR",
+    }).format(Number(montant || 0));
 
 const joursPlanning = [
   "Lundi",
@@ -200,7 +219,13 @@ if (role !== "employe") {
     chargerProfiles();
   };
 
-  const [adminTab, setAdminTab] = useState("produits");
+const [adminTab, setAdminTab] = useState(() => {
+  return localStorage.getItem("adminTab") || "produits";
+});
+
+useEffect(() => {
+  localStorage.setItem("adminTab", adminTab);
+}, [adminTab]);
 
   const [annonceAccueil, setAnnonceAccueil] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
@@ -210,6 +235,9 @@ if (role !== "employe") {
   const [reponsesDemandes, setReponsesDemandes] = useState({});
   const [filtreEmploye, setFiltreEmploye] = useState("all");
   const [rechercheEmploye, setRechercheEmploye] = useState("");
+  const [moisExportAdmin, setMoisExportAdmin] = useState(
+    new Date().toISOString().slice(0, 7)
+  );
 
   const [avisClients, setAvisClients] = useState([]);
   const [nouvelAvis, setNouvelAvis] = useState({
@@ -277,14 +305,168 @@ if (role !== "employe") {
     setAvisClients(data || []);
   };
 
+  const calculerStatsCommandes = async () => {
+  const aujourdHui = new Date().toISOString().slice(0, 10);
+
+  const { data, error } = await supabase
+    .from("commandes")
+    .select("total, created_at, contenu")
+    .gte("created_at", `${aujourdHui}T00:00:00`)
+    .lt("created_at", `${aujourdHui}T23:59:59`);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  const caJour = (data || []).reduce(
+    (total, commande) => total + Number(commande.total || 0),
+    0
+  );
+
+  const nbCommandesJour = data?.length || 0;
+  
+  const compteurProduits = {};
+  const compteurHeures = {};
+  
+  (data || []).forEach((commande) => {
+    const heure = new Date(commande.created_at).getHours();
+
+    compteurHeures[heure] =
+      (compteurHeures[heure] || 0) + 1;
+    (commande.contenu || []).forEach((produit) => {
+      const nom = produit.nom || "Produit inconnu";
+
+      compteurProduits[nom] =
+        (compteurProduits[nom] || 0) +
+        Number(produit.quantite || 0);
+    });
+  });
+
+  let produitTop = "Aucun";
+  let quantiteTop = 0;
+ 
+  Object.entries(compteurProduits).forEach(([nom, quantite]) => {
+    if (quantite > quantiteTop) {
+      produitTop = nom;
+      quantiteTop = quantite;
+    }
+  });
+
+  const maintenant = new Date();
+  const debutAujourdhui = new Date(maintenant);
+  debutAujourdhui.setHours(0, 0, 0, 0);
+
+  const debutHistorique = new Date(debutAujourdhui);
+  debutHistorique.setDate(debutHistorique.getDate() - 56);
+
+  const jourSemaineActuel = maintenant.getDay();
+
+  const nomsJours = [
+    "dimanche",
+    "lundi",
+    "mardi",
+    "mercredi",
+    "jeudi",
+    "vendredi",
+    "samedi",
+  ];
+
+  const { data: commandesHistoriqueRush, error: rushError } = await supabase
+    .from("commandes")
+    .select("created_at")
+    .gte("created_at", debutHistorique.toISOString())
+    .lt("created_at", debutAujourdhui.toISOString());
+
+  if (rushError) {
+    console.error(rushError);
+  }
+
+  const compteurHeuresRush = {};
+  const joursAnalyses = new Set();
+
+  (commandesHistoriqueRush || []).forEach((commande) => {
+    const dateCommande = new Date(commande.created_at);
+
+    if (dateCommande.getDay() !== jourSemaineActuel) return;
+
+    const jourKey = dateCommande.toISOString().slice(0, 10);
+    joursAnalyses.add(jourKey);
+
+    const heure = dateCommande.getHours();
+
+    compteurHeuresRush[heure] =
+      (compteurHeuresRush[heure] || 0) + 1;
+  });
+
+  let heureRush = "Aucune";
+  let nbCommandesRush = 0;
+
+  const nbJoursAnalyses = joursAnalyses.size || 1;
+
+  Object.entries(compteurHeuresRush).forEach(([heure, total]) => {
+    const moyenne = total / nbJoursAnalyses;
+
+    if (moyenne > nbCommandesRush) {
+      heureRush = `${heure}h`;
+      nbCommandesRush = moyenne;
+    }
+  });
+
+  const rushBase =
+    joursAnalyses.size > 0
+      ? `Basé sur ${joursAnalyses.size} ancien(s) ${nomsJours[jourSemaineActuel]}`
+      : "Pas encore assez d’historique";
+
+  setStatsCommandes({
+    caJour,
+    nbCommandesJour,
+    panierMoyen: nbCommandesJour > 0 ? caJour / nbCommandesJour : 0,
+    produitTop,
+    quantiteTop,
+    heureRush,
+    nbCommandesRush: Number(nbCommandesRush.toFixed(1)),
+    rushBase,
+  });
+  const { data: toutesCommandes, error: toutesCommandesError } = await supabase
+    .from("commandes")
+    .select("numero_commande, total, statut, created_at")
+    .order("created_at", { ascending: false });
+
+  if (toutesCommandesError) {
+    console.error(toutesCommandesError);
+  } else {
+    setCommandesStats(toutesCommandes || []);
+  }
+  };
+
+  const supprimerAnciennesDemandesPointage = async () => {
+  const limite = new Date();
+  limite.setDate(limite.getDate() - 7);
+
+  const { error } = await supabase
+    .from("demandes_modification_pointage")
+    .delete()
+    .lt("created_at", limite.toISOString());
+
+  if (error) {
+    console.error("Erreur suppression anciennes demandes :", error);
+    return;
+  }
+
+  chargerDemandesPointage();
+};
+
   useEffect(() => {
     if (isLogged) {
       chargerEmployes();
       chargerPointages();
       chargerDemandesPointage();
       chargerAvisClients();
+      calculerStatsCommandes();
       chargerProfiles();
       chargerPlanning();
+      supprimerAnciennesDemandesPointage();
     }
   }, [isLogged]);
 
@@ -392,6 +574,8 @@ if (role !== "employe") {
         .update({
           arrivee: demande.arrivee_demandee,
           depart: demande.depart_demandee,
+          origine: "modifie_admin",
+          commentaire_admin: "Pointage modifié par l’admin",
         })
         .eq("id", demande.pointage_id);
 
@@ -611,8 +795,39 @@ if (role !== "employe") {
     return `${heures}h${String(mins).padStart(2, "0")}`;
   };
 
+  const exporterCommandesJourExcel = (jour, commandesJour) => {
+    const lignes = commandesJour.map((commande) => ({
+      "Numéro commande": commande.numero_commande || commande.id,
+      Date: new Date(commande.created_at).toLocaleString("fr-FR"),
+      Total: Number(commande.total || 0),
+      Statut: commande.statut || "",
+    }));
+
+    const totalJour = commandesJour.reduce(
+      (total, commande) => total + Number(commande.total || 0),
+      0
+    );
+
+    lignes.push({});
+    lignes.push({
+      "Numéro commande": "TOTAL JOUR",
+      Total: totalJour,
+    });
+
+    const feuille = XLSX.utils.json_to_sheet(lignes);
+    const classeur = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(classeur, feuille, "Commandes");
+
+    XLSX.writeFile(classeur, `commandes-${jour.replaceAll("/", "-")}.xlsx`);
+  };
+
   const exporterPointagesExcel = () => {
-    const totalMinutes = historiquePointages.reduce((total, pointage) => {
+    const pointagesAExporter = historiquePointages.filter((pointage) => {
+      if (!pointage.arrivee) return false;
+      return pointage.arrivee.slice(0, 7) === moisExportAdmin;
+    });
+    const totalMinutes = pointagesAExporter.reduce((total, pointage) => {
       if (!pointage.arrivee || !pointage.depart) return total;
 
       const arrivee = new Date(pointage.arrivee);
@@ -622,7 +837,7 @@ if (role !== "employe") {
       return total + diffMinutes;
     }, 0);
 
-    const lignes = historiquePointages.map((pointage) => {
+    const lignes = pointagesAExporter.map((pointage) => {
       const employe = getEmploye(pointage.employe_id);
 
       return {
@@ -632,6 +847,13 @@ if (role !== "employe") {
         Départ: formatDateHeure(pointage.depart),
         "Temps travaillé": calculateWorkedTime(pointage.arrivee, pointage.depart),
         Statut: pointage.depart ? "Hors service" : "En service",
+        Commentaire:
+          pointage.commentaire_admin ||
+          (pointage.origine === "modifie_admin"
+            ? "Pointage modifié par l’admin"
+            : pointage.origine === "ajoute_admin"
+            ? "Pointage ajouté par l’admin suite oubli salarié"
+            : ""),
       };
       
     });
@@ -674,7 +896,9 @@ if (role !== "employe") {
       arrivee: debut,
       depart: fin,
       force_admin: true,
-    },
+      origine: "ajoute_admin",
+      commentaire_admin: "Pointage ajouté par l’admin suite oubli salarié",
+    }
   ]);
 
   if (error) {
@@ -700,6 +924,26 @@ if (role !== "employe") {
   const demandesTraitees = demandesPointage.filter(
     (demande) => demande.statut !== "en_attente"
   );
+
+    const commandesStatsGroupees = commandesStats.reduce((acc, commande) => {
+      const date = new Date(commande.created_at);
+
+      const annee = String(date.getFullYear());
+
+      const mois = date.toLocaleDateString("fr-FR", {
+        month: "long",
+      });
+
+      const jour = date.toLocaleDateString("fr-FR");
+
+      if (!acc[annee]) acc[annee] = {};
+      if (!acc[annee][mois]) acc[annee][mois] = {};
+      if (!acc[annee][mois][jour]) acc[annee][mois][jour] = [];
+
+      acc[annee][mois][jour].push(commande);
+
+      return acc;
+    }, {});
 
   const pointagesFiltres = historiquePointages.filter((pointage) => {
     const employe = getEmploye(pointage.employe_id);
@@ -835,6 +1079,17 @@ const supprimerCompte = async (userId) => {
             >
               Employés
             </button>
+
+            <button
+  onClick={() => setAdminTab("stats")}
+  className={`rounded-full px-6 py-3 font-black ${
+    adminTab === "stats"
+      ? "bg-yellow-400 text-black"
+      : "bg-white/10 text-white hover:bg-white/20"
+  }`}
+>
+  Statistiques
+</button>
 
             <button
               onClick={() => setAdminTab("planning")}
@@ -1090,6 +1345,142 @@ const supprimerCompte = async (userId) => {
               </div>
             </>
           )}
+
+          {adminTab === "stats" && (
+  <div className="mt-8 rounded-3xl border border-yellow-500/20 bg-white/5 p-6">
+    <h3 className="text-2xl font-black text-yellow-300">
+      Statistiques du jour
+    </h3>
+
+    <div className="mt-6 grid gap-4 md:grid-cols-5">
+      <div className="rounded-2xl bg-black p-5">
+        <p className="text-sm text-stone-400">
+          Chiffre d’affaires
+        </p>
+
+        <p className="mt-2 text-3xl font-black text-yellow-300">
+          {formatMontant(statsCommandes.caJour)}
+        </p>
+      </div>
+
+      <div className="rounded-2xl bg-black p-5">
+        <p className="text-sm text-stone-400">
+          Commandes
+        </p>
+
+        <p className="mt-2 text-3xl font-black text-white">
+          {statsCommandes.nbCommandesJour}
+        </p>
+      </div>
+
+      <div className="rounded-2xl bg-black p-5">
+        <p className="text-sm text-stone-400">
+          Panier moyen
+        </p>
+
+        <p className="mt-2 text-3xl font-black text-green-400">
+          {formatMontant(statsCommandes.panierMoyen)}
+        </p>
+      </div>
+      <div className="rounded-2xl bg-black p-5">
+        <p className="text-sm text-stone-400">Produit le plus vendu</p>
+
+        <p className="mt-2 text-xl font-black text-orange-400">
+          {statsCommandes.produitTop}
+        </p>
+
+        <p className="mt-2 text-sm font-bold text-white">
+          {statsCommandes.quantiteTop} vendu(s)
+        </p>
+      </div>
+
+      <div className="rounded-2xl bg-black p-5">
+        <p className="text-sm text-stone-400">Rush prévisionnel</p>
+
+        <p className="mt-2 text-xl font-black text-red-400">
+          {statsCommandes.heureRush}
+        </p>
+
+        <p className="mt-2 text-sm font-bold text-white">
+          {statsCommandes.nbCommandesRush} commande(s) en moyenne
+        </p>
+
+        <p className="mt-1 text-xs text-stone-400">
+          {statsCommandes.rushBase}
+        </p>
+      </div>
+    </div>
+    <div className="mt-8 space-y-4">
+    <h3 className="text-xl font-black text-yellow-300">
+        Export par jour
+      </h3>
+
+      {Object.entries(commandesStatsGroupees).map(([annee, moisData]) => (
+        <div key={annee} className="rounded-2xl bg-black p-4">
+          <button
+            onClick={() =>
+              setAnneesStatsOuvertes((current) => ({
+                ...current,
+                [annee]: !current[annee],
+              }))
+            }
+            className="rounded-full bg-yellow-400 px-5 py-3 font-black text-black"
+          >
+            {anneesStatsOuvertes[annee] ? "▼" : "▶"} {annee}
+          </button>
+
+          {anneesStatsOuvertes[annee] && (
+            <div className="mt-4 ml-4 space-y-3">
+              {Object.entries(moisData).map(([mois, joursData]) => {
+                const cleMois = `${annee}-${mois}`;
+
+                return (
+                  <div key={cleMois}>
+                    <button
+                      onClick={() =>
+                        setMoisStatsOuverts((current) => ({
+                          ...current,
+                          [cleMois]: !current[cleMois],
+                        }))
+                      }
+                      className="rounded-full bg-orange-500 px-5 py-2 font-black text-white"
+                    >
+                      {moisStatsOuverts[cleMois] ? "▼" : "▶"} {mois}
+                    </button>
+
+                    {moisStatsOuverts[cleMois] && (
+                      <div className="mt-3 ml-4 space-y-2">
+                        {Object.entries(joursData).map(([jour, commandesJour]) => (
+                          <div
+                            key={jour}
+                            className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white/5 px-4 py-3"
+                          >
+                            <span className="font-black text-white">
+                              {jour} — {commandesJour.length} commande(s)
+                            </span>
+
+                            <button
+                              onClick={() =>
+                                exporterCommandesJourExcel(jour, commandesJour)
+                              }
+                              className="rounded-full bg-green-600 px-4 py-2 font-black text-white hover:bg-green-500"
+                            >
+                              Exporter ce jour
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  </div>
+)}
 
           {adminTab === "avis" && (
             <div className="mt-8 rounded-3xl border border-yellow-500/20 bg-white/5 p-6">
@@ -1582,12 +1973,15 @@ const supprimerCompte = async (userId) => {
 
                       const enService = dernierPointage && !dernierPointage.depart;
 
+                      const moisActuel = new Date().toISOString().slice(0, 7);
+
                       const totalMinutesEmploye = historiquePointages
                         .filter(
                           (pointage) =>
                             pointage.employe_id === employe.id &&
                             pointage.arrivee &&
-                            pointage.depart
+                            pointage.depart &&
+                            pointage.arrivee.slice(0, 7) === moisActuel
                         )
                         .reduce((total, pointage) => {
                           const arrivee = new Date(pointage.arrivee);
@@ -1771,21 +2165,66 @@ const supprimerCompte = async (userId) => {
 
                   <div className="flex flex-wrap gap-3">
   <button
-    onClick={() => {
-      chargerEmployes();
-      chargerPointages();
+  type="button"
+  onClick={() => {
+    chargerEmployes();
+    chargerPointages();
+  }}
+  className="rounded-full bg-yellow-400 px-5 py-3 font-black text-black"
+>
+  Actualiser
+</button>
+
+<div className="flex flex-wrap gap-3">
+  <select
+    value={moisExportAdmin.split("-")[1]}
+    onChange={(e) => {
+      const annee = moisExportAdmin.split("-")[0];
+      setMoisExportAdmin(`${annee}-${e.target.value}`);
     }}
-    className="rounded-full bg-yellow-400 px-5 py-3 font-black text-black"
+    className="rounded-full bg-black px-5 py-3 font-bold text-white border border-yellow-500/30"
   >
-    Actualiser
-  </button>
+    <option value="01">Janvier</option>
+    <option value="02">Février</option>
+    <option value="03">Mars</option>
+    <option value="04">Avril</option>
+    <option value="05">Mai</option>
+    <option value="06">Juin</option>
+    <option value="07">Juillet</option>
+    <option value="08">Août</option>
+    <option value="09">Septembre</option>
+    <option value="10">Octobre</option>
+    <option value="11">Novembre</option>
+    <option value="12">Décembre</option>
+  </select>
+
+  <select
+    value={moisExportAdmin.split("-")[0]}
+    onChange={(e) => {
+      const mois = moisExportAdmin.split("-")[1];
+      setMoisExportAdmin(`${e.target.value}-${mois}`);
+    }}
+    className="rounded-full bg-black px-5 py-3 font-bold text-white border border-yellow-500/30"
+  >
+    {[2026, 2027, 2028, 2029, 2030].map((annee) => (
+      <option key={annee} value={annee}>
+        {annee}
+      </option>
+    ))}
+  </select>
+</div>
 
   <button
-    onClick={exporterPointagesExcel}
-    className="rounded-full bg-green-600 px-5 py-3 font-black text-white hover:bg-green-500"
-  >
-    Exporter Excel
-  </button>
+  type="button"
+  onClick={(e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    exporterPointagesExcel();
+  }}
+  className="rounded-full bg-green-600 px-5 py-3 font-black text-white hover:bg-green-500"
+>
+  Exporter Excel
+</button>
 
   <button
     onClick={() => setShowPointageForce(true)}
