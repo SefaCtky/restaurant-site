@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { Maximize, Minimize } from "lucide-react";
 
 export default function CuisinePage({
   supabase,
@@ -9,10 +10,20 @@ export default function CuisinePage({
   const [nouvelleCommande, setNouvelleCommande] = useState(null);
   const [commandeTempsSelection, setCommandeTempsSelection] = useState(null);
   const [modeCuisineActif, setModeCuisineActif] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
 
-  const commandesConnuesRef = React.useRef(new Set());
-  const premierChargementRef = React.useRef(true);
-  const audioContextRef = React.useRef(null);
+  const commandesConnuesRef = useRef(new Set());
+  const premierChargementRef = useRef(true);
+  const audioContextRef = useRef(null);
+  const toggleFullscreen = async () => {
+    if (!document.fullscreenElement) {
+      await document.documentElement.requestFullscreen();
+      setFullscreen(true);
+    } else {
+      await document.exitFullscreen();
+      setFullscreen(false);
+    }
+  };
 
   const jouerSonCuisine = async () => {
     const AudioContextClass =
@@ -71,8 +82,7 @@ export default function CuisinePage({
     const { data, error } = await supabase
       .from("commandes")
       .select("*")
-      .neq("statut", "Terminée")
-      .neq("statut", "Livrée")
+      .in("statut", ["En attente", "En préparation"])
       .order("created_at", { ascending: true });
 
     if (error) {
@@ -160,20 +170,36 @@ export default function CuisinePage({
     }
   };
 
-  const getTempsCommande = (dateCommande) => {
-    const maintenant = heureActuelle;
-    const creation = new Date(dateCommande).getTime();
+    const getTempsCommande = (dateCommande) => {
+      const maintenant = heureActuelle;
+      const creation = new Date(dateCommande).getTime();
 
-    return Math.floor((maintenant - creation) / 60000);
-  };
+      return Math.floor((maintenant - creation) / 60000);
+    };
+
+    const getTempsPreparation = (commande) => {
+      if (!commande.temps_estime_at) return null;
+
+      const debut = new Date(commande.temps_estime_at).getTime();
+      const maintenant = heureActuelle;
+
+      return Math.floor((maintenant - debut) / 60000);
+    };
+
+    const getNombreArticles = (commande) => {
+      return (commande.contenu || []).reduce(
+        (total, item) => total + (item.quantite || 0),
+        0
+      );
+    };
 
   const getUrgenceStyle = (minutes) => {
     if (minutes >= 20) {
-      return "border-red-500 bg-red-950/50 animate-pulse shadow-[0_0_35px_rgba(239,68,68,0.45)]";
+      return "border-red-500 bg-red-950/80 shadow-[0_0_70px_rgba(239,68,68,0.9)] scale-[1.01]";
     }
 
     if (minutes >= 10) {
-      return "border-orange-400 bg-orange-950/30 shadow-[0_0_25px_rgba(251,146,60,0.35)]";
+      return "border-orange-400 bg-orange-950/60 shadow-[0_0_45px_rgba(251,146,60,0.65)]";
     }
 
     return "border-yellow-500/30 bg-black/70";
@@ -203,14 +229,13 @@ export default function CuisinePage({
 
     chargerCommandes();
   };
+const commandesPreparation = commandes.filter(
+  (commande) =>
+    commande.statut === "En attente" ||
+    commande.statut === "En préparation"
+);
 
-  const commandesPreparation = commandes.filter(
-    (commande) => commande.statut !== "Prête"
-  );
-
-  const commandesPretes = commandes.filter(
-    (commande) => commande.statut === "Prête"
-  );
+const commandesPretes = [];
 
   const getTempsRestant = (commande) => {
   if (!commande.temps_estime_minutes || !commande.temps_estime_at) {
@@ -225,7 +250,18 @@ export default function CuisinePage({
   const fin = debut + commande.temps_estime_minutes * 60000;
   const restant = Math.max(0, Math.ceil((fin - heureActuelle) / 60000));
 
-  return `Temps restant : ${restant} min`;
+  if (restant <= 0) {
+  return "⏰ EN RETARD";
+}
+
+return `Temps restant : ${restant} min`;
+};
+
+const getHeureCommande = (dateCommande) => {
+  return new Date(dateCommande).toLocaleTimeString("fr-FR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 };
 
   const renderCommande = (commande) => {
@@ -234,14 +270,21 @@ export default function CuisinePage({
     return (
       <div
         key={commande.id}
-        className={`rounded-3xl border-2 p-6 shadow-2xl ${getUrgenceStyle(
-          minutes
-        )}`}
+        className={`rounded-3xl border-2 p-6 shadow-2xl transition-all duration-300
+        ${getUrgenceStyle(minutes)}
+        ${
+          commande.mode_paiement === "Sur place"
+            ? "xl:scale-[1.03]"
+            : ""
+        }`}
       >
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-3xl font-black text-white">
               #{commande.numero_commande || commande.id}
+            </p>
+            <p className="mt-2 text-lg font-bold text-stone-300">
+              Arrivée à {getHeureCommande(commande.created_at)}
             </p>
 
             {commande.mode_paiement && (
@@ -253,18 +296,36 @@ export default function CuisinePage({
                 }`}
               >
                 {commande.mode_paiement === "Sur place"
-                  ? "🔥 SUR PLACE - PRIORITÉ"
+                  ? "🔥 SUR PLACE • PRIORITÉ ABSOLUE"
                   : "À EMPORTER"}
               </p>
             )}
 
-            <p className="mt-3 text-5xl font-black text-yellow-300">
-              {minutes} min
+            <div className="mt-3 flex flex-wrap gap-2">
+              <span className="rounded-full bg-green-600 px-4 py-2 text-sm font-black text-white">
+                Total : {formatPrice(Number(commande.total || 0))}
+              </span>
+              <span className="rounded-full bg-blue-600 px-4 py-2 text-sm font-black text-white">
+                {getNombreArticles(commande)} article
+                {getNombreArticles(commande) > 1 ? "s" : ""}
+              </span>          
+            </div>
+
+            <p
+              className={`mt-3 text-5xl font-black ${
+                getTempsRestant(commande)?.includes("RETARD")
+                  ? "text-red-500 animate-pulse"
+                  : "text-yellow-300"
+              }`}
+            >
+              {getTempsRestant(commande)
+                ? getTempsRestant(commande).replace("Temps restant : ", "")
+                : `${minutes} min`}
             </p>
 
-            {getTempsRestant(commande) && (
-              <p className="mt-3 inline-flex rounded-full bg-blue-600 px-4 py-2 text-sm font-black text-white">
-                {getTempsRestant(commande)}
+            {getTempsPreparation(commande) !== null && (
+              <p className="mt-2 text-sm font-bold text-stone-400">
+                En préparation depuis {getTempsPreparation(commande)} min
               </p>
             )}
           </div>
@@ -285,29 +346,57 @@ export default function CuisinePage({
               </p>
 
               {item.viandes?.length > 0 && (
-                <p className="mt-2 text-lg text-yellow-300">
-                  {item.viandes
-                    .map((v) => v.name || v.nom || v)
-                    .join(", ")}
+                <div className="mt-3 rounded-2xl border border-yellow-400/40 bg-yellow-500/10 p-4">
+                  <p className="text-sm font-black uppercase tracking-wide text-yellow-300">
+                    Viandes
+                  </p>
+
+                  <p className="mt-2 text-2xl font-black text-yellow-200">
+                    {item.viandes.map((v) => v.name || v.nom || v).join(" • ")}
+                  </p>
+                </div>
+              )}
+
+              {item.sans_sauce_fromagere && (
+                <p className="mt-3 rounded-2xl border-2 border-red-500 bg-red-950/80 p-4 text-xlg font-black text-red-200 shadow-[0_0_30px_rgba(239,68,68,0.55)]">
+                  🚨 ALLERGIE / LACTOSE : SANS SAUCE FROMAGÈRE
+                </p>
+              )}
+
+              {item.supplement_cheddar && (
+                <p className="mt-3 rounded-2xl border-2 border-yellow-400 bg-yellow-950/70 p-3 text-lg font-black text-yellow-200">
+                  🧀 SUPPLÉMENT CHEDDAR
                 </p>
               )}
 
               {item.sauces?.length > 0 && (
-                <p className="mt-2 text-stone-300">
-                  Sauces : {item.sauces.join(", ")}
-                </p>
-              )}
+                <div className="mt-3">
+                  <p className="mb-2 text-sm font-black uppercase tracking-wide text-stone-400">
+                    Sauces
+                  </p>
 
+                  <div className="flex flex-wrap gap-2">
+                    {item.sauces.map((sauce, index) => (
+                      <span
+                        key={index}
+                        className="rounded-full bg-white/10 px-4 py-2 text-lg font-black text-white"
+                      >
+                        {sauce}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
               {item.note && (
-                <p className="mt-3 rounded-xl bg-red-500/20 p-3 font-bold text-red-300">
-                  NOTE : {item.note}
+                <p className="mt-3 rounded-2xl border-2 border-red-500 bg-red-950/70 p-4 text-lg font-black text-red-200 shadow-[0_0_25px_rgba(239,68,68,0.45)]">
+                  ⚠️ NOTE CUISINE : {item.note}
                 </p>
               )}
             </div>
           ))}
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-3">
+        <div className="mt-6 grid grid-cols-1 gap-3">
           <button
             onClick={() => setCommandeTempsSelection(commande.id)}
             className="rounded-2xl bg-blue-600 py-4 text-lg font-black text-white hover:bg-blue-500"
@@ -315,36 +404,32 @@ export default function CuisinePage({
             Préparation
           </button>
 
-          <button
-            onClick={() =>
-              modifierStatut(
-                commande.id,
-                "Prête"
-              )
-            }
-            className="rounded-2xl bg-green-600 py-4 text-lg font-black text-white hover:bg-green-500"
-          >
-            Prête
-          </button>
-
-          <button
-            onClick={() =>
-              modifierStatut(
-                commande.id,
-                "Terminée"
-              )
-            }
-            className="col-span-2 rounded-2xl bg-stone-700 py-4 text-lg font-black text-white hover:bg-stone-600"
-          >
-            Terminée
-          </button>
+          {commande.statut === "En préparation" && (
+            <button
+              onClick={() =>
+                modifierStatut(
+                  commande.id,
+                  "Prête"
+                )
+              }
+              className="rounded-2xl bg-green-600 py-4 text-lg font-black text-white hover:bg-green-500"
+            >
+              Prête
+            </button>
+          )}      
         </div>
       </div>
     );
   };
-
+  
   return (
     <main className="min-h-screen bg-black p-6">
+      <button
+        onClick={toggleFullscreen}
+        className="fixed top-4 right-4 z-50 bg-black text-orange-500 p-3 rounded-full shadow-lg border border-orange-500 hover:scale-110 transition"
+      >
+        {fullscreen ? <Minimize size={28} /> : <Maximize size={28} />}
+      </button>
       {!modeCuisineActif && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black">
           <button
@@ -417,22 +502,13 @@ export default function CuisinePage({
           </h1>
 
           <p className="mt-2 text-stone-400">
-            {commandes.length} commande
-            {commandes.length > 1 ? "s" : ""} en cours
+            {commandesPreparation.length} commande
+            {commandesPreparation.length > 1 ? "s" : ""} en cours
           </p>
         </div>
-
-        <button
-          onClick={() =>
-            document.documentElement.requestFullscreen()
-          }
-          className="rounded-full bg-purple-600 px-6 py-4 text-lg font-black text-white hover:bg-purple-500"
-        >
-          Plein écran
-        </button>
       </div>
 
-      {commandes.length === 0 ? (
+      {commandesPreparation.length === 0 ? (
         <div className="rounded-3xl border border-yellow-500/20 bg-black/60 p-20 text-center text-4xl font-black text-stone-500">
           Aucune commande
         </div>
@@ -446,19 +522,7 @@ export default function CuisinePage({
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {commandesPreparation.map(renderCommande)}
             </div>
-          </div>
-
-          {commandesPretes.length > 0 && (
-            <div>
-              <h2 className="mb-5 text-3xl font-black text-green-400">
-                PRÊTES À SERVIR
-              </h2>
-
-              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                {commandesPretes.map(renderCommande)}
-              </div>
-            </div>
-          )}
+          </div>          
         </div>
       )}
     </main>

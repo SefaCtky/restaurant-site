@@ -64,6 +64,22 @@ export default function StaffCommandesPage({
     playBeep(0.7, 1200);
   };
     
+ const activerModeCommandes = async () => {
+  if (!audioContextRef.current) {
+    audioContextRef.current = new (
+      window.AudioContext || window.webkitAudioContext
+    )();
+  }
+
+  await audioContextRef.current.resume();
+
+  activerSonCommandes();
+
+  setTimeout(() => {
+    playNotificationSound(true);
+  }, 100);
+};
+
   const activerSonStaff = () => {
     if (!audioContextRef.current) {
       audioContextRef.current = new (
@@ -367,16 +383,16 @@ const getBordureUrgence = (minutes) => {
     if (statut === "En attente") return "bg-yellow-400 text-black";
     if (statut === "En préparation") return "bg-blue-600 text-white";
     if (statut === "Prête") return "bg-green-600 text-white";
-    if (statut === "Terminée") return "bg-stone-600 text-white";
+    if (statut === "Livrée") return "bg-stone-700 text-white";
 
     return "bg-white/10 text-white";
   };
 
   const commandesEnCours = commandes.filter(
-  (commande) =>
-    commande.statut !== "Terminée" && commande.statut !== "Livrée"
-);
-
+    (commande) =>
+      commande.statut !== "Prête" &&
+      commande.statut !== "Livrée"
+  );
   const aujourdHui = new Date().toISOString().slice(0, 10);
 
 const commandesTermineesNonLivreesDuJour = commandes.filter((commande) => {
@@ -384,7 +400,7 @@ const commandesTermineesNonLivreesDuJour = commandes.filter((commande) => {
     .toISOString()
     .slice(0, 10);
 
-  return commande.statut === "Terminée" && dateCommande === aujourdHui;
+  return commande.statut === "Prête" && dateCommande === aujourdHui;
 });
 
 const commandesLivreesDuJour = commandes.filter((commande) => {
@@ -406,7 +422,7 @@ const commandesArchivees = commandes.filter((commande) => {
     .slice(0, 10);
 
   return (
-    (commande.statut === "Terminée" || commande.statut === "Livrée") &&
+    (commande.statut === "Livrée") &&
     dateCommande !== aujourdHui
   );
 });
@@ -595,6 +611,9 @@ const renderCommande = (commande) => (
             }`.trim() ||
             "Invité"}
         </p>
+        <p className="mt-1 text-sm font-bold text-stone-400">
+          Commande créée le : {formatDate(commande.created_at)}
+        </p>
 
         <p className="mt-2 text-2xl font-black text-yellow-300">
           {formatPrice(Number(commande.total || 0))}
@@ -662,10 +681,25 @@ const renderCommande = (commande) => (
             {item.accompagnement && <p>Accompagnement : {item.accompagnement}</p>}
             {item.viandes?.length > 0 && <p>Viandes : {item.viandes.map((v) => v.name || v.nom || v).join(", ")}</p>}
             {item.crudites?.length > 0 && <p>Options : {item.crudites.join(", ")}</p>}
+            {(item.sans_sauce_fromagere ||
+              item.sansSauceFromagere ||
+              item.sans_sauce_fromagère ||
+              item.sansSauceFromagère ||
+              item.options?.includes?.("Sans sauce fromagère") ||
+              item.crudites?.includes?.("Sans sauce fromagère")) && (
+              <p className="mt-3 rounded-2xl border-2 border-red-500 bg-red-950/80 p-4 text-xl font-black text-red-200 shadow-[0_0_30px_rgba(239,68,68,0.55)]">
+                🚨 ALLERGIE / LACTOSE : SANS SAUCE FROMAGÈRE
+              </p>
+            )}
+            {(item.cheddar || item.supplement_cheddar || item.supplementCheddar) && (
+              <p className="mt-3 rounded-2xl border-2 border-yellow-400 bg-yellow-950/70 p-4 text-lg font-black text-yellow-200">
+                🧀 SUPPLÉMENT CHEDDAR
+              </p>
+            )}
+
             {item.sauces?.length > 0 && <p>Sauces : {item.sauces.join(", ")}</p>}
             {item.sauces_frites?.length > 0 && <p>Sauces frites : {item.sauces_frites.join(", ")}</p>}
             {item.note && <p>Note : {item.note}</p>}
-
             <p className="mt-2 font-black text-yellow-300">
               {formatPrice(item.total_ligne || 0)}
             </p>
@@ -726,17 +760,19 @@ const renderCommande = (commande) => (
 
           <button onClick={(e) => { e.stopPropagation(); modifierStatut(commande.id, "Prête"); }} className="rounded-full bg-green-600 px-5 py-3 font-black text-white hover:bg-green-500">
             Prête
-          </button>
-
-          <button onClick={(e) => { e.stopPropagation(); modifierStatut(commande.id, "Terminée"); }} className="rounded-full bg-stone-600 px-5 py-3 font-black text-white hover:bg-stone-500">
-            Terminée
-          </button>
+          </button>          
         </>
       ) : (
         <>
-          {commande.statut === "Terminée" && (
-            <button onClick={(e) => { e.stopPropagation(); modifierStatut(commande.id, "Livrée"); }} className="rounded-full bg-green-600 px-5 py-3 font-black text-white hover:bg-green-500">
-              Marquer comme livrée
+          {commande.statut === "Prête" && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                modifierStatut(commande.id, "Livrée");
+              }}
+              className="rounded-full bg-green-600 px-5 py-3 font-black text-white hover:bg-green-500"
+            >
+              Livrée
             </button>
           )}
        
@@ -802,6 +838,18 @@ const getTempsRestant = (commande) => {
   
   return (
     <main className="px-5 py-16">
+
+      {!soundEnabled && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black">
+          <button
+            onClick={activerModeCommandes}
+            className="rounded-[3rem] border-4 border-yellow-400 bg-yellow-400 px-14 py-10 text-4xl font-black text-black shadow-[0_0_80px_rgba(250,204,21,0.6)] hover:bg-yellow-300"
+          >
+            CLIQUER POUR ACTIVER LE MODE COMMANDES
+          </button>
+        </div>
+      )}
+      
       {nouvelleCommandePopup && (
         <div className="fixed right-5 top-5 z-50 animate-bounce rounded-3xl border-2 border-yellow-400 bg-black px-6 py-5 shadow-2xl shadow-yellow-400/30">
           <p className="text-sm font-black text-yellow-300">🔔 Nouvelle commande</p>
