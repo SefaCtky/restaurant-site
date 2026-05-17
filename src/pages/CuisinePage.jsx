@@ -7,12 +7,12 @@ export default function CuisinePage({
   const [commandes, setCommandes] = useState([]);
   const [heureActuelle, setHeureActuelle] = useState(Date.now());
   const [nouvelleCommande, setNouvelleCommande] = useState(null);
+  const [commandeTempsSelection, setCommandeTempsSelection] = useState(null);
+  const [modeCuisineActif, setModeCuisineActif] = useState(false);
 
   const commandesConnuesRef = React.useRef(new Set());
   const premierChargementRef = React.useRef(true);
   const audioContextRef = React.useRef(null);
-
-  const [modeCuisineActif, setModeCuisineActif] = useState(false);
 
   const jouerSonCuisine = async () => {
     const AudioContextClass =
@@ -81,16 +81,11 @@ export default function CuisinePage({
     }
 
     const nouvelles = (data || []).filter(
-      (commande) =>
-        !commandesConnuesRef.current.has(commande.id)
+      (commande) => !commandesConnuesRef.current.has(commande.id)
     );
 
-    if (
-      !premierChargementRef.current &&
-      nouvelles.length > 0
-    ) {
+    if (!premierChargementRef.current && nouvelles.length > 0) {
       setNouvelleCommande(nouvelles[0]);
-
       jouerSonCuisine();
 
       setTimeout(() => {
@@ -186,15 +181,24 @@ export default function CuisinePage({
 
   const modifierStatut = async (
     commandeId,
-    statut
+    statut,
+    tempsEstime = null
   ) => {
+    const updateData = { statut };
+
+    if (tempsEstime !== null) {
+      updateData.temps_estime_minutes = tempsEstime;
+      updateData.temps_estime_at = new Date().toISOString();
+    }
+
     const { error } = await supabase
       .from("commandes")
-      .update({ statut })
+      .update(updateData)
       .eq("id", commandeId);
 
     if (error) {
       console.error(error);
+      return;
     }
 
     chargerCommandes();
@@ -208,10 +212,24 @@ export default function CuisinePage({
     (commande) => commande.statut === "Prête"
   );
 
+  const getTempsRestant = (commande) => {
+  if (!commande.temps_estime_minutes || !commande.temps_estime_at) {
+    return null;
+  }
+
+  if (commande.statut === "Prête") {
+    return "Commande prête ✅";
+  }
+
+  const debut = new Date(commande.temps_estime_at).getTime();
+  const fin = debut + commande.temps_estime_minutes * 60000;
+  const restant = Math.max(0, Math.ceil((fin - heureActuelle) / 60000));
+
+  return `Temps restant : ${restant} min`;
+};
+
   const renderCommande = (commande) => {
-    const minutes = getTempsCommande(
-      commande.created_at
-    );
+    const minutes = getTempsCommande(commande.created_at);
 
     return (
       <div
@@ -222,6 +240,10 @@ export default function CuisinePage({
       >
         <div className="flex items-start justify-between gap-4">
           <div>
+            <p className="text-3xl font-black text-white">
+              #{commande.numero_commande || commande.id}
+            </p>
+
             {commande.mode_paiement && (
               <p
                 className={`mt-2 inline-flex rounded-full px-4 py-2 text-sm font-black ${
@@ -239,6 +261,12 @@ export default function CuisinePage({
             <p className="mt-3 text-5xl font-black text-yellow-300">
               {minutes} min
             </p>
+
+            {getTempsRestant(commande) && (
+              <p className="mt-3 inline-flex rounded-full bg-blue-600 px-4 py-2 text-sm font-black text-white">
+                {getTempsRestant(commande)}
+              </p>
+            )}
           </div>
 
           <div className="rounded-full bg-yellow-400 px-4 py-2 text-sm font-black text-black">
@@ -247,51 +275,41 @@ export default function CuisinePage({
         </div>
 
         <div className="mt-6 space-y-4">
-          {(commande.contenu || []).map(
-            (item, index) => (
-              <div
-                key={index}
-                className="rounded-2xl bg-white/5 p-4"
-              >
-                <p className="text-2xl font-black text-white">
-                  {item.quantite}x {item.nom}
+          {(commande.contenu || []).map((item, index) => (
+            <div
+              key={index}
+              className="rounded-2xl bg-white/5 p-4"
+            >
+              <p className="text-2xl font-black text-white">
+                {item.quantite}x {item.nom}
+              </p>
+
+              {item.viandes?.length > 0 && (
+                <p className="mt-2 text-lg text-yellow-300">
+                  {item.viandes
+                    .map((v) => v.name || v.nom || v)
+                    .join(", ")}
                 </p>
+              )}
 
-                {item.viandes?.length > 0 && (
-                  <p className="mt-2 text-lg text-yellow-300">
-                    {item.viandes
-                      .map(
-                        (v) => v.name || v.nom || v
-                      )
-                      .join(", ")}
-                  </p>
-                )}
+              {item.sauces?.length > 0 && (
+                <p className="mt-2 text-stone-300">
+                  Sauces : {item.sauces.join(", ")}
+                </p>
+              )}
 
-                {item.sauces?.length > 0 && (
-                  <p className="mt-2 text-stone-300">
-                    Sauces :{" "}
-                    {item.sauces.join(", ")}
-                  </p>
-                )}
-
-                {item.note && (
-                  <p className="mt-3 rounded-xl bg-red-500/20 p-3 font-bold text-red-300">
-                    NOTE : {item.note}
-                  </p>
-                )}
-              </div>
-            )
-          )}
+              {item.note && (
+                <p className="mt-3 rounded-xl bg-red-500/20 p-3 font-bold text-red-300">
+                  NOTE : {item.note}
+                </p>
+              )}
+            </div>
+          ))}
         </div>
 
         <div className="mt-6 grid grid-cols-2 gap-3">
           <button
-            onClick={() =>
-              modifierStatut(
-                commande.id,
-                "En préparation"
-              )
-            }
+            onClick={() => setCommandeTempsSelection(commande.id)}
             className="rounded-2xl bg-blue-600 py-4 text-lg font-black text-white hover:bg-blue-500"
           >
             Préparation
@@ -346,18 +364,48 @@ export default function CuisinePage({
             </p>
 
             <p className="mt-6 text-7xl font-black text-white">
-              #
-              {nouvelleCommande.numero_commande ||
-                nouvelleCommande.id}
+              #{nouvelleCommande.numero_commande || nouvelleCommande.id}
             </p>
 
             <p className="mt-6 text-5xl font-black text-yellow-300">
-              {formatPrice(
-                Number(
-                  nouvelleCommande.total || 0
-                )
-              )}
+              {formatPrice(Number(nouvelleCommande.total || 0))}
             </p>
+          </div>
+        </div>
+      )}
+
+      {commandeTempsSelection && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/80">
+          <div className="w-full max-w-md rounded-3xl border border-yellow-500 bg-black p-8">
+            <h2 className="mb-6 text-center text-3xl font-black text-yellow-400">
+              Temps estimé
+            </h2>
+
+            <div className="space-y-4">
+              {[10, 20, 30].map((temps) => (
+                <button
+                  key={temps}
+                  onClick={() => {
+                    modifierStatut(
+                      commandeTempsSelection,
+                      "En préparation",
+                      temps
+                    );
+                    setCommandeTempsSelection(null);
+                  }}
+                  className="w-full rounded-2xl bg-yellow-400 px-6 py-5 text-2xl font-black text-black hover:bg-yellow-300"
+                >
+                  {temps} min
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setCommandeTempsSelection(null)}
+              className="mt-6 w-full rounded-2xl bg-white/10 px-6 py-4 font-bold text-white"
+            >
+              Annuler
+            </button>
           </div>
         </div>
       )}
@@ -370,8 +418,7 @@ export default function CuisinePage({
 
           <p className="mt-2 text-stone-400">
             {commandes.length} commande
-            {commandes.length > 1 ? "s" : ""} en
-            cours
+            {commandes.length > 1 ? "s" : ""} en cours
           </p>
         </div>
 
@@ -397,9 +444,7 @@ export default function CuisinePage({
             </h2>
 
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {commandesPreparation.map(
-                renderCommande
-              )}
+              {commandesPreparation.map(renderCommande)}
             </div>
           </div>
 
@@ -410,9 +455,7 @@ export default function CuisinePage({
               </h2>
 
               <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                {commandesPretes.map(
-                  renderCommande
-                )}
+                {commandesPretes.map(renderCommande)}
               </div>
             </div>
           )}

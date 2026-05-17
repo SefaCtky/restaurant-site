@@ -640,6 +640,12 @@ const renderCommande = (commande) => (
       </span>
     </div>
 
+    {getTempsRestant(commande) && (
+  <p className="mt-2 inline-flex rounded-full bg-blue-600 px-4 py-2 text-sm font-black text-white">
+    {getTempsRestant(commande)}
+  </p>
+)}
+
     {commandeOuverteId === commande.id && (
       <div className="mt-5 space-y-3 rounded-2xl border border-yellow-500/20 bg-black/50 p-4">
         <h3 className="font-black text-yellow-300">Détail de la commande</h3>
@@ -774,6 +780,26 @@ const commandesAffichees =
     );
   }
 
+const getTempsRestant = (commande) => {
+  if (!commande.temps_estime_minutes || !commande.temps_estime_at) {
+    return null;
+  }
+
+  if (commande.statut === "Prête") {
+    return "Commande prête ✅";
+  }
+
+  if (commande.statut === "Livrée") {
+    return "Commande livrée ✅";
+  }
+
+  const debut = new Date(commande.temps_estime_at).getTime();
+  const fin = debut + commande.temps_estime_minutes * 60000;
+  const restant = Math.max(0, Math.ceil((fin - Date.now()) / 60000));
+
+  return `Temps restant : ${restant} min`;
+};
+  
   return (
     <main className="px-5 py-16">
       {nouvelleCommandePopup && (

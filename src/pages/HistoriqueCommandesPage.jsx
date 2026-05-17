@@ -36,6 +36,32 @@ export default function HistoriqueCommandesPage({
 
   useEffect(() => {
     chargerHistorique();
+
+    if (!user?.id) return;
+
+    const interval = setInterval(() => {
+      chargerHistorique();
+    }, 3000);
+
+    const channel = supabase
+      .channel("historique-commandes-client")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "commandes",
+        },
+        () => {
+          chargerHistorique();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
   }, [user?.id]);
 
   const recommander = (commande) => {
@@ -64,6 +90,75 @@ export default function HistoriqueCommandesPage({
     setCart(nouveauPanier);
     setCartOpen(true);
   };
+
+  const getStatutStyle = (statut) => {
+  switch (statut) {
+    case "en_attente":
+      return {
+        text: "En attente",
+        className: "bg-red-500/20 text-red-300 border border-red-500/30",
+      };
+
+    case "en_preparation":
+      return {
+        text: "En préparation",
+        className:
+          "bg-orange-500/20 text-orange-300 border border-orange-500/30",
+      };
+
+    case "prete":
+      return {
+        text: "Prête",
+        className:
+          "bg-green-500/20 text-green-300 border border-green-500/30",
+      };
+
+    case "livree":
+      return {
+        text: "Livrée",
+        className:
+          "bg-stone-500/20 text-stone-300 border border-stone-500/30",
+      };
+
+    default:
+      return {
+        text: statut,
+        className:
+          "bg-white/10 text-white border border-white/20",
+      };
+  }
+};
+
+const getProgressionCommande = (statut) => {
+  const etapes = ["En attente", "En préparation", "Prête", "Livrée"];
+
+  const indexActuel = etapes.indexOf(statut);
+
+  return etapes.map((etape, index) => ({
+    label: etape,
+    active: index <= indexActuel,
+  }));
+};
+
+const getTempsRestant = (commande) => {
+  if (!commande.temps_estime_minutes || !commande.temps_estime_at) {
+    return null;
+  }
+
+  if (commande.statut === "Prête") {
+    return "Votre commande est prête ✅";
+  }
+
+  if (commande.statut === "Livrée") {
+    return "Commande livrée ✅";
+  }
+
+  const debut = new Date(commande.temps_estime_at).getTime();
+  const fin = debut + commande.temps_estime_minutes * 60000;
+  const restant = Math.max(0, Math.ceil((fin - Date.now()) / 60000));
+
+  return `Temps estimé restant : ${restant} min`;
+};
 
   return (
     <main className="px-5 py-16">
@@ -97,7 +192,11 @@ export default function HistoriqueCommandesPage({
           {commandes.map((commande) => (
             <div
               key={commande.id}
-              className="rounded-3xl border border-yellow-500/20 bg-white/5 p-6"
+              className={`rounded-3xl border p-6 ${
+                ["En attente", "En préparation", "Prête"].includes(commande.statut)
+                  ? "border-green-400 bg-green-500/15 shadow-[0_0_45px_rgba(34,197,94,0.55)] ring-2 ring-green-400/40"
+                  : "border-yellow-500/20 bg-white/5"
+              }`}
             >
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
@@ -111,9 +210,37 @@ export default function HistoriqueCommandesPage({
                       : ""}
                   </p>
 
-                  <p className="mt-2 font-bold text-white">
-                    Statut : {commande.statut}
-                  </p>
+                  <div
+                    className={`mt-3 inline-flex rounded-full px-4 py-2 text-sm font-black ${getStatutStyle(
+                      commande.statut
+                    ).className}`}
+                  >
+                    {getStatutStyle(commande.statut).text}
+                  </div>
+                  {getTempsRestant(commande) && (
+                    <p className="mt-3 inline-flex rounded-full bg-blue-600 px-4 py-2 text-sm font-black text-white">
+                      {getTempsRestant(commande)}
+                    </p>
+                  )}
+                  <div className="mt-5 grid grid-cols-4 gap-2">
+                    {getProgressionCommande(commande.statut).map((etape) => (
+                      <div key={etape.label} className="text-center">
+                        <div
+                          className={`h-3 rounded-full ${
+                            etape.active ? "bg-yellow-400" : "bg-white/10"
+                          }`}
+                        />
+
+                        <p
+                          className={`mt-2 text-xs font-bold ${
+                            etape.active ? "text-yellow-300" : "text-stone-500"
+                          }`}
+                        >
+                          {etape.label}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="text-right">
