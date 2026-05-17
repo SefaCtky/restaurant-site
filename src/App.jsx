@@ -770,6 +770,41 @@ export default function RestaurantWebsite() {
   };
 
   if (window.location.pathname === "/cuisine") {
+    if (loadingAuth) {
+      return (
+        <main className="min-h-screen bg-black px-5 py-16 text-white">
+          <p className="text-center text-xl font-black text-yellow-300">
+            Chargement de l’espace cuisine...
+          </p>
+        </main>
+      );
+    }
+
+    if (!user) {
+      return (
+        <ConnexionPage
+          supabase={supabase}
+          verifierSession={verifierSession}
+          setActivePage={setActivePage}
+        />
+      );
+    }
+
+    if (!["admin", "employe"].includes(userRole)) {
+      return (
+        <main className="min-h-screen bg-black px-5 py-16 text-white">
+          <div className="mx-auto max-w-xl rounded-[2rem] border border-red-500/40 bg-red-950/20 p-8 text-center">
+            <h1 className="text-3xl font-black text-red-400">
+              Accès refusé
+            </h1>
+            <p className="mt-3 text-stone-300">
+              Cette page est réservée aux employés Chez Omer.
+            </p>
+          </div>
+        </main>
+      );
+    }
+
     return (
       <CuisinePage
         supabase={supabase}
