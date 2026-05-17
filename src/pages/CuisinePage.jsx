@@ -358,7 +358,7 @@ const getHeureCommande = (dateCommande) => {
               )}
 
               {item.sans_sauce_fromagere && (
-                <p className="mt-3 rounded-2xl border-2 border-red-500 bg-red-950/80 p-4 text-xlg font-black text-red-200 shadow-[0_0_30px_rgba(239,68,68,0.55)]">
+                <p className="mt-3 rounded-2xl border-2 border-red-500 bg-red-950/80 p-4 text-lg font-black text-red-200 shadow-[0_0_30px_rgba(239,68,68,0.55)]">
                   🚨 ALLERGIE / LACTOSE : SANS SAUCE FROMAGÈRE
                 </p>
               )}
