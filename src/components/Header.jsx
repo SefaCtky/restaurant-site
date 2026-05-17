@@ -100,7 +100,13 @@ export default function Header({
                 Déconnexion
               </button>
             )}
-            <button onClick={() => setCartOpen(true)} className="rounded-xl bg-yellow-400 px-4 py-3 font-black text-black">
+            <button
+              onClick={() => {
+                setCartOpen(true);
+                setOpen(false);
+              }}
+              className="rounded-xl bg-yellow-400 px-4 py-3 font-black text-black"
+            >
               Voir le panier ({itemCount})
             </button>
           </div>
