@@ -27,7 +27,10 @@ export default function Header({
           {nav.filter((item) => item !== "Accueil").map((item) => (
             <button
               key={item}
-              onClick={() => showPage(item)}
+              onClick={() => {
+                showPage(item);
+                setOpen(false);
+              }}
               className={`rounded-full px-6 py-3 text-sm font-black tracking-wide transition duration-300 ${
                 activePage === item
                   ? "bg-gradient-to-r from-yellow-300 to-orange-400 text-black shadow-[0_0_20px_rgba(250,204,21,0.45)]"
@@ -61,7 +64,11 @@ export default function Header({
           {itemCount > 0 && <span className="absolute -right-2 -top-2 rounded-full bg-red-600 px-2 py-0.5 text-xs text-white">{itemCount}</span>}
         </button>
 
-        <button className="rounded-2xl border border-yellow-500/20 bg-white/5 p-3 text-yellow-300 shadow-[0_0_20px_rgba(250,204,21,0.08)] backdrop-blur-md transition duration-300 hover:scale-105 hover:border-yellow-400/40 hover:bg-yellow-500/10 md:hidden">
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          className="rounded-2xl border border-yellow-500/20 bg-white/5 p-3 text-yellow-300 shadow-[0_0_20px_rgba(250,204,21,0.08)] backdrop-blur-md transition duration-300 hover:scale-105 hover:border-yellow-400/40 hover:bg-yellow-500/10 md:hidden"
+        >
           {open ? <X /> : <Menu />}
         </button>
       </div>
@@ -70,7 +77,11 @@ export default function Header({
         <div className="border-t border-yellow-500/10 bg-black/95 px-5 py-5 backdrop-blur-2xl md:hidden">
           <div className="flex flex-col gap-3">
             {nav.filter((item) => item !== "Accueil").map((item) => (
-              <button key={item} onClick={() => showPage(item)} className="rounded-2xl border border-yellow-500/10 bg-white/5 px-5 py-4 text-left font-black text-stone-200 transition duration-300 hover:border-yellow-400/30 hover:bg-yellow-500/10 hover:text-yellow-300">
+              <button key={item} onClick={() => {
+                showPage(item);
+                setOpen(false);
+              }}
+              className="rounded-2xl border border-yellow-500/10 bg-white/5 px-5 py-4 text-left font-black text-stone-200 transition duration-300 hover:border-yellow-400/30 hover:bg-yellow-500/10 hover:text-yellow-300">
                 {item}
               </button>
             ))}
