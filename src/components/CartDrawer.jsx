@@ -17,6 +17,7 @@ export default function CartDrawer({
   supabase,
 }) {
   const [sendingOrder, setSendingOrder] = useState(false);
+  const [typeCommande, setTypeCommande] = useState("Sur place");
 
   if (!cartOpen) return null;
 
@@ -92,7 +93,7 @@ const numeroCommande = `${prefix}${prochainNumero}`;
       contenu: contenuCommande,
       total,
       statut: "En attente",
-      mode_paiement: "Sur place",
+      mode_paiement: typeCommande,
       notes: "",
     });
 
@@ -191,6 +192,27 @@ const numeroCommande = `${prefix}${prochainNumero}`;
         </div>
 
         <div className="border-t border-yellow-500/20 p-5">
+        <div className="mb-5">
+          <p className="mb-3 text-sm font-black text-yellow-300">
+            Type de commande
+          </p>
+
+          <div className="flex gap-3">
+            {["Sur place", "À emporter"].map((type) => (
+              <button
+                key={type}
+                onClick={() => setTypeCommande(type)}
+                className={`rounded-full px-5 py-3 font-black transition ${
+                  typeCommande === type
+                    ? "bg-yellow-400 text-black"
+                    : "bg-white/10 text-white hover:bg-white/20"
+                }`}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+        </div>
           <div className="mb-4 flex items-center justify-between text-2xl font-black">
             <span>Total</span>
             <span>{formatPrice(total)}</span>

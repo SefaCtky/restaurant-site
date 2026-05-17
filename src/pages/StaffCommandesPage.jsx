@@ -310,13 +310,33 @@ useEffect(() => {
     });
   };
 
-const getTempsCommande = (dateCommande) => {
+const getTempsCommande = (commande) => {
   const maintenant = heureActuelle;
-  const creation = new Date(dateCommande).getTime();
 
-  const diffMinutes = Math.floor((maintenant - creation) / 60000);
+  const historiqueLivraison = commande.historique_statuts?.find(
+    (item) => item.nouveau_statut === "Livrée"
+  );
 
-  return diffMinutes;
+  const dateFin = historiqueLivraison?.created_at
+    ? new Date(historiqueLivraison.created_at).getTime()
+    : maintenant;
+
+  const creation = new Date(commande.created_at).getTime();
+
+  return Math.floor((dateFin - creation) / 60000);
+};
+
+const getTempsDepuisStatut = (commande, statutRecherche) => {
+  const historique = commande.historique_statuts?.find(
+    (item) => item.nouveau_statut === statutRecherche
+  );
+
+  if (!historique?.created_at) return null;
+
+  const maintenant = heureActuelle;
+  const dateStatut = new Date(historique.created_at).getTime();
+
+  return Math.floor((maintenant - dateStatut) / 60000);
 };
 
 const getCouleurTemps = (minutes) => {
@@ -359,17 +379,26 @@ const getBordureUrgence = (minutes) => {
 
   const aujourdHui = new Date().toISOString().slice(0, 10);
 
-const commandesTermineesDuJour = commandes.filter((commande) => {
+const commandesTermineesNonLivreesDuJour = commandes.filter((commande) => {
   const dateCommande = new Date(commande.created_at)
     .toISOString()
     .slice(0, 10);
 
-  return (
-    (commande.statut === "Terminée" ||
-      commande.statut === "Livrée") &&
-    dateCommande === aujourdHui
-  );
+  return commande.statut === "Terminée" && dateCommande === aujourdHui;
 });
+
+const commandesLivreesDuJour = commandes.filter((commande) => {
+  const dateCommande = new Date(commande.created_at)
+    .toISOString()
+    .slice(0, 10);
+
+  return commande.statut === "Livrée" && dateCommande === aujourdHui;
+});
+
+const commandesTermineesDuJour = [
+  ...commandesTermineesNonLivreesDuJour,
+  ...commandesLivreesDuJour,
+];
 
 const commandesArchivees = commandes.filter((commande) => {
   const dateCommande = new Date(commande.created_at)
@@ -377,8 +406,7 @@ const commandesArchivees = commandes.filter((commande) => {
     .slice(0, 10);
 
   return (
-    (commande.statut === "Terminée" ||
-      commande.statut === "Livrée") &&
+    (commande.statut === "Terminée" || commande.statut === "Livrée") &&
     dateCommande !== aujourdHui
   );
 });
@@ -537,15 +565,27 @@ const renderCommande = (commande) => (
         current === commande.id ? null : commande.id
       )
     }
-    className={`cursor-pointer rounded-[2rem] border bg-black/70 p-6 shadow-xl ${getBordureUrgence(
-      getTempsCommande(commande.created_at)
-    )}`}
+    className={`cursor-pointer rounded-[2rem] border bg-black/70 p-6 shadow-xl ${
+  ongletCommandes === "archivees"
+    ? "border-yellow-500/20"
+    : getBordureUrgence(getTempsCommande(commande))
+}`}
   >
     <div className="flex flex-wrap items-start justify-between gap-4">
       <div>
-        <p className="text-xl font-black text-white">
-          {commande.numero_commande || `Commande #${commande.id}`}
-        </p>
+        {commande.mode_paiement && (
+          <p
+            className={`mt-2 inline-flex rounded-full px-4 py-2 text-sm font-black ${
+              commande.mode_paiement === "Sur place"
+                ? "bg-red-600 text-white"
+                : "bg-yellow-400 text-black"
+            }`}
+          >
+            {commande.mode_paiement === "Sur place"
+              ? "🔥 SUR PLACE"
+              : "À EMPORTER"}
+          </p>
+        )}
 
         <p className="mt-2 text-sm font-bold text-stone-300">
           Client :{" "}
@@ -561,12 +601,28 @@ const renderCommande = (commande) => (
         </p>
 
         <p
-  className={`mt-2 text-lg font-black ${getCouleurTemps(
-    getTempsCommande(commande.created_at)
-  )}`}
+  className={`mt-2 text-lg font-black ${
+    ongletCommandes === "archivees"
+      ? "text-stone-400"
+      : getCouleurTemps(getTempsCommande(commande))
+  }`}
 >
-  ⏱️ {getTempsCommande(commande.created_at)} min
+  ⏱️ {getTempsCommande(commande)} min
 </p>
+
+{commande.statut === "Prête" && getTempsDepuisStatut(commande, "Prête") !== null && (
+  <p
+    className={`mt-3 inline-flex rounded-full px-4 py-2 text-sm font-black ${
+      getTempsDepuisStatut(commande, "Prête") >= 10
+        ? "bg-red-600 text-white animate-pulse"
+        : getTempsDepuisStatut(commande, "Prête") >= 5
+        ? "bg-orange-500 text-white"
+        : "bg-green-600 text-white"
+    }`}
+  >
+    Prête depuis {getTempsDepuisStatut(commande, "Prête")} min
+  </p>
+)}
 
         {commande.pris_en_charge_par && (
           <p className="mt-3 inline-flex rounded-full border border-yellow-500/30 bg-yellow-400/10 px-4 py-2 text-sm font-black text-yellow-300">
@@ -677,12 +733,7 @@ const renderCommande = (commande) => (
               Marquer comme livrée
             </button>
           )}
-
-          {commande.statut === "Livrée" && (
-            <span className="rounded-full bg-green-700 px-5 py-3 font-black text-white">
-              Commande livrée
-            </span>
-          )}
+       
         </>
       )}
     </div>
@@ -824,7 +875,57 @@ const commandesAffichees =
 
         </div>
 
-      {commandesAffichees.length === 0 ? (
+      {ongletCommandes === "terminees" ? (
+        <div className="space-y-10">
+          <div className="rounded-[2rem] border border-yellow-500/30 bg-black/60 p-6">
+            <div className="mb-5 flex items-center gap-3">
+              <h2 className="text-3xl font-black text-yellow-300">
+                À LIVRER
+              </h2>
+
+              <span className="rounded-xl bg-yellow-400 px-3 py-1 text-sm font-black text-black">
+                {commandesTermineesNonLivreesDuJour.length}
+              </span>
+            </div>
+
+            {commandesTermineesNonLivreesDuJour.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-yellow-500/20 bg-black/40 p-6 text-center text-stone-400">
+                Aucune commande à livrer.
+              </div>
+            ) : (
+              <div className="space-y-5">
+                {commandesTermineesNonLivreesDuJour.map((commande) =>
+                  renderCommande(commande)
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="rounded-[2rem] border border-green-500/30 bg-green-950/10 p-6">
+            <div className="mb-5 flex items-center gap-3">
+              <h2 className="text-3xl font-black text-green-400">
+                LIVRÉES
+              </h2>
+
+              <span className="rounded-xl bg-green-600 px-3 py-1 text-sm font-black text-white">
+                {commandesLivreesDuJour.length}
+              </span>
+            </div>
+
+            {commandesLivreesDuJour.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-green-500/20 bg-black/40 p-6 text-center text-stone-400">
+                Aucune commande livrée.
+              </div>
+            ) : (
+              <div className="space-y-5 opacity-80">
+                {commandesLivreesDuJour.map((commande) =>
+                  renderCommande(commande)
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : commandesAffichees.length === 0 ? (
         <div className="rounded-[2rem] border border-yellow-500/20 bg-black/60 p-8 text-center text-stone-400">
           Aucune commande pour le moment.
         </div>

@@ -24,6 +24,7 @@ import {
   Bell,
   BellOff,
 } from "lucide-react";
+import CuisinePage from "./pages/CuisinePage";
 
 const restaurantAddress = "15 Rue de Belfort, 90400 Sevenans";
 const phoneNumber = "07 49 19 49 27";
@@ -122,8 +123,9 @@ export default function RestaurantWebsite() {
   const [open, setOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [cart, setCart] = useState([]);
-  const [activePage, setActivePage] = useState("Accueil");
-  const [activeCategory, setActiveCategory] = useState(null);
+  const [activePage, setActivePage] = useState(
+    window.location.pathname === "/cuisine" ? "Cuisine" : "Accueil"
+  );  const [activeCategory, setActiveCategory] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedSaucesSandwich, setSelectedSaucesSandwich] = useState([]);
   const [selectedSaucesFrites, setSelectedSaucesFrites] = useState([]);
@@ -161,7 +163,9 @@ export default function RestaurantWebsite() {
     "À propos",
     ...(user ? ["Historique"] : []),
     "Contact",
-    ...(userRole === "admin" || userRole === "employe" ? ["Pointage", "Commandes"] : []),
+    ...(userRole === "admin" || userRole === "employe"
+      ? ["Pointage", "Commandes", "Cuisine"]
+      : []),
     ...(userRole === "admin" ? ["Admin"] : []),
     ...(!user ? ["Connexion"] : []),
   ];
@@ -398,6 +402,22 @@ export default function RestaurantWebsite() {
       listener?.subscription?.unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+  const handlePopState = () => {
+    setActivePage(
+      window.location.pathname === "/cuisine"
+        ? "Cuisine"
+        : "Accueil"
+    );
+  };
+
+  window.addEventListener("popstate", handlePopState);
+
+  return () => {
+    window.removeEventListener("popstate", handlePopState);
+  };
+}, []);
 
   useEffect(() => {
     chargerAnnonce();
@@ -643,6 +663,13 @@ export default function RestaurantWebsite() {
   const showPage = (page) => {
     setActivePage(page);
     setOpen(false);
+
+    if (page === "Cuisine") {
+      window.history.pushState({}, "", "/cuisine");
+    } else {
+      window.history.pushState({}, "", "/");
+    }
+
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -692,6 +719,17 @@ export default function RestaurantWebsite() {
       );
     }
 
+    if (activePage === "Cuisine") {
+      return (
+        <CuisinePage
+          supabase={supabase}
+          formatPrice={formatPrice}
+          soundEnabled={soundEnabled}
+          activerSonCommandes={activerSonCommandes}
+        />
+      );
+    }
+
     if (activePage === "Admin") {
       return (
         <AdminPage
@@ -731,6 +769,15 @@ export default function RestaurantWebsite() {
     );
   };
 
+  if (window.location.pathname === "/cuisine") {
+    return (
+      <CuisinePage
+        supabase={supabase}
+        formatPrice={formatPrice}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-black text-stone-100">
       <div className="fixed inset-0 -z-10 bg-black" />
@@ -738,45 +785,35 @@ export default function RestaurantWebsite() {
       <div className="fixed inset-0 -z-10 opacity-[0.07] bg-[url('/carte-visite.png')] bg-cover bg-center" />
       <style>{`@keyframes reservationMarquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }`}</style>
 
-      <Header
-        LOGO={LOGO}
-        nav={nav}
-        activePage={activePage}
-        showPage={showPage}
-        user={user}
-        setUser={setUser}
-        setUserRole={setUserRole}
-        setActivePage={setActivePage}
-        setOpen={setOpen}
-        open={open}
-        itemCount={itemCount}
-        setCartOpen={setCartOpen}
-        supabase={supabase}
-      />
-
-      {["admin", "employe"].includes(userRole) && (
-        <button
-          onClick={activerSonCommandes}
-          className={`fixed bottom-5 left-5 z-[80] flex items-center gap-2 rounded-full px-5 py-3 font-black shadow-2xl transition ${
-            soundEnabled
-              ? newOrderFlash
-                ? "bg-red-600 text-white animate-pulse"
-                : "bg-green-600 text-white hover:bg-green-500"
-              : "bg-blue-600 text-white hover:bg-blue-500"
-          }`}
-        >
-          {soundEnabled ? <Bell size={18} /> : <BellOff size={18} />}
-          {soundEnabled
-            ? newOrderFlash
-              ? "Nouvelle commande !"
-              : "Désactiver son commandes"
-            : "Activer son commandes"}
-        </button>
+      {activePage !== "Cuisine" && (
+        <Header
+          LOGO={LOGO}
+          nav={nav}
+          activePage={activePage}
+          showPage={showPage}
+          user={user}
+          setUser={setUser}
+          setUserRole={setUserRole}
+          setActivePage={setActivePage}
+          setOpen={setOpen}
+          open={open}
+          itemCount={itemCount}
+          setCartOpen={setCartOpen}
+          supabase={supabase}
+        />
       )}
 
-      <MobileCartButton itemCount={itemCount} setCartOpen={setCartOpen} />
+      
+      {activePage !== "Cuisine" && (
+        <MobileCartButton
+          itemCount={itemCount}
+          setCartOpen={setCartOpen}
+        />
+      )}
       <CurrentPage />
-      <Footer LOGO={LOGO} />
+      {activePage !== "Cuisine" && (
+        <Footer LOGO={LOGO} />
+      )}
 
       <ProductModal
         selectedProduct={selectedProduct}
