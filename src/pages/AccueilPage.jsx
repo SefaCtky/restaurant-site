@@ -173,25 +173,25 @@ export default function AccueilPage({
             </div>
           )}
 
-          <div className="inline-flex rounded-full border border-yellow-500/30 bg-black/60 px-6 py-3 font-black text-yellow-300">
+          <div className="inline-flex items-center gap-2 rounded-full border border-yellow-400/20 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 px-6 py-3 font-black tracking-wide text-yellow-200 shadow-[0_0_25px_rgba(250,204,21,0.12)] backdrop-blur-xl">
             Restaurant HALAL • Le kebab fait maison
           </div>
 
-          <h1 className="mt-8 text-6xl font-black uppercase leading-none text-white md:text-8xl">
+          <h1 className="mt-8 text-5xl font-black uppercase leading-none tracking-normal text-white drop-shadow-[0_0_25px_rgba(255,255,255,0.08)] sm:text-6xl lg:text-7xl">
             Chez Omer
-            <span className="block bg-gradient-to-r from-yellow-300 to-orange-500 bg-clip-text text-transparent">
+            <span className="block bg-gradient-to-r from-yellow-200 via-yellow-400 to-orange-500 bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(250,204,21,0.25)]">
               Restaurant
             </span>
           </h1>
 
-          <p className="mt-8 max-w-2xl text-2xl font-bold leading-relaxed text-white">
+          <p className="mt-8 max-w-2xl text-lg font-medium leading-relaxed text-stone-300 sm:text-xl">
             Viande sélectionnée, fait maison, cuisson maîtrisée et qualité premium. Sur place ou à emporter à Sevenans.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-4">
             <button
               onClick={() => showPage("Menu")}
-              className="rounded-full bg-yellow-400 px-8 py-4 font-black text-black shadow-xl hover:bg-yellow-300"
+              className="rounded-full bg-gradient-to-r from-yellow-300 to-orange-400 px-8 py-4 font-black text-black shadow-[0_0_30px_rgba(250,204,21,0.35)] transition duration-300 hover:scale-105 hover:shadow-[0_0_45px_rgba(251,146,60,0.45)]"
             >
               Voir le menu
             </button>
@@ -216,25 +216,25 @@ export default function AccueilPage({
 
       <section className="mx-auto max-w-7xl px-5 py-14">
         <div className="grid gap-6 md:grid-cols-3">
-          <div className="rounded-3xl border border-yellow-500/20 bg-white/5 p-6">
+          <div className="rounded-3xl border border-yellow-500/20 bg-white/5 p-6 transition duration-300 hover:-translate-y-1 hover:border-yellow-400/30 hover:shadow-[0_0_30px_rgba(250,204,21,0.15)]">
             <MapPin className="text-yellow-400" />
             <h3 className="mt-4 text-xl font-black text-white">Adresse</h3>
             <p className="mt-2 text-stone-300">{restaurantAddress}</p>
           </div>
 
-          <div className="rounded-3xl border border-yellow-500/20 bg-white/5 p-6">
+          <div className="rounded-3xl border border-yellow-500/20 bg-white/5 p-6 transition duration-300 hover:-translate-y-1 hover:border-yellow-400/30 hover:shadow-[0_0_30px_rgba(250,204,21,0.15)]">
             <Phone className="text-yellow-400" />
             <h3 className="mt-4 text-xl font-black text-white">Téléphone</h3>
             <p className="mt-2 text-stone-300">{phoneNumber}</p>
           </div>
 
-          <div className="rounded-3xl border border-yellow-500/20 bg-white/5 p-6">
+          <div className="rounded-3xl border border-yellow-500/20 bg-white/5 p-6 transition duration-300 hover:-translate-y-1 hover:border-yellow-400/30 hover:shadow-[0_0_30px_rgba(250,204,21,0.15)]">
             <h3 className="text-xl font-black text-white">Commande WhatsApp</h3>
             <a
               href={`https://wa.me/${whatsappNumber}`}
               target="_blank"
               rel="noreferrer"
-              className="mt-4 inline-block rounded-full bg-green-600 px-6 py-3 font-black text-white hover:bg-green-500"
+              className="mt-4 inline-block rounded-full bg-gradient-to-r from-green-500 to-emerald-400 px-6 py-3 font-black text-white shadow-[0_0_25px_rgba(34,197,94,0.25)] transition duration-300 hover:scale-105 hover:shadow-[0_0_35px_rgba(16,185,129,0.4)]"
             >
               Contacter
             </a>
@@ -254,7 +254,7 @@ export default function AccueilPage({
             <p className="text-stone-400">Aucun avis validé pour le moment.</p>
           ) : (
             avisValides.slice(0, 6).map((avis) => (
-              <div key={avis.id} className="rounded-3xl border border-yellow-500/20 bg-black/60 p-6">
+              <div key={avis.id} className="rounded-3xl border border-yellow-500/10 bg-gradient-to-b from-black/80 to-black/60 p-6 transition duration-300 hover:-translate-y-1 hover:border-yellow-400/30 hover:shadow-[0_0_35px_rgba(250,204,21,0.12)]">
                 <div className="flex gap-1 text-yellow-400">
                   {Array.from({ length: Number(avis.note) || 5 }).map((_, index) => (
                     <Star key={index} size={18} fill="currentColor" />
@@ -294,7 +294,7 @@ export default function AccueilPage({
                     prenom: e.target.value,
                   }))
                 }
-                className="w-full rounded-2xl border border-yellow-500/20 bg-black px-5 py-4 text-white outline-none focus:border-yellow-400 disabled:opacity-70"
+                className="w-full rounded-2xl border border-yellow-500/10 bg-black/70 backdrop-blur-xl transition duration-300 focus:border-yellow-400/50 focus:shadow-[0_0_25px_rgba(250,204,21,0.15)] px-5 py-4 text-white outline-none focus:border-yellow-400 disabled:opacity-70"
               />
 
               <input
@@ -308,7 +308,7 @@ export default function AccueilPage({
                     nom: e.target.value,
                   }))
                 }
-                className="w-full rounded-2xl border border-yellow-500/20 bg-black px-5 py-4 text-white outline-none focus:border-yellow-400 disabled:opacity-70"
+                className="w-full rounded-2xl border border-yellow-500/10 bg-black/70 backdrop-blur-xl transition duration-300 focus:border-yellow-400/50 focus:shadow-[0_0_25px_rgba(250,204,21,0.15)] px-5 py-4 text-white outline-none focus:border-yellow-400 disabled:opacity-70"
               />
             </div>
 
@@ -320,7 +320,7 @@ export default function AccueilPage({
                   note: e.target.value,
                 }))
               }
-              className="w-full rounded-2xl border border-yellow-500/20 bg-black px-5 py-4 text-white outline-none focus:border-yellow-400"
+              className="w-full rounded-2xl border border-yellow-500/10 bg-black/70 backdrop-blur-xl transition duration-300 focus:border-yellow-400/50 focus:shadow-[0_0_25px_rgba(250,204,21,0.15)] px-5 py-4 text-white outline-none focus:border-yellow-400"
             >
               <option value="5">5 étoiles</option>
               <option value="4">4 étoiles</option>
@@ -338,7 +338,7 @@ export default function AccueilPage({
                   commentaire: e.target.value,
                 }))
               }
-              className="min-h-32 w-full rounded-2xl border border-yellow-500/20 bg-black px-5 py-4 text-white outline-none focus:border-yellow-400"
+              className="min-h-32 w-full rounded-2xl border border-yellow-500/10 bg-black/70 backdrop-blur-xl transition duration-300 focus:border-yellow-400/50 focus:shadow-[0_0_25px_rgba(250,204,21,0.15)] px-5 py-4 text-white outline-none focus:border-yellow-400"
             />
 
             <button

@@ -310,7 +310,7 @@ const getHeureCommande = (dateCommande) => {
                 {getNombreArticles(commande) > 1 ? "s" : ""}
               </span>          
             </div>
-
+        
             <p
               className={`mt-3 text-5xl font-black ${
                 getTempsRestant(commande)?.includes("RETARD")

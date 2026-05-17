@@ -160,6 +160,44 @@ const getTempsRestant = (commande) => {
   return `Temps estimé restant : ${restant} min`;
 };
 
+const getMessageStatut = (statut) => {
+  switch (statut) {
+    case "En attente":
+      return "🧾 Votre commande a bien été reçue.";
+
+    case "En préparation":
+      return "👨‍🍳 La cuisine prépare votre commande.";
+
+    case "Prête":
+      return "✅ Votre commande est prête !";
+
+    case "Livrée":
+      return "🎉 Merci pour votre commande Chez Omer.";
+
+    default:
+      return "";
+  }
+};
+
+const getIconStatut = (statut) => {
+  switch (statut) {
+    case "en_attente":
+      return "🧾";
+
+    case "en_preparation":
+      return "👨‍🍳";
+
+    case "prete":
+      return "✅";
+
+    case "livree":
+      return "🎉";
+
+    default:
+      return "🍴";
+  }
+};
+
   return (
     <main className="px-5 py-16">
       <div className="mx-auto max-w-5xl">
@@ -194,7 +232,7 @@ const getTempsRestant = (commande) => {
               key={commande.id}
               className={`rounded-3xl border p-6 ${
                 ["En attente", "En préparation", "Prête"].includes(commande.statut)
-                  ? "border-green-400 bg-green-500/15 shadow-[0_0_45px_rgba(34,197,94,0.55)] ring-2 ring-green-400/40"
+                  ? "border-green-400 bg-green-500/15 shadow-[0_0_60px_rgba(34,197,94,0.35)] ring-2 ring-green-400/40 animate-pulse"
                   : "border-yellow-500/20 bg-white/5"
               }`}
             >
@@ -215,12 +253,21 @@ const getTempsRestant = (commande) => {
                       commande.statut
                     ).className}`}
                   >
-                    {getStatutStyle(commande.statut).text}
+                    {getIconStatut(commande.statut)} {getStatutStyle(commande.statut).text}
+                  
                   </div>
                   {getTempsRestant(commande) && (
-                    <p className="mt-3 inline-flex rounded-full bg-blue-600 px-4 py-2 text-sm font-black text-white">
-                      {getTempsRestant(commande)}
-                    </p>
+                    <div className="mt-3 space-y-2">
+                      <p className="inline-flex rounded-full bg-blue-600 px-4 py-2 text-sm font-black text-white">
+                        {getTempsRestant(commande)}
+                      </p>
+
+                      {!["Prête", "Livrée"].includes(commande.statut) && (
+                        <p className="text-sm font-bold text-stone-300">
+                          {getMessageStatut(commande.statut)}
+                        </p>
+                      )}
+                    </div>
                   )}
                   <div className="mt-5 grid grid-cols-4 gap-2">
                     {getProgressionCommande(commande.statut).map((etape) => (
@@ -250,7 +297,7 @@ const getTempsRestant = (commande) => {
 
                   <button
                     onClick={() => recommander(commande)}
-                    className="mt-3 flex items-center gap-2 rounded-full bg-yellow-400 px-5 py-3 font-black text-black hover:bg-yellow-300"
+                    className="mt-3 flex items-center gap-2 rounded-full bg-gradient-to-r from-yellow-300 to-orange-400 px-5 py-3 font-black text-black shadow-[0_0_25px_rgba(250,204,21,0.25)] transition duration-300 hover:scale-105 hover:shadow-[0_0_35px_rgba(251,146,60,0.4)]"
                   >
                     <RotateCcw size={18} />
                     Recommander
@@ -262,7 +309,7 @@ const getTempsRestant = (commande) => {
                 {(commande.contenu || []).map((item, index) => (
                   <div
                     key={index}
-                    className="rounded-2xl bg-black/40 p-4 text-sm text-stone-300"
+                    className="rounded-2xl border border-yellow-500/10 bg-black/50 p-4 text-sm text-stone-300 transition duration-300 hover:border-yellow-400/30 hover:bg-black/70"
                   >
                     <p className="font-black text-white">
                       {item.quantite}x {item.nom}
