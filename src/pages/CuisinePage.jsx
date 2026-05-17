@@ -11,6 +11,7 @@ export default function CuisinePage({
   const [commandeTempsSelection, setCommandeTempsSelection] = useState(null);
   const [modeCuisineActif, setModeCuisineActif] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
+  const modeRush = commandes.length >= 4;
 
   const commandesConnuesRef = useRef(new Set());
   const premierChargementRef = useRef(true);
@@ -229,13 +230,13 @@ export default function CuisinePage({
 
     chargerCommandes();
   };
-const commandesPreparation = commandes.filter(
-  (commande) =>
-    commande.statut === "En attente" ||
-    commande.statut === "En préparation"
+const commandesEnPreparation = commandes.filter(
+  (commande) => commande.statut === "En préparation"
 );
 
-const commandesPretes = [];
+const commandesEnAttente = commandes.filter(
+  (commande) => commande.statut === "En attente"
+);
 
   const getTempsRestant = (commande) => {
   if (!commande.temps_estime_minutes || !commande.temps_estime_at) {
@@ -270,7 +271,9 @@ const getHeureCommande = (dateCommande) => {
     return (
       <div
         key={commande.id}
-        className={`rounded-3xl border-2 p-6 shadow-2xl transition-all duration-300
+        className={`rounded-3xl border-2 shadow-2xl transition-all duration-300 ${
+          modeRush ? "p-4" : "p-6"
+        }
         ${getUrgenceStyle(minutes)}
         ${
           commande.mode_paiement === "Sur place"
@@ -280,7 +283,7 @@ const getHeureCommande = (dateCommande) => {
       >
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-3xl font-black text-white">
+            <p className={`${modeRush ? "text-xl" : "text-3xl"} font-black text-white`}>
               #{commande.numero_commande || commande.id}
             </p>
             <p className="mt-2 text-lg font-bold text-stone-300">
@@ -335,13 +338,19 @@ const getHeureCommande = (dateCommande) => {
           </div>
         </div>
 
-        <div className="mt-6 space-y-4">
+        <div
+          className={`mt-6 rounded-2xl border border-white/10 bg-black/80 ${
+            modeRush ? "space-y-2 p-3" : "space-y-4 p-4"
+          }`}
+        >
           {(commande.contenu || []).map((item, index) => (
             <div
               key={index}
-              className="rounded-2xl bg-white/5 p-4"
+              className={`border-b border-dashed border-white/20 pb-3 last:border-b-0 ${
+                modeRush ? "text-sm" : ""
+              }`}
             >
-              <p className="text-2xl font-black text-white">
+              <p className={`${modeRush ? "text-lg" : "text-2xl"} font-black text-white`}>
                 {item.quantite}x {item.nom}
               </p>
 
@@ -399,7 +408,7 @@ const getHeureCommande = (dateCommande) => {
         <div className="mt-6 grid grid-cols-1 gap-3">
           <button
             onClick={() => setCommandeTempsSelection(commande.id)}
-            className="rounded-2xl bg-blue-600 py-4 text-lg font-black text-white hover:bg-blue-500"
+            className="rounded-2xl bg-blue-600 py-5 text-2xl font-black text-white active:scale-95 hover:bg-blue-500"
           >
             Préparation
           </button>
@@ -412,7 +421,7 @@ const getHeureCommande = (dateCommande) => {
                   "Prête"
                 )
               }
-              className="rounded-2xl bg-green-600 py-4 text-lg font-black text-white hover:bg-green-500"
+              className="rounded-2xl bg-green-600 py-5 text-2xl font-black text-white active:scale-95 hover:bg-green-500"
             >
               Prête
             </button>
@@ -423,7 +432,7 @@ const getHeureCommande = (dateCommande) => {
   };
   
   return (
-    <main className="min-h-screen bg-black p-6">
+    <main className="min-h-screen overflow-x-hidden bg-black p-4 xl:p-6">
       <button
         onClick={toggleFullscreen}
         className="fixed top-4 right-4 z-50 bg-black text-orange-500 p-3 rounded-full shadow-lg border border-orange-500 hover:scale-110 transition"
@@ -502,27 +511,76 @@ const getHeureCommande = (dateCommande) => {
           </h1>
 
           <p className="mt-2 text-stone-400">
-            {commandesPreparation.length} commande
-            {commandesPreparation.length > 1 ? "s" : ""} en cours
+            {commandesEnPreparation.length + commandesEnAttente.length} commande
+            {commandesEnPreparation.length + commandesEnAttente.length > 1 ? "s" : ""} en cours
           </p>
         </div>
       </div>
 
-      {commandesPreparation.length === 0 ? (
+      {commandesEnPreparation.length === 0 &&
+      commandesEnAttente.length === 0 ? (
         <div className="rounded-3xl border border-yellow-500/20 bg-black/60 p-20 text-center text-4xl font-black text-stone-500">
           Aucune commande
         </div>
       ) : (
         <div className="space-y-12">
-          <div>
-            <h2 className="mb-5 text-3xl font-black text-yellow-300">
-              EN PRÉPARATION
-            </h2>
 
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {commandesPreparation.map(renderCommande)}
+          <div>
+            <div className="mb-5 flex items-center gap-3">
+              <h2 className="text-3xl font-black text-blue-400">
+                EN PRÉPARATION
+              </h2>
+
+              <span className="rounded-xl bg-blue-600 px-3 py-1 text-sm font-black text-white">
+                {commandesEnPreparation.length}
+              </span>
             </div>
-          </div>          
+
+            {commandesEnPreparation.length === 0 ? (
+              <div className="rounded-3xl border border-blue-500/20 bg-blue-950/10 p-10 text-center text-xl font-black text-stone-500">
+                Aucune commande en préparation
+              </div>
+            ) : (
+              <div
+                className={`grid gap-4 ${
+                  modeRush
+                    ? "grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5"
+                    : "md:grid-cols-2 xl:grid-cols-3"
+                }`}
+              >
+                {commandesEnPreparation.map(renderCommande)}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <div className="mb-5 flex items-center gap-3">
+              <h2 className="text-3xl font-black text-yellow-300">
+                EN ATTENTE
+              </h2>
+
+              <span className="rounded-xl bg-yellow-400 px-3 py-1 text-sm font-black text-black">
+                {commandesEnAttente.length}
+              </span>
+            </div>
+
+            {commandesEnAttente.length === 0 ? (
+              <div className="rounded-3xl border border-yellow-500/20 bg-yellow-950/10 p-10 text-center text-xl font-black text-stone-500">
+                Aucune commande en attente
+              </div>
+            ) : (
+              <div
+                className={`grid gap-4 ${
+                  modeRush
+                    ? "grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5"
+                    : "md:grid-cols-2 xl:grid-cols-3"
+                }`}
+              >
+                {commandesEnAttente.map(renderCommande)}
+              </div>
+            )}
+          </div>
+
         </div>
       )}
     </main>

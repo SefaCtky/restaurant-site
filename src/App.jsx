@@ -26,6 +26,7 @@ import {
   BellOff,
 } from "lucide-react";
 import CuisinePage from "./pages/CuisinePage";
+import DashboardPage from "./pages/DashboardPage";
 
 const restaurantAddress = "15 Rue de Belfort, 90400 Sevenans";
 const phoneNumber = "07 49 19 49 27";
@@ -164,17 +165,27 @@ export default function RestaurantWebsite() {
   }, [soundEnabled]);
 
   const nav = [
-    "Accueil",
-    "Menu",
-    "À propos",
-    ...(user ? ["Historique"] : []),
-    "Contact",
-    ...(userRole === "admin" || userRole === "employe"
-      ? ["Pointage", "Commandes", "Cuisine"]
-      : []),
-    ...(userRole === "admin" ? ["Admin"] : []),
-    ...(!user ? ["Connexion"] : []),
-  ];
+  "Menu",
+  "À propos",
+  ...(user ? ["Historique"] : []),
+  "Contact",
+
+  ...(userRole === "employe"
+    ? ["Pointage", "Commandes", "Cuisine"]
+    : []),
+
+  ...(userRole === "admin"
+    ? [
+        "Pointage",
+        "Commandes",
+        "Cuisine",
+        "Dashboard",
+        "Admin",
+      ]
+    : []),
+
+  ...(!user ? ["Connexion"] : []),
+];
 
   const total = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart]);
   const itemCount = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
@@ -732,6 +743,15 @@ export default function RestaurantWebsite() {
           formatPrice={formatPrice}
           soundEnabled={soundEnabled}
           activerSonCommandes={activerSonCommandes}
+        />
+      );
+    }
+
+    if (activePage === "Dashboard") {
+      return (
+        <DashboardPage
+          supabase={supabase}
+          formatPrice={formatPrice}
         />
       );
     }

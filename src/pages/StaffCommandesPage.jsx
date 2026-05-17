@@ -108,6 +108,10 @@ export default function StaffCommandesPage({
     setNouvelleCommandePopup(commande);
 
     setTimeout(() => {
+      imprimerTicketCuisine(commande);
+    }, 1000);
+
+    setTimeout(() => {
       setNouvelleCommandePopup(null);
     }, 8000);
   };
@@ -471,6 +475,29 @@ const imprimerTicketCuisine = (commande) => {
           ${item.crudites?.length > 0 ? `<p>Options : ${item.crudites.join(", ")}</p>` : ""}
           ${item.sauces?.length > 0 ? `<p>Sauces : ${item.sauces.join(", ")}</p>` : ""}
           ${item.sauces_frites?.length > 0 ? `<p>Sauces frites : ${item.sauces_frites.join(", ")}</p>` : ""}
+          ${
+            (
+              item.sans_sauce_fromagere ||
+              item.sansSauceFromagere ||
+              item.sans_sauce_fromagère ||
+              item.sansSauceFromagère ||
+              item.options?.includes?.("Sans sauce fromagère") ||
+              item.crudites?.includes?.("Sans sauce fromagère")
+            )
+              ? `<div class="alerte">🚨 ALLERGIE / LACTOSE<br/>SANS SAUCE FROMAGÈRE</div>`
+              : ""
+          }
+
+          ${
+            (
+              item.cheddar ||
+              item.supplement_cheddar ||
+              item.supplementCheddar ||
+              JSON.stringify(item).toLowerCase().includes("cheddar")
+            )
+              ? `<div class="cheddar">🧀 SUPPLÉMENT CHEDDAR</div>`
+              : ""
+          }
           ${item.note ? `<p><strong>Note : ${item.note}</strong></p>` : ""}
         </div>
       `;
@@ -484,11 +511,61 @@ const imprimerTicketCuisine = (commande) => {
       <head>
         <title>Ticket cuisine</title>
         <style>
+          .alerte {
+          margin-top: 8px;
+          border: 2px solid #000;
+          padding: 8px;
+          text-align: center;
+          font-size: 15px;
+          font-weight: 900;
+        }
+
+        .cheddar {
+          margin-top: 8px;
+          border: 2px dashed #000;
+          padding: 8px;
+          text-align: center;
+          font-size: 15px;
+          font-weight: 900;
+        }
+
+        hr {
+            border: none;
+            border-top: 2px dashed #000;
+            margin: 12px 0;
+          }
+
+          .logo {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: 2px;
+          }
+
+          .numero {
+            text-align: center;
+            font-size: 22px;
+            font-weight: 900;
+            margin: 10px 0;
+          }
+
+          .mode {
+            text-align: center;
+            padding: 10px;
+            font-size: 18px;
+            font-weight: 900;
+            border: 2px solid #000;
+            margin-bottom: 12px;
+          }
+
+        
           body {
             font-family: Arial, sans-serif;
             padding: 12px;
             font-size: 14px;
             color: #000;
+            max-width: 340px;
+            margin: auto;
           }
 
           h1 {
@@ -511,6 +588,10 @@ const imprimerTicketCuisine = (commande) => {
           .produit {
             border-bottom: 1px dashed #000;
             padding: 10px 0;
+            background: #f8f8f8;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
           }
 
           .produit p {
@@ -533,18 +614,51 @@ const imprimerTicketCuisine = (commande) => {
       </head>
 
       <body>
-        <h1>CHEZ OMER</h1>
-        <p class="center"><strong>TICKET CUISINE</strong></p>
+        <div class="logo">CHEZ OMER</div>
 
+          <hr />
+
+          <div class="numero">
+            COMMANDE ${commande.numero_commande || commande.id}
+          </div>
+
+          <div class="mode">
+            ${commande.mode_paiement === "Sur place"
+              ? "🔥 SUR PLACE"
+              : "🥡 À EMPORTER"}
+          </div>
+
+          <hr />
         <div class="info">
           <p><strong>Commande :</strong> ${commande.numero_commande || commande.id}</p>
+
           <p><strong>Date :</strong> ${formatDate(commande.created_at)}</p>
+
           <p><strong>Client :</strong> ${
             commande.client?.nom ||
             `${commande.client?.prenom || ""} ${commande.client?.nom_famille || ""}`.trim() ||
             "Invité"
           }</p>
+
+          ${
+            commande.telephone
+              ? `<p><strong>Téléphone :</strong> ${commande.telephone}</p>`
+              : ""
+          }
+
+          ${
+            commande.mode_paiement
+              ? `<p><strong>Mode :</strong> ${commande.mode_paiement}</p>`
+              : ""
+          }
+
           <p><strong>Statut :</strong> ${commande.statut || ""}</p>
+
+          ${
+            commande.temps_estime_minutes
+              ? `<p><strong>Temps estimé :</strong> ${commande.temps_estime_minutes} min</p>`
+              : ""
+          }
         </div>
 
         ${contenuProduits}
@@ -681,17 +795,30 @@ const renderCommande = (commande) => (
             {item.accompagnement && <p>Accompagnement : {item.accompagnement}</p>}
             {item.viandes?.length > 0 && <p>Viandes : {item.viandes.map((v) => v.name || v.nom || v).join(", ")}</p>}
             {item.crudites?.length > 0 && <p>Options : {item.crudites.join(", ")}</p>}
-            {(item.sans_sauce_fromagere ||
+            {(
+              item.sans_sauce_fromagere ||
               item.sansSauceFromagere ||
               item.sans_sauce_fromagère ||
               item.sansSauceFromagère ||
               item.options?.includes?.("Sans sauce fromagère") ||
-              item.crudites?.includes?.("Sans sauce fromagère")) && (
+              item.crudites?.includes?.("Sans sauce fromagère") ||
+              item.sauces?.includes?.("Sans sauce fromagère") ||
+              item.saucesSandwich?.includes?.("Sans sauce fromagère") ||
+              item.sauces_frites?.includes?.("Sans sauce fromagère") ||
+              item.note?.toLowerCase?.().includes("sans sauce fromagère") ||
+              JSON.stringify(item).toLowerCase().includes("sans sauce fromagère")
+            ) && (
               <p className="mt-3 rounded-2xl border-2 border-red-500 bg-red-950/80 p-4 text-xl font-black text-red-200 shadow-[0_0_30px_rgba(239,68,68,0.55)]">
                 🚨 ALLERGIE / LACTOSE : SANS SAUCE FROMAGÈRE
               </p>
             )}
-            {(item.cheddar || item.supplement_cheddar || item.supplementCheddar) && (
+
+            {(
+              item.cheddar ||
+              item.supplement_cheddar ||
+              item.supplementCheddar ||
+              JSON.stringify(item).toLowerCase().includes("cheddar")
+            ) && (
               <p className="mt-3 rounded-2xl border-2 border-yellow-400 bg-yellow-950/70 p-4 text-lg font-black text-yellow-200">
                 🧀 SUPPLÉMENT CHEDDAR
               </p>
