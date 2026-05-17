@@ -9,6 +9,7 @@ import ContactPage from "./pages/ContactPage";
 import PointagePage from "./pages/PointagePage";
 import AdminPage from "./pages/AdminPage";
 import ConnexionPage from "./pages/ConnexionPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ProductModal from "./components/ProductModal";
 import CartDrawer from "./components/CartDrawer";
 import MobileCartButton from "./components/MobileCartButton";
@@ -124,8 +125,13 @@ export default function RestaurantWebsite() {
   const [cartOpen, setCartOpen] = useState(false);
   const [cart, setCart] = useState([]);
   const [activePage, setActivePage] = useState(
-    window.location.pathname === "/cuisine" ? "Cuisine" : "Accueil"
-  );  const [activeCategory, setActiveCategory] = useState(null);
+    window.location.pathname === "/cuisine"
+      ? "Cuisine"
+      : window.location.pathname === "/reset-password"
+      ? "ResetPassword"
+      : "Accueil"
+  );  
+  const [activeCategory, setActiveCategory] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedSaucesSandwich, setSelectedSaucesSandwich] = useState([]);
   const [selectedSaucesFrites, setSelectedSaucesFrites] = useState([]);
@@ -753,6 +759,10 @@ export default function RestaurantWebsite() {
 
     if (activePage === "Connexion") {
       return <ConnexionPage supabase={supabase} verifierSession={verifierSession} setActivePage={setActivePage} />;
+    }
+
+    if (activePage === "ResetPassword") {
+      return <ResetPasswordPage supabase={supabase} />;
     }
 
     return (

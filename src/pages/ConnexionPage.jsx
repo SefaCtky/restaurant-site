@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import PageTitle from "../components/PageTitle";
 
 export default function ConnexionPage({ supabase, verifierSession, setActivePage }) {
@@ -11,6 +12,11 @@ export default function ConnexionPage({ supabase, verifierSession, setActivePage
   const [nomInscription, setNomInscription] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const [resetModalOpen, setResetModalOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
 
   const [loadingConnexion, setLoadingConnexion] = useState(false);
   const [loadingGoogle, setLoadingGoogle] = useState(false);
@@ -215,6 +221,33 @@ export default function ConnexionPage({ supabase, verifierSession, setActivePage
     setLoadingConnexion(false);
   };
 
+  const envoyerResetPassword = async () => {
+    if (!resetEmail || !resetEmail.includes("@")) {
+      setMessageConnexion("Adresse email invalide ❌");
+      return;
+    }
+
+    setResetLoading(true);
+    setMessageConnexion("");
+
+    const { error } = await supabase.auth.resetPasswordForEmail(
+      resetEmail.trim().toLowerCase(),
+      {
+        redirectTo: window.location.origin + "/reset-password",
+      }
+    );
+
+    setResetLoading(false);
+
+    if (error) {
+      setMessageConnexion(`Erreur : ${error.message} ❌`);
+      return;
+    }
+
+    setResetModalOpen(false);
+    setMessageConnexion("Email de réinitialisation envoyé ✅");
+  };
+
   return (
     <main className="px-5 py-16">
       <PageTitle
@@ -288,16 +321,34 @@ export default function ConnexionPage({ supabase, verifierSession, setActivePage
                 className="w-full rounded-2xl border border-yellow-500/20 bg-black px-5 py-4 text-white outline-none focus:border-yellow-400"
               />
 
-              <input
-                type="password"
-                placeholder="Mot de passe"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") connexion();
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Mot de passe"
+                  className="w-full rounded-2xl border border-yellow-500/20 bg-black px-5 py-4 pr-14 text-white outline-none focus:border-yellow-400"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-white"
+                >
+                  {showPassword ? <EyeOff size={22} /> : <Eye size={22} />}
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setResetEmail(identifiant.includes("@") ? identifiant : "");
+                  setResetModalOpen(true);
                 }}
-                className="w-full rounded-2xl border border-yellow-500/20 bg-black px-5 py-4 text-white outline-none focus:border-yellow-400"
-              />
+                className="text-sm font-bold text-yellow-300 hover:text-yellow-200"
+              >
+                Mot de passe oublié ?
+              </button>
 
               <button
                 onClick={connexion}
@@ -375,6 +426,47 @@ export default function ConnexionPage({ supabase, verifierSession, setActivePage
           {messageConnexion && <p className="text-center font-bold text-white">{messageConnexion}</p>}
         </div>
       </div>
+
+      {resetModalOpen && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/80 px-5">
+          <div className="w-full max-w-md rounded-[2rem] border border-yellow-500/20 bg-stone-950 p-6 text-white">
+            <h2 className="text-2xl font-black text-yellow-300">
+              Mot de passe oublié
+            </h2>
+
+            <p className="mt-2 text-sm text-stone-400">
+              Entrez votre adresse email. Vous recevrez un lien pour modifier votre mot de passe.
+            </p>
+
+            <input
+              type="email"
+              value={resetEmail}
+              onChange={(e) => setResetEmail(e.target.value)}
+              placeholder="Votre adresse email"
+              className="mt-5 w-full rounded-2xl border border-yellow-500/20 bg-black px-5 py-4 text-white outline-none focus:border-yellow-400"
+            />
+
+            <div className="mt-5 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setResetModalOpen(false)}
+                className="flex-1 rounded-full bg-white/10 px-5 py-3 font-black text-white hover:bg-white/20"
+              >
+                Annuler
+              </button>
+
+              <button
+                type="button"
+                disabled={resetLoading}
+                onClick={envoyerResetPassword}
+                className="flex-1 rounded-full bg-yellow-400 px-5 py-3 font-black text-black hover:bg-yellow-300 disabled:opacity-60"
+              >
+                {resetLoading ? "Envoi..." : "Envoyer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
