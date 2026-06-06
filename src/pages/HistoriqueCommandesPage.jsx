@@ -18,6 +18,7 @@ export default function HistoriqueCommandesPage({
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
 
   // Charger les données de sécurité et de profil
   const chargerProfil = async () => {
@@ -56,48 +57,31 @@ export default function HistoriqueCommandesPage({
     try {
       setUpdatingProfil(true);
 
+      // 1. Mise à jour de la table profiles
       const { error: profileError } = await supabase
         .from("profiles")
-        .upsert({
-          id: user.id,
-          phone: phone,
-          updated_at: new Date(),
-        });
-
+        .upsert({ id: user.id, phone: phone, updated_at: new Date() });
       if (profileError) throw profileError;
 
+      // 2. Mise à jour Auth (Email ou Password)
       const authUpdates = {};
-      
-      if (email !== user.email && email.trim() !== "") {
-        authUpdates.email = email;
-      }
-
+      if (email !== user.email && email.trim() !== "") authUpdates.email = email;
       if (password.trim() !== "") {
-        if (password.length < 6) {
-          alert("Le mot de passe doit contenir au moins 6 caractères.");
-          setUpdatingProfil(false);
-          return;
-        }
+        if (password.length < 6) throw new Error("Le mot de passe doit faire 6 caractères min.");
+        if (password !== passwordConfirmation) throw new Error("Les mots de passe ne correspondent pas.");
         authUpdates.password = password;
       }
 
       if (Object.keys(authUpdates).length > 0) {
         const { error: authError } = await supabase.auth.updateUser(authUpdates);
         if (authError) throw authError;
-
-        if (authUpdates.email) {
-          alert("Téléphone enregistré ! 📱 Un e-mail de confirmation a été envoyé à votre nouvelle adresse. ✉️");
-          setPassword("");
-          setUpdatingProfil(false);
-          return;
-        }
       }
 
       alert("Vos informations ont bien été mises à jour ! 🎉");
       setPassword("");
+      setPasswordConfirmation("");
     } catch (error) {
-      alert(`Erreur lors de la mise à jour : ${error.message}`);
-      console.error(error.message);
+      alert(`Erreur : ${error.message}`);
     } finally {
       setUpdatingProfil(false);
     }
@@ -195,10 +179,14 @@ export default function HistoriqueCommandesPage({
   };
 
   const getProgressionCommande = (statut) => {
-    const etapes = ["En attente", "En préparation", "Prête", "Livrée"];
+    const etapes = ["en_attente", "en_preparation", "prete", "livree"]; // Valeurs de ta BDD
     const indexActuel = etapes.indexOf(statut);
-    return etapes.map((etape, index) => ({
-      label: etape,
+    
+    // Noms affichés à l'écran
+    const labels = ["En attente", "En prépa", "Prête", "Livrée"];
+    
+    return labels.map((label, index) => ({
+      label: label,
       active: index <= indexActuel,
     }));
   };
@@ -303,6 +291,19 @@ export default function HistoriqueCommandesPage({
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-yellow-400 text-sm transition"
                   placeholder="•••••••• (Laissez vide pour ne pas changer)"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-stone-400 uppercase tracking-wider flex items-center gap-2">
+                  <Lock className="text-yellow-400" size={14} /> Confirmer le Mot de Passe
+                </label>
+                <input
+                  type="password"
+                  value={passwordConfirmation}
+                  onChange={(e) => setPasswordConfirmation(e.target.value)}
+                  className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-yellow-400 text-sm transition"
+                  placeholder="Retapez votre nouveau mot de passe"
                 />
               </div>
 
