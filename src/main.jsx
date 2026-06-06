@@ -13,3 +13,7 @@ if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("/service-worker.js");
   });
 }
+import { registerSW } from "virtual:pwa-register";
+
+// Enregistre automatiquement les mises à jour du site sur le téléphone du client
+registerSW({ immediate: true });
