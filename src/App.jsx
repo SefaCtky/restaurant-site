@@ -634,7 +634,7 @@ export default function RestaurantWebsite() {
         note,
         quantity: 1,
       },
-    ]);
+    ])
 
     setSelectedProduct(null);
     setCartOpen(true);
@@ -654,7 +654,7 @@ export default function RestaurantWebsite() {
       const formatBoisson = item.drinkSizeChoice ? `\n  Format : ${item.drinkSizeChoice}` : "";
       const formatEau = item.waterSizeChoice ? `\n  Format : ${item.waterSizeChoice}` : "";
       const boissonEnfant = item.menuEnfantBoisson ? `\n  Boisson : ${item.menuEnfantBoisson}` : "";
-      const cheddar = item.extraCheddar ? `\n  Supplément cheddar : +2,00 €` : "";
+      const cheddar = (item.extraCheddar === true || item.extraCheddar === "true") ? `\n  Supplément cheddar : +2,00 €` : "";
       const sansFromagere = item.sansSauceFromagere ? `\n  Sans sauce fromagère` : "";
       const choix = item.breadChoice ? `\n  Choix : ${item.breadChoice}` : "";
       const accompagnement = item.accompagnementChoice ? `\n  Accompagnement : ${item.accompagnementChoice}` : "";

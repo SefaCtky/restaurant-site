@@ -36,18 +36,28 @@ export default function AdminPage({
   const [messagePlanning, setMessagePlanning] = useState("");
   const [employePlanningOuvert, setEmployePlanningOuvert] = useState(null);
   const [statsCommandes, setStatsCommandes] = useState({
-  caJour: 0,
-  nbCommandesJour: 0,
-  panierMoyen: 0,
-  produitTop: "Aucun",
-  quantiteTop: 0,
-  heureRush: "Aucune",
-  nbCommandesRush: 0,
-  rushBase: "",
-});
+    caJour: 0,
+    nbCommandesJour: 0,
+    panierMoyen: 0,
+    produitTop: "Aucun",
+    quantiteTop: 0,
+    heureRush: "Aucune",
+    nbCommandesRush: 0,
+    rushBase: "",
+  });
   const [commandesStats, setCommandesStats] = useState([]);
-const [anneesStatsOuvertes, setAnneesStatsOuvertes] = useState({});
-const [moisStatsOuverts, setMoisStatsOuverts] = useState({});
+  const [anneesStatsOuvertes, setAnneesStatsOuvertes] = useState({});
+  const [moisStatsOuverts, setMoisStatsOuverts] = useState({});
+
+  // ÉTATS COMPLETS POUR LA FENÊTRE MODALE DE MODIFICATION ADMIN
+  const [showModifModal, setShowModifModal] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState(null);
+  const [editPrenom, setEditPrenom] = useState("");
+  const [editNom, setEditNom] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editPassword, setEditPassword] = useState("");
+  const [loadingModif, setLoadingModif] = useState(false);
 
   const formatMontant = (montant) =>
     new Intl.NumberFormat("fr-FR", {
@@ -55,108 +65,108 @@ const [moisStatsOuverts, setMoisStatsOuverts] = useState({});
       currency: "EUR",
     }).format(Number(montant || 0));
 
-const joursPlanning = [
-  "Lundi",
-  "Mardi",
-  "Mercredi",
-  "Jeudi",
-  "Vendredi",
-  "Samedi",
-  "Dimanche",
-];
+  const joursPlanning = [
+    "Lundi",
+    "Mardi",
+    "Mercredi",
+    "Jeudi",
+    "Vendredi",
+    "Samedi",
+    "Dimanche",
+  ];
 
-const chargerPlanning = async () => {
-  const { data, error } = await supabase
-    .from("planning_employes")
-    .select("*");
+  const chargerPlanning = async () => {
+    const { data, error } = await supabase
+      .from("planning_employes")
+      .select("*");
 
-  if (error) {
-    console.error(error);
-    setMessagePlanning("Erreur chargement planning.");
-    return;
-  }
-
-  setPlanningEmployes(data || []);
-};
-
-const getPlanningJour = (employeId, jour) => {
-  return planningEmployes.find(
-    (p) => p.employe_id === employeId && p.jour_semaine === jour
-  );
-};
-
-const updatePlanningLocal = (employeId, jour, field, value) => {
-  setPlanningEmployes((current) => {
-    const existing = current.find(
-      (p) => p.employe_id === employeId && p.jour_semaine === jour
-    );
-
-    if (existing) {
-      return current.map((p) =>
-        p.employe_id === employeId && p.jour_semaine === jour
-          ? { ...p, [field]: value }
-          : p
-      );
+    if (error) {
+      console.error(error);
+      setMessagePlanning("Erreur chargement planning.");
+      return;
     }
 
-    return [
-      ...current,
-      {
-        employe_id: employeId,
-        jour_semaine: jour,
-        debut_matin: "",
-        fin_matin: "",
-        debut_soir: "",
-        fin_soir: "",
-        [field]: value,
-      },
-    ];
-  });
-};
+    setPlanningEmployes(data || []);
+  };
 
-const copierJourSurSemaine = (employeId, jourSource) => {
-  const planningSource = getPlanningJour(employeId, jourSource);
+  const getPlanningJour = (employeId, jour) => {
+    return planningEmployes.find(
+      (p) => p.employe_id === employeId && p.jour_semaine === jour
+    );
+  };
 
-  if (!planningSource) {
-    alert("Aucun horaire à copier pour ce jour ❌");
-    return;
-  }
+  const updatePlanningLocal = (employeId, jour, field, value) => {
+    setPlanningEmployes((current) => {
+      const existing = current.find(
+        (p) => p.employe_id === employeId && p.jour_semaine === jour
+      );
 
-  joursPlanning.forEach((jour) => {
-    updatePlanningLocal(employeId, jour, "debut_matin", planningSource.debut_matin || "");
-    updatePlanningLocal(employeId, jour, "fin_matin", planningSource.fin_matin || "");
-    updatePlanningLocal(employeId, jour, "debut_soir", planningSource.debut_soir || "");
-    updatePlanningLocal(employeId, jour, "fin_soir", planningSource.fin_soir || "");
-  });
-};
+      if (existing) {
+        return current.map((p) =>
+          p.employe_id === employeId && p.jour_semaine === jour
+            ? { ...p, [field]: value }
+            : p
+        );
+      }
 
-const sauvegarderPlanning = async () => {
-  setMessagePlanning("");
-
-  const lignes = planningEmployes.map((p) => ({
-    employe_id: p.employe_id,
-    jour_semaine: p.jour_semaine,
-    debut_matin: p.debut_matin || null,
-    fin_matin: p.fin_matin || null,
-    debut_soir: p.debut_soir || null,
-    fin_soir: p.fin_soir || null,
-  }));
-
-  const { error } = await supabase
-    .from("planning_employes")
-    .upsert(lignes, {
-      onConflict: "employe_id,jour_semaine",
+      return [
+        ...current,
+        {
+          employe_id: employeId,
+          jour_semaine: jour,
+          debut_matin: "",
+          fin_matin: "",
+          debut_soir: "",
+          fin_soir: "",
+          [field]: value,
+        },
+      ];
     });
+  };
 
-  if (error) {
-    console.error(error);
-    setMessagePlanning("Erreur lors de l’enregistrement.");
-    return;
-  }
+  const copierJourSurSemaine = (employeId, jourSource) => {
+    const planningSource = getPlanningJour(employeId, jourSource);
 
-  setMessagePlanning("Planning enregistré avec succès ✅");
-  chargerPlanning();
-};
+    if (!planningSource) {
+      alert("Aucun horaire à copier pour ce jour ❌");
+      return;
+    }
+
+    joursPlanning.forEach((jour) => {
+      updatePlanningLocal(employeId, jour, "debut_matin", planningSource.debut_matin || "");
+      updatePlanningLocal(employeId, jour, "fin_matin", planningSource.fin_matin || "");
+      updatePlanningLocal(employeId, jour, "debut_soir", planningSource.debut_soir || "");
+      updatePlanningLocal(employeId, jour, "fin_soir", planningSource.fin_soir || "");
+    });
+  };
+
+  const sauvegarderPlanning = async () => {
+    setMessagePlanning("");
+
+    const lignes = planningEmployes.map((p) => ({
+      employe_id: p.employe_id,
+      jour_semaine: p.jour_semaine,
+      debut_matin: p.debut_matin || null,
+      fin_matin: p.fin_matin || null,
+      debut_soir: p.debut_soir || null,
+      fin_soir: p.fin_soir || null,
+    }));
+
+    const { error } = await supabase
+      .from("planning_employes")
+      .upsert(lignes, {
+        onConflict: "employe_id,jour_semaine",
+      });
+
+    if (error) {
+      console.error(error);
+      setMessagePlanning("Erreur lors de l’enregistrement.");
+      return;
+    }
+
+    setMessagePlanning("Planning enregistré avec succès ✅");
+    chargerPlanning();
+  };
 
   const chargerProfiles = async () => {
     setMessageProfiles("");
@@ -188,26 +198,26 @@ const sauvegarderPlanning = async () => {
       .update({ role })
       .eq("id", id);
 
-      if (role === "employe") {
-  const profile = profiles.find((p) => p.id === id);
+    if (role === "employe") {
+      const profile = profiles.find((p) => p.id === id);
 
-  await supabase.from("employes").upsert({
-    auth_user_id: id,
-    nom:
-      `${profile?.prenom || ""} ${profile?.nom_famille || ""}`.trim() ||
-      profile?.nom ||
-      "Employé",
-    email: profile?.email || "",
-    actif: true,
-  });
-}
+      await supabase.from("employes").upsert({
+        auth_user_id: id,
+        nom:
+          `${profile?.prenom || ""} ${profile?.nom_famille || ""}`.trim() ||
+          profile?.nom ||
+          "Employé",
+        email: profile?.email || "",
+        actif: true,
+      });
+    }
 
-if (role !== "employe") {
-  await supabase
-    .from("employes")
-    .delete()
-    .eq("auth_user_id", id);
-}
+    if (role !== "employe") {
+      await supabase
+        .from("employes")
+        .delete()
+        .eq("auth_user_id", id);
+    }
 
     if (error) {
       console.error(error);
@@ -219,13 +229,67 @@ if (role !== "employe") {
     chargerProfiles();
   };
 
-const [adminTab, setAdminTab] = useState(() => {
-  return localStorage.getItem("adminTab") || "produits";
-});
+  // FONCTIONS DE LA MODALE DE MODIFICATION ADMIN
+  const ouvrirModifModal = (profile) => {
+    setSelectedProfile(profile);
+    setEditPrenom(profile.prenom || "");
+    setEditNom(profile.nom_famille || "");
+    setEditPhone(profile.phone || "");
+    setEditEmail(profile.email || "");
+    setEditPassword(""); 
+    setShowModifModal(true);
+  };
 
-useEffect(() => {
-  localStorage.setItem("adminTab", adminTab);
-}, [adminTab]);
+  const sauvegarderCompteAdmin = async () => {
+    if (!selectedProfile) return;
+    setLoadingModif(true);
+
+    try {
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({
+          prenom: editPrenom.trim(),
+          nom_famille: editNom.trim(),
+          nom: `${editPrenom.trim()} ${editNom.trim()}`,
+          phone: editPhone.trim(),
+          email: editEmail.trim(),
+        })
+        .eq("id", selectedProfile.id);
+
+      if (profileError) throw profileError;
+
+      if (editPassword.trim() !== "") {
+        if (editPassword.trim().length < 6) {
+          alert("Le mot de passe doit contenir au moins 6 caractères.");
+          setLoadingModif(false);
+          return;
+        }
+        const { error: resetError } = await supabase.auth.resetPasswordForEmail(editEmail.trim(), {
+          redirectTo: window.location.origin + "/reset-password",
+        });
+        if (resetError) throw resetError;
+        alert("Profil enregistré ! Un e-mail de réinitialisation de mot de passe a été envoyé à l'utilisateur.");
+      } else {
+        alert("Le compte a été mis à jour avec succès ! 🎉");
+      }
+
+      setShowModifModal(false);
+      chargerProfiles();
+    } catch (error) {
+      console.error(error);
+      alert(`Erreur lors de la modification : ${error.message}`);
+    } finally {
+      setLoadingModif(false);
+    }
+  };
+
+  const [adminTab, setAdminTab] = useState(() => {
+    return localStorage.getItem("adminTab") || "produits";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("adminTab", adminTab);
+  }, [adminTab]);
 
   const [annonceAccueil, setAnnonceAccueil] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
@@ -306,156 +370,156 @@ useEffect(() => {
   };
 
   const calculerStatsCommandes = async () => {
-  const aujourdHui = new Date().toISOString().slice(0, 10);
+    const aujourdHui = new Date().toISOString().slice(0, 10);
 
-  const { data, error } = await supabase
-    .from("commandes")
-    .select("total, created_at, contenu")
-    .gte("created_at", `${aujourdHui}T00:00:00`)
-    .lt("created_at", `${aujourdHui}T23:59:59`);
+    const { data, error } = await supabase
+      .from("commandes")
+      .select("total, created_at, contenu")
+      .gte("created_at", `${aujourdHui}T00:00:00`)
+      .lt("created_at", `${aujourdHui}T23:59:59`);
 
-  if (error) {
-    console.error(error);
-    return;
-  }
+    if (error) {
+      console.error(error);
+      return;
+    }
 
-  const caJour = (data || []).reduce(
-    (total, commande) => total + Number(commande.total || 0),
-    0
-  );
+    const caJour = (data || []).reduce(
+      (total, commande) => total + Number(commande.total || 0),
+      0
+    );
 
-  const nbCommandesJour = data?.length || 0;
-  
-  const compteurProduits = {};
-  const compteurHeures = {};
-  
-  (data || []).forEach((commande) => {
-    const heure = new Date(commande.created_at).getHours();
+    const nbCommandesJour = data?.length || 0;
+    
+    const compteurProduits = {};
+    const compteurHeures = {};
+    
+    (data || []).forEach((commande) => {
+      const heure = new Date(commande.created_at).getHours();
 
-    compteurHeures[heure] =
-      (compteurHeures[heure] || 0) + 1;
-    (commande.contenu || []).forEach((produit) => {
-      const nom = produit.nom || "Produit inconnu";
+      compteurHeures[heure] =
+        (compteurHeures[heure] || 0) + 1;
+      (commande.contenu || []).forEach((produit) => {
+        const nom = produit.nom || "Produit inconnu";
 
-      compteurProduits[nom] =
-        (compteurProduits[nom] || 0) +
-        Number(produit.quantite || 0);
+        compteurProduits[nom] =
+          (compteurProduits[nom] || 0) +
+          Number(produit.quantite || 0);
+      });
     });
-  });
 
-  let produitTop = "Aucun";
-  let quantiteTop = 0;
- 
-  Object.entries(compteurProduits).forEach(([nom, quantite]) => {
-    if (quantite > quantiteTop) {
-      produitTop = nom;
-      quantiteTop = quantite;
+    let produitTop = "Aucun";
+    let quantiteTop = 0;
+   
+    Object.entries(compteurProduits).forEach(([nom, quantite]) => {
+      if (quantite > quantiteTop) {
+        produitTop = nom;
+        quantiteTop = quantite;
+      }
+    });
+
+    const maintenant = new Date();
+    const debutAujourdhui = new Date(maintenant);
+    debutAujourdhui.setHours(0, 0, 0, 0);
+
+    const debutHistorique = new Date(debutAujourdhui);
+    debutHistorique.setDate(debutHistorique.getDate() - 56);
+
+    const jourSemaineActuel = maintenant.getDay();
+
+    const nomsJours = [
+      "dimanche",
+      "lundi",
+      "mardi",
+      "mercredi",
+      "jeudi",
+      "vendredi",
+      "samedi",
+    ];
+
+    const { data: commandesHistoriqueRush, error: rushError } = await supabase
+      .from("commandes")
+      .select("created_at")
+      .gte("created_at", debutHistorique.toISOString())
+      .lt("created_at", debutAujourdhui.toISOString());
+
+    if (rushError) {
+      console.error(rushError);
     }
-  });
 
-  const maintenant = new Date();
-  const debutAujourdhui = new Date(maintenant);
-  debutAujourdhui.setHours(0, 0, 0, 0);
+    const compteurHeuresRush = {};
+    const joursAnalyses = new Set();
 
-  const debutHistorique = new Date(debutAujourdhui);
-  debutHistorique.setDate(debutHistorique.getDate() - 56);
+    (commandesHistoriqueRush || []).forEach((commande) => {
+      const dateCommande = new Date(commande.created_at);
 
-  const jourSemaineActuel = maintenant.getDay();
+      if (dateCommande.getDay() !== jourSemaineActuel) return;
 
-  const nomsJours = [
-    "dimanche",
-    "lundi",
-    "mardi",
-    "mercredi",
-    "jeudi",
-    "vendredi",
-    "samedi",
-  ];
+      const jourKey = dateCommande.toISOString().slice(0, 10);
+      joursAnalyses.add(jourKey);
 
-  const { data: commandesHistoriqueRush, error: rushError } = await supabase
-    .from("commandes")
-    .select("created_at")
-    .gte("created_at", debutHistorique.toISOString())
-    .lt("created_at", debutAujourdhui.toISOString());
+      const heure = dateCommande.getHours();
 
-  if (rushError) {
-    console.error(rushError);
-  }
+      compteurHeuresRush[heure] =
+        (compteurHeuresRush[heure] || 0) + 1;
+    });
 
-  const compteurHeuresRush = {};
-  const joursAnalyses = new Set();
+    let heureRush = "Aucune";
+    let nbCommandesRush = 0;
 
-  (commandesHistoriqueRush || []).forEach((commande) => {
-    const dateCommande = new Date(commande.created_at);
+    const nbJoursAnalyses = joursAnalyses.size || 1;
 
-    if (dateCommande.getDay() !== jourSemaineActuel) return;
+    Object.entries(compteurHeuresRush).forEach(([heure, total]) => {
+      const moyenne = total / nbJoursAnalyses;
 
-    const jourKey = dateCommande.toISOString().slice(0, 10);
-    joursAnalyses.add(jourKey);
+      if (moyenne > nbCommandesRush) {
+        heureRush = `${heure}h`;
+        nbCommandesRush = moyenne;
+      }
+    });
 
-    const heure = dateCommande.getHours();
+    const rushBase =
+      joursAnalyses.size > 0
+        ? `Basé sur ${joursAnalyses.size} ancien(s) ${nomsJours[jourSemaineActuel]}`
+        : "Pas encore assez d’historique";
 
-    compteurHeuresRush[heure] =
-      (compteurHeuresRush[heure] || 0) + 1;
-  });
+    setStatsCommandes({
+      caJour,
+      nbCommandesJour,
+      panierMoyen: nbCommandesJour > 0 ? caJour / nbCommandesJour : 0,
+      produitTop,
+      quantiteTop,
+      heureRush,
+      nbCommandesRush: Number(nbCommandesRush.toFixed(1)),
+      rushBase,
+    });
+    const { data: toutesCommandes, error: toutesCommandesError } = await supabase
+      .from("commandes")
+      .select("numero_commande, total, statut, created_at")
+      .order("created_at", { ascending: false });
 
-  let heureRush = "Aucune";
-  let nbCommandesRush = 0;
-
-  const nbJoursAnalyses = joursAnalyses.size || 1;
-
-  Object.entries(compteurHeuresRush).forEach(([heure, total]) => {
-    const moyenne = total / nbJoursAnalyses;
-
-    if (moyenne > nbCommandesRush) {
-      heureRush = `${heure}h`;
-      nbCommandesRush = moyenne;
+    if (toutesCommandesError) {
+      console.error(toutesCommandesError);
+    } else {
+      setCommandesStats(toutesCommandes || []);
     }
-  });
-
-  const rushBase =
-    joursAnalyses.size > 0
-      ? `Basé sur ${joursAnalyses.size} ancien(s) ${nomsJours[jourSemaineActuel]}`
-      : "Pas encore assez d’historique";
-
-  setStatsCommandes({
-    caJour,
-    nbCommandesJour,
-    panierMoyen: nbCommandesJour > 0 ? caJour / nbCommandesJour : 0,
-    produitTop,
-    quantiteTop,
-    heureRush,
-    nbCommandesRush: Number(nbCommandesRush.toFixed(1)),
-    rushBase,
-  });
-  const { data: toutesCommandes, error: toutesCommandesError } = await supabase
-    .from("commandes")
-    .select("numero_commande, total, statut, created_at")
-    .order("created_at", { ascending: false });
-
-  if (toutesCommandesError) {
-    console.error(toutesCommandesError);
-  } else {
-    setCommandesStats(toutesCommandes || []);
-  }
   };
 
   const supprimerAnciennesDemandesPointage = async () => {
-  const limite = new Date();
-  limite.setDate(limite.getDate() - 7);
+    const limite = new Date();
+    limite.setDate(limite.getDate() - 7);
 
-  const { error } = await supabase
-    .from("demandes_modification_pointage")
-    .delete()
-    .lt("created_at", limite.toISOString());
+    const { error } = await supabase
+      .from("demandes_modification_pointage")
+      .delete()
+      .lt("created_at", limite.toISOString());
 
-  if (error) {
-    console.error("Erreur suppression anciennes demandes :", error);
-    return;
-  }
+    if (error) {
+      console.error("Erreur suppression anciennes demandes :", error);
+      return;
+    }
 
-  chargerDemandesPointage();
-};
+    chargerDemandesPointage();
+  };
 
   useEffect(() => {
     if (isLogged) {
@@ -564,10 +628,7 @@ useEffect(() => {
     }
 
     if (statut === "acceptee") {
-
       console.log("DEMANDE ACCEPTÉE :", demande);
-      console.log("Arrivée demandée :", demande.arrivee_demandee);
-      console.log("Départ demandé :", demande.depart_demandee);
 
       const { error: updatePointageError } = await supabase
         .from("pointages")
@@ -818,7 +879,6 @@ useEffect(() => {
     const classeur = XLSX.utils.book_new();
 
     XLSX.utils.book_append_sheet(classeur, feuille, "Commandes");
-
     XLSX.writeFile(classeur, `commandes-${jour.replaceAll("/", "-")}.xlsx`);
   };
 
@@ -855,7 +915,6 @@ useEffect(() => {
             ? "Pointage ajouté par l’admin suite oubli salarié"
             : ""),
       };
-      
     });
 
     if (lignes.length === 0) {
@@ -877,45 +936,45 @@ useEffect(() => {
   };
 
   const ajouterPointageForce = async () => {
-  if (
-    !employeSelectionne ||
-    !datePointage ||
-    !heureDebut ||
-    !heureFin
-  ) {
-    setMessagePointageForce("Veuillez remplir tous les champs.");
-    return;
-  }
-
-  const debut = `${datePointage}T${heureDebut}:00`;
-  const fin = `${datePointage}T${heureFin}:00`;
-
-  const { error } = await supabase.from("pointages").insert([
-    {
-      employe_id: employeSelectionne,
-      arrivee: debut,
-      depart: fin,
-      force_admin: true,
-      origine: "ajoute_admin",
-      commentaire_admin: "Pointage ajouté par l’admin suite oubli salarié",
+    if (
+      !employeSelectionne ||
+      !datePointage ||
+      !heureDebut ||
+      !heureFin
+    ) {
+      setMessagePointageForce("Veuillez remplir tous les champs.");
+      return;
     }
-  ]);
 
-  if (error) {
-    console.error(error);
-    setMessagePointageForce("Erreur lors du pointage.");
-    return;
-  }
+    const debut = `${datePointage}T${heureDebut}:00`;
+    const fin = `${datePointage}T${heureFin}:00`;
 
-  setMessagePointageForce("Pointage ajouté avec succès.");
+    const { error } = await supabase.from("pointages").insert([
+      {
+        employe_id: employeSelectionne,
+        arrivee: debut,
+        depart: fin,
+        force_admin: true,
+        origine: "ajoute_admin",
+        commentaire_admin: "Pointage ajouté par l’admin suite oubli salarié",
+      }
+    ]);
 
-  setEmployeSelectionne("");
-  setDatePointage("");
-  setHeureDebut("");
-  setHeureFin("");
+    if (error) {
+      console.error(error);
+      setMessagePointageForce("Erreur lors du pointage.");
+      return;
+    }
 
-  chargerPointages();
-};
+    setMessagePointageForce("Pointage ajouté avec succès.");
+
+    setEmployeSelectionne("");
+    setDatePointage("");
+    setHeureDebut("");
+    setHeureFin("");
+
+    chargerPointages();
+  };
 
   const demandesEnAttente = demandesPointage.filter(
     (demande) => demande.statut === "en_attente"
@@ -925,25 +984,19 @@ useEffect(() => {
     (demande) => demande.statut !== "en_attente"
   );
 
-    const commandesStatsGroupees = commandesStats.reduce((acc, commande) => {
-      const date = new Date(commande.created_at);
+  const commandesStatsGroupees = commandesStats.reduce((acc, commande) => {
+    const date = new Date(commande.created_at);
+    const annee = String(date.getFullYear());
+    const mois = date.toLocaleDateString("fr-FR", { month: "long" });
+    const jour = date.toLocaleDateString("fr-FR");
 
-      const annee = String(date.getFullYear());
+    if (!acc[annee]) acc[annee] = {};
+    if (!acc[annee][mois]) acc[annee][mois] = {};
+    if (!acc[annee][mois][jour]) acc[annee][mois][jour] = [];
 
-      const mois = date.toLocaleDateString("fr-FR", {
-        month: "long",
-      });
-
-      const jour = date.toLocaleDateString("fr-FR");
-
-      if (!acc[annee]) acc[annee] = {};
-      if (!acc[annee][mois]) acc[annee][mois] = {};
-      if (!acc[annee][mois][jour]) acc[annee][mois][jour] = [];
-
-      acc[annee][mois][jour].push(commande);
-
-      return acc;
-    }, {});
+    acc[annee][mois][jour].push(commande);
+    return acc;
+  }, {});
 
   const pointagesFiltres = historiquePointages.filter((pointage) => {
     const employe = getEmploye(pointage.employe_id);
@@ -962,43 +1015,44 @@ useEffect(() => {
 
     return filtreOK && rechercheOK;
   });
-const supprimerCompte = async (userId) => {
-  const confirmation = window.confirm(
-    "Voulez-vous vraiment supprimer définitivement ce compte ?"
-  );
 
-  if (!confirmation) return;
+  const supprimerCompte = async (userId) => {
+    const confirmation = window.confirm(
+      "Voulez-vous vraiment supprimer définitivement ce compte ?"
+    );
 
-  const { data: sessionData } = await supabase.auth.getSession();
+    if (!confirmation) return;
 
-  if (!sessionData?.session?.access_token) {
-    alert("Erreur : session admin introuvable.");
-    return;
-  }
+    const { data: sessionData } = await supabase.auth.getSession();
 
-  const { data, error } = await supabase.functions.invoke("delete-user", {
-    body: { user_id: userId },
-    headers: {
-      Authorization: `Bearer ${sessionData.session.access_token}`,
-    },
-  });
+    if (!sessionData?.session?.access_token) {
+      alert("Erreur : session admin introuvable.");
+      return;
+    }
 
-  if (error) {
-    console.error("Erreur suppression compte :", error);
-    alert("Erreur suppression : " + error.message);
-    setMessageProfiles("Erreur lors de la suppression du compte.");
-    return;
-  }
+    const { data, error } = await supabase.functions.invoke("delete-user", {
+      body: { user_id: userId },
+      headers: {
+        Authorization: `Bearer ${sessionData.session.access_token}`,
+      },
+    });
 
-  if (data?.success === false) {
-    alert("Erreur suppression : " + data.error);
-    setMessageProfiles(data.error);
-    return;
-  }
+    if (error) {
+      console.error("Erreur suppression compte :", error);
+      alert("Erreur suppression : " + error.message);
+      setMessageProfiles("Erreur lors de la suppression du compte.");
+      return;
+    }
 
-  setMessageProfiles("Compte supprimé avec succès.");
-  await chargerProfiles();
-};
+    if (data?.success === false) {
+      alert("Erreur suppression : " + data.error);
+      setMessageProfiles(data.error);
+      return;
+    }
+
+    setMessageProfiles("Compte supprimé avec succès.");
+    await chargerProfiles();
+  };
 
   return (
     <main className="px-5 py-16">
@@ -1050,9 +1104,7 @@ const supprimerCompte = async (userId) => {
             <button
               onClick={() => setAdminTab("produits")}
               className={`rounded-full px-6 py-3 font-black ${
-                adminTab === "produits"
-                  ? "bg-yellow-400 text-black"
-                  : "bg-white/10 text-white hover:bg-white/20"
+                adminTab === "produits" ? "bg-yellow-400 text-black" : "bg-white/10 text-white hover:bg-white/20"
               }`}
             >
               Produits
@@ -1061,9 +1113,7 @@ const supprimerCompte = async (userId) => {
             <button
               onClick={() => setAdminTab("avis")}
               className={`rounded-full px-6 py-3 font-black ${
-                adminTab === "avis"
-                  ? "bg-yellow-400 text-black"
-                  : "bg-white/10 text-white hover:bg-white/20"
+                adminTab === "avis" ? "bg-yellow-400 text-black" : "bg-white/10 text-white hover:bg-white/20"
               }`}
             >
               Avis clients
@@ -1072,31 +1122,25 @@ const supprimerCompte = async (userId) => {
             <button
               onClick={() => setAdminTab("employes")}
               className={`rounded-full px-6 py-3 font-black ${
-                adminTab === "employes"
-                  ? "bg-yellow-400 text-black"
-                  : "bg-white/10 text-white hover:bg-white/20"
+                adminTab === "employes" ? "bg-yellow-400 text-black" : "bg-white/10 text-white hover:bg-white/20"
               }`}
             >
               Employés
             </button>
 
             <button
-  onClick={() => setAdminTab("stats")}
-  className={`rounded-full px-6 py-3 font-black ${
-    adminTab === "stats"
-      ? "bg-yellow-400 text-black"
-      : "bg-white/10 text-white hover:bg-white/20"
-  }`}
->
-  Statistiques
-</button>
+              onClick={() => setAdminTab("stats")}
+              className={`rounded-full px-6 py-3 font-black ${
+                adminTab === "stats" ? "bg-yellow-400 text-black" : "bg-white/10 text-white hover:bg-white/20"
+              }`}
+            >
+              Statistiques
+            </button>
 
             <button
               onClick={() => setAdminTab("planning")}
               className={`rounded-full px-6 py-3 font-black ${
-                adminTab === "planning"
-                  ? "bg-yellow-400 text-black"
-                  : "bg-white/10 text-white hover:bg-white/20"
+                adminTab === "planning" ? "bg-yellow-400 text-black" : "bg-white/10 text-white hover:bg-white/20"
               }`}
             >
               Planning équipe
@@ -1105,9 +1149,7 @@ const supprimerCompte = async (userId) => {
             <button
               onClick={() => setAdminTab("comptes")}
               className={`rounded-full px-6 py-3 font-black ${
-                adminTab === "comptes"
-                  ? "bg-yellow-400 text-black"
-                  : "bg-white/10 text-white hover:bg-white/20"
+                adminTab === "comptes" ? "bg-yellow-400 text-black" : "bg-white/10 text-white hover:bg-white/20"
               }`}
             >
               Comptes
@@ -1347,140 +1389,142 @@ const supprimerCompte = async (userId) => {
           )}
 
           {adminTab === "stats" && (
-  <div className="mt-8 rounded-3xl border border-yellow-500/20 bg-white/5 p-6">
-    <h3 className="text-2xl font-black text-yellow-300">
-      Statistiques du jour
-    </h3>
+            <div className="mt-8 rounded-3xl border border-yellow-500/20 bg-white/5 p-6">
+              <h3 className="text-2xl font-black text-yellow-300">
+                Statistiques du jour
+              </h3>
 
-    <div className="mt-6 grid gap-4 md:grid-cols-5">
-      <div className="rounded-2xl bg-black p-5">
-        <p className="text-sm text-stone-400">
-          Chiffre d’affaires
-        </p>
+              <div className="mt-6 grid gap-4 md:grid-cols-5">
+                <div className="rounded-2xl bg-black p-5">
+                  <p className="text-sm text-stone-400">
+                    Chiffre d’affaires
+                  </p>
 
-        <p className="mt-2 text-3xl font-black text-yellow-300">
-          {formatMontant(statsCommandes.caJour)}
-        </p>
-      </div>
+                  <p className="mt-2 text-3xl font-black text-yellow-300">
+                    {formatMontant(statsCommandes.caJour)}
+                  </p>
+                </div>
 
-      <div className="rounded-2xl bg-black p-5">
-        <p className="text-sm text-stone-400">
-          Commandes
-        </p>
+                <div className="rounded-2xl bg-black p-5">
+                  <p className="text-sm text-stone-400">
+                    Commandes
+                  </p>
 
-        <p className="mt-2 text-3xl font-black text-white">
-          {statsCommandes.nbCommandesJour}
-        </p>
-      </div>
+                  <p className="mt-2 text-3xl font-black text-white">
+                    {statsCommandes.nbCommandesJour}
+                  </p>
+                </div>
 
-      <div className="rounded-2xl bg-black p-5">
-        <p className="text-sm text-stone-400">
-          Panier moyen
-        </p>
+                <div className="rounded-2xl bg-black p-5">
+                  <p className="text-sm text-stone-400">
+                    Panier moyen
+                  </p>
 
-        <p className="mt-2 text-3xl font-black text-green-400">
-          {formatMontant(statsCommandes.panierMoyen)}
-        </p>
-      </div>
-      <div className="rounded-2xl bg-black p-5">
-        <p className="text-sm text-stone-400">Produit le plus vendu</p>
+                  <p className="mt-2 text-3xl font-black text-green-400">
+                    {formatMontant(statsCommandes.panierMoyen)}
+                  </p>
+                </div>
 
-        <p className="mt-2 text-xl font-black text-orange-400">
-          {statsCommandes.produitTop}
-        </p>
+                <div className="rounded-2xl bg-black p-5">
+                  <p className="text-sm text-stone-400">Produit le plus vendu</p>
 
-        <p className="mt-2 text-sm font-bold text-white">
-          {statsCommandes.quantiteTop} vendu(s)
-        </p>
-      </div>
+                  <p className="mt-2 text-xl font-black text-orange-400">
+                    {statsCommandes.produitTop}
+                  </p>
 
-      <div className="rounded-2xl bg-black p-5">
-        <p className="text-sm text-stone-400">Rush prévisionnel</p>
+                  <p className="mt-2 text-sm font-bold text-white">
+                    {statsCommandes.quantiteTop} vendu(s)
+                  </p>
+                </div>
 
-        <p className="mt-2 text-xl font-black text-red-400">
-          {statsCommandes.heureRush}
-        </p>
+                <div className="rounded-2xl bg-black p-5">
+                  <p className="text-sm text-stone-400">Rush prévisionnel</p>
 
-        <p className="mt-2 text-sm font-bold text-white">
-          {statsCommandes.nbCommandesRush} commande(s) en moyenne
-        </p>
+                  <p className="mt-2 text-xl font-black text-red-400">
+                    {statsCommandes.heureRush}
+                  </p>
 
-        <p className="mt-1 text-xs text-stone-400">
-          {statsCommandes.rushBase}
-        </p>
-      </div>
-    </div>
-    <div className="mt-8 space-y-4">
-    <h3 className="text-xl font-black text-yellow-300">
-        Export par jour
-      </h3>
+                  <p className="mt-2 text-sm font-bold text-white">
+                    {statsCommandes.nbCommandesRush} commande(s) en moyenne
+                  </p>
 
-      {Object.entries(commandesStatsGroupees).map(([annee, moisData]) => (
-        <div key={annee} className="rounded-2xl bg-black p-4">
-          <button
-            onClick={() =>
-              setAnneesStatsOuvertes((current) => ({
-                ...current,
-                [annee]: !current[annee],
-              }))
-            }
-            className="rounded-full bg-yellow-400 px-5 py-3 font-black text-black"
-          >
-            {anneesStatsOuvertes[annee] ? "▼" : "▶"} {annee}
-          </button>
+                  <p className="mt-1 text-xs text-stone-400">
+                    {statsCommandes.rushBase}
+                  </p>
+                </div>
+              </div>
 
-          {anneesStatsOuvertes[annee] && (
-            <div className="mt-4 ml-4 space-y-3">
-              {Object.entries(moisData).map(([mois, joursData]) => {
-                const cleMois = `${annee}-${mois}`;
+              <div className="mt-8 space-y-4">
+                <h3 className="text-xl font-black text-yellow-300">
+                  Export par jour
+                </h3>
 
-                return (
-                  <div key={cleMois}>
+                {Object.entries(commandesStatsGroupees).map(([annee, moisData]) => (
+                  <div key={annee} className="rounded-2xl bg-black p-4">
                     <button
                       onClick={() =>
-                        setMoisStatsOuverts((current) => ({
+                        setAnneesStatsOuvertes((current) => ({
                           ...current,
-                          [cleMois]: !current[cleMois],
+                          [annee]: !current[annee],
                         }))
                       }
-                      className="rounded-full bg-orange-500 px-5 py-2 font-black text-white"
+                      className="rounded-full bg-yellow-400 px-5 py-3 font-black text-black"
                     >
-                      {moisStatsOuverts[cleMois] ? "▼" : "▶"} {mois}
+                      {anneesStatsOuvertes[annee] ? "▼" : "▶"} {annee}
                     </button>
 
-                    {moisStatsOuverts[cleMois] && (
-                      <div className="mt-3 ml-4 space-y-2">
-                        {Object.entries(joursData).map(([jour, commandesJour]) => (
-                          <div
-                            key={jour}
-                            className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white/5 px-4 py-3"
-                          >
-                            <span className="font-black text-white">
-                              {jour} — {commandesJour.length} commande(s)
-                            </span>
+                    {anneesStatsOuvertes[annee] && (
+                      <div className="mt-4 ml-4 space-y-3">
+                        {Object.entries(moisData).map(([mois, joursData]) => {
+                          const cleMois = `${annee}-${mois}`;
 
-                            <button
-                              onClick={() =>
-                                exporterCommandesJourExcel(jour, commandesJour)
-                              }
-                              className="rounded-full bg-green-600 px-4 py-2 font-black text-white hover:bg-green-500"
-                            >
-                              Exporter ce jour
-                            </button>
-                          </div>
-                        ))}
+                          return (
+                            <div key={cleMois}>
+                              <button
+                                onClick={() =>
+                                  setMoisStatsOuverts((current) => ({
+                                    ...current,
+                                    [cleMois]: !current[cleMois],
+                                  }))
+                                }
+                                className="rounded-full bg-orange-500 px-5 py-2 font-black text-white"
+                              >
+                                {moisStatsOuverts[cleMois] ? "▼" : "▶"} {mois}
+                              </button>
+
+                              {moisStatsOuverts[cleMois] && (
+                                <div className="mt-3 ml-4 space-y-2">
+                                  {Object.entries(joursData).map(([jour, commandesJour]) => (
+                                    <div
+                                      key={jour}
+                                      className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white/5 px-4 py-3"
+                                    >
+                                      <span className="font-black text-white">
+                                        {jour} — {commandesJour.length} commande(s)
+                                      </span>
+
+                                      <button
+                                        onClick={() =>
+                                          exporterCommandesJourExcel(jour, commandesJour)
+                                        }
+                                        className="rounded-full bg-green-600 px-4 py-2 font-black text-white hover:bg-green-500"
+                                      >
+                                        Exporter ce jour
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
-                );
-              })}
+                ))}
+              </div>
             </div>
           )}
-        </div>
-      ))}
-    </div>
-  </div>
-)}
 
           {adminTab === "avis" && (
             <div className="mt-8 rounded-3xl border border-yellow-500/20 bg-white/5 p-6">
@@ -1645,7 +1689,6 @@ const supprimerCompte = async (userId) => {
                             }
                             className="h-5 w-5"
                           />
-
                           Avis actif sur le site
                         </label>
 
@@ -1678,166 +1721,166 @@ const supprimerCompte = async (userId) => {
             </div>
           )}
 
-{adminTab === "planning" && (
-  <div className="mt-8 rounded-3xl border border-yellow-500/20 bg-white/5 p-6">
-    <div className="flex flex-wrap items-center justify-between gap-4">
-      <div>
-        <h3 className="text-2xl font-black text-yellow-300">
-          Planning équipe
-        </h3>
+          {adminTab === "planning" && (
+            <div className="mt-8 rounded-3xl border border-yellow-500/20 bg-white/5 p-6">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-2xl font-black text-yellow-300">
+                    Planning équipe
+                  </h3>
 
-        <p className="mt-2 text-sm text-stone-400">
-          Définis les horaires autorisés pour le pointage des employés.
-        </p>
-      </div>
+                  <p className="mt-2 text-sm text-stone-400">
+                    Définis les horaires autorisés pour le pointage des employés.
+                  </p>
+                </div>
 
-      <button
-        onClick={sauvegarderPlanning}
-        className="rounded-full bg-yellow-400 px-6 py-3 font-black text-black hover:bg-yellow-300"
-      >
-        Enregistrer le planning
-      </button>
-    </div>
+                <button
+                  onClick={sauvegarderPlanning}
+                  className="rounded-full bg-yellow-400 px-6 py-3 font-black text-black hover:bg-yellow-300"
+                >
+                  Enregistrer le planning
+                </button>
+              </div>
 
-    {messagePlanning && (
-      <p className="mt-4 font-bold text-yellow-300">{messagePlanning}</p>
-    )}
+              {messagePlanning && (
+                <p className="mt-4 font-bold text-yellow-300">{messagePlanning}</p>
+              )}
 
-    <div className="mt-6 space-y-8">
-      {profiles
-        .filter((profile) => profile.role === "employe")
-        .map((employe) => (
-          <div
-  key={employe.id}
-  className="rounded-3xl border border-yellow-500/20 bg-black p-5"
->
-  <button
-    type="button"
-    onClick={() =>
-      setEmployePlanningOuvert((current) =>
-        current === employe.id ? null : employe.id
-      )
-    }
-    className="flex w-full items-center justify-between text-left"
-  >
-    <h4 className="text-xl font-black text-white">
-      {employe.nom || employe.email}
-    </h4>
-
-    <span className="rounded-full bg-yellow-400 px-4 py-2 text-sm font-black text-black">
-      {employePlanningOuvert === employe.id ? "Fermer" : "Ouvrir"}
-    </span>
-  </button>
-            
-            {employePlanningOuvert === employe.id && (
-            <div className="mt-5 overflow-x-auto">
-              <table className="w-full min-w-[800px] text-left text-sm">
-                <thead>
-                  <tr className="text-yellow-300">
-                    <th className="p-3">Jour</th>
-                    <th className="p-3">Début matinée</th>
-                    <th className="p-3">Fin matinée</th>
-                    <th className="p-3">Début soirée</th>
-                    <th className="p-3">Fin soirée</th>
-                    <th className="p-3">Action</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {joursPlanning.map((jour) => {
-                    const planning = getPlanningJour(employe.id, jour);
-
-                    return (
-                      <tr
-                        key={jour}
-                        className="border-t border-yellow-500/10"
+              <div className="mt-6 space-y-8">
+                {profiles
+                  .filter((profile) => profile.role === "employe")
+                  .map((employe) => (
+                    <div
+                      key={employe.id}
+                      className="rounded-3xl border border-yellow-500/20 bg-black p-5"
+                    >
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setEmployePlanningOuvert((current) =>
+                            current === employe.id ? null : employe.id
+                          )
+                        }
+                        className="flex w-full items-center justify-between text-left"
                       >
-                        <td className="p-3 font-bold text-white">{jour}</td>
+                        <h4 className="text-xl font-black text-white">
+                          {employe.nom || employe.email}
+                        </h4>
 
-                        <td className="p-3">
-                          <input
-                            type="time"
-                            value={planning?.debut_matin || ""}
-                            onChange={(e) =>
-                              updatePlanningLocal(
-                                employe.id,
-                                jour,
-                                "debut_matin",
-                                e.target.value
-                              )
-                            }
-                            className="w-full rounded-xl bg-white/10 px-3 py-2 text-white"
-                          />
-                        </td>
+                        <span className="rounded-full bg-yellow-400 px-4 py-2 text-sm font-black text-black">
+                          {employePlanningOuvert === employe.id ? "Fermer" : "Ouvrir"}
+                        </span>
+                      </button>
+                        
+                      {employePlanningOuvert === employe.id && (
+                        <div className="mt-5 overflow-x-auto">
+                          <table className="w-full min-w-[800px] text-left text-sm">
+                            <thead>
+                              <tr className="text-yellow-300">
+                                <th className="p-3">Jour</th>
+                                <th className="p-3">Début matinée</th>
+                                <th className="p-3">Fin matinée</th>
+                                <th className="p-3">Début soirée</th>
+                                <th className="p-3">Fin soirée</th>
+                                <th className="p-3">Action</th>
+                              </tr>
+                            </thead>
 
-                        <td className="p-3">
-                          <input
-                            type="time"
-                            value={planning?.fin_matin || ""}
-                            onChange={(e) =>
-                              updatePlanningLocal(
-                                employe.id,
-                                jour,
-                                "fin_matin",
-                                e.target.value
-                              )
-                            }
-                            className="w-full rounded-xl bg-white/10 px-3 py-2 text-white"
-                          />
-                        </td>
+                            <tbody>
+                              {joursPlanning.map((jour) => {
+                                const planning = getPlanningJour(employe.id, jour);
 
-                        <td className="p-3">
-                          <input
-                            type="time"
-                            value={planning?.debut_soir || ""}
-                            onChange={(e) =>
-                              updatePlanningLocal(
-                                employe.id,
-                                jour,
-                                "debut_soir",
-                                e.target.value
-                              )
-                            }
-                            className="w-full rounded-xl bg-white/10 px-3 py-2 text-white"
-                          />
-                        </td>
+                                return (
+                                  <tr
+                                    key={jour}
+                                    className="border-t border-yellow-500/10"
+                                  >
+                                    <td className="p-3 font-bold text-white">{jour}</td>
 
-                        <td className="p-3">
-                          <input
-                            type="time"
-                            value={planning?.fin_soir || ""}
-                            onChange={(e) =>
-                              updatePlanningLocal(
-                                employe.id,
-                                jour,
-                                "fin_soir",
-                                e.target.value
-                              )
-                            }
-                            className="w-full rounded-xl bg-white/10 px-3 py-2 text-white"
-                          />
-                        </td>
-                        <td className="p-3">
-                          <button
-                            type="button"
-                            onClick={() => copierJourSurSemaine(employe.id, jour)}
-                            className="rounded-full bg-yellow-400 px-4 py-2 text-sm font-black text-black hover:bg-yellow-300"
-                          >
-                            Copier semaine
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                                    <td className="p-3">
+                                      <input
+                                        type="time"
+                                        value={planning?.debut_matin || ""}
+                                        onChange={(e) =>
+                                          updatePlanningLocal(
+                                            employe.id,
+                                            jour,
+                                            "debut_matin",
+                                            e.target.value
+                                          )
+                                        }
+                                        className="w-full rounded-xl bg-white/10 px-3 py-2 text-white"
+                                      />
+                                    </td>
+
+                                    <td className="p-3">
+                                      <input
+                                        type="time"
+                                        value={planning?.fin_matin || ""}
+                                        onChange={(e) =>
+                                          updatePlanningLocal(
+                                            employe.id,
+                                            jour,
+                                            "fin_matin",
+                                            e.target.value
+                                          )
+                                        }
+                                        className="w-full rounded-xl bg-white/10 px-3 py-2 text-white"
+                                      />
+                                    </td>
+
+                                    <td className="p-3">
+                                      <input
+                                        type="time"
+                                        value={planning?.debut_soir || ""}
+                                        onChange={(e) =>
+                                          updatePlanningLocal(
+                                            employe.id,
+                                            jour,
+                                            "debut_soir",
+                                            e.target.value
+                                          )
+                                        }
+                                        className="w-full rounded-xl bg-white/10 px-3 py-2 text-white"
+                                      />
+                                    </td>
+
+                                    <td className="p-3">
+                                      <input
+                                        type="time"
+                                        value={planning?.fin_soir || ""}
+                                        onChange={(e) =>
+                                          updatePlanningLocal(
+                                            employe.id,
+                                            jour,
+                                            "fin_soir",
+                                            e.target.value
+                                          )
+                                        }
+                                        className="w-full rounded-xl bg-white/10 px-3 py-2 text-white"
+                                      />
+                                    </td>
+                                    <td className="p-3">
+                                      <button
+                                        type="button"
+                                        onClick={() => copierJourSurSemaine(employe.id, jour)}
+                                        className="rounded-full bg-yellow-400 px-4 py-2 text-sm font-black text-black hover:bg-yellow-300"
+                                      >
+                                        Copier semaine
+                                      </button>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+              </div>
             </div>
-            )}
-          </div>
-        ))}
-    </div>
-  </div>
-)}
+          )}
 
           {adminTab === "comptes" && (
             <div className="mt-8 rounded-3xl border border-yellow-500/20 bg-white/5 p-6">
@@ -1870,7 +1913,6 @@ const supprimerCompte = async (userId) => {
                   <p className="text-stone-400">Aucun compte trouvé.</p>
                 ) : (
                   profiles.map((profile) => (
-                    
                     <div
                       key={profile.id}
                       className="rounded-2xl border border-yellow-500/20 bg-black p-4"
@@ -1878,10 +1920,16 @@ const supprimerCompte = async (userId) => {
                       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div>
                           <p className="text-lg font-black text-white">
-                            {profile.email || "Email non renseigné"}
+                            {profile.prenom || profile.nom_famille 
+                              ? `${profile.prenom || ""} ${profile.nom_famille || ""}`.trim() 
+                              : profile.nom || "Identité non renseignée"}
                           </p>
 
                           <p className="mt-1 text-sm text-stone-400">
+                            Email : {profile.email || "Email non renseigné"}
+                          </p>
+
+                          <p className="text-sm text-stone-400">
                             Téléphone : {profile.phone || "Non renseigné"}
                           </p>
 
@@ -1923,18 +1971,26 @@ const supprimerCompte = async (userId) => {
                           >
                             Admin
                           </button>
-                        <button
-  type="button"
-  onClick={(e) => {
-    e.stopPropagation();
-    supprimerCompte(profile.id);
-  }}
-  className="rounded-full bg-red-700 px-4 py-2 font-black text-white hover:bg-red-600"
->
-  Supprimer
-</button>
 
-</div>
+                          <button
+                            type="button"
+                            onClick={() => ouvrirModifModal(profile)}
+                            className="rounded-full bg-orange-500 px-4 py-2 font-black text-white hover:bg-orange-400"
+                          >
+                            Modifier
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              supprimerCompte(profile.id);
+                            }}
+                            className="rounded-full bg-red-700 px-4 py-2 font-black text-white hover:bg-red-600"
+                          >
+                            Supprimer
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))
@@ -1972,7 +2028,6 @@ const supprimerCompte = async (userId) => {
                       );
 
                       const enService = dernierPointage && !dernierPointage.depart;
-
                       const moisActuel = new Date().toISOString().slice(0, 7);
 
                       const totalMinutesEmploye = historiquePointages
@@ -2164,75 +2219,71 @@ const supprimerCompte = async (userId) => {
                   </h3>
 
                   <div className="flex flex-wrap gap-3">
-  <button
-  type="button"
-  onClick={() => {
-    chargerEmployes();
-    chargerPointages();
-  }}
-  className="rounded-full bg-yellow-400 px-5 py-3 font-black text-black"
->
-  Actualiser
-</button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        chargerEmployes();
+                        chargerPointages();
+                      }}
+                      className="rounded-full bg-yellow-400 px-5 py-3 font-black text-black"
+                    >
+                      Actualiser
+                    </button>
 
-<div className="flex flex-wrap gap-3">
-  <select
-    value={moisExportAdmin.split("-")[1]}
-    onChange={(e) => {
-      const annee = moisExportAdmin.split("-")[0];
-      setMoisExportAdmin(`${annee}-${e.target.value}`);
-    }}
-    className="rounded-full bg-black px-5 py-3 font-bold text-white border border-yellow-500/30"
-  >
-    <option value="01">Janvier</option>
-    <option value="02">Février</option>
-    <option value="03">Mars</option>
-    <option value="04">Avril</option>
-    <option value="05">Mai</option>
-    <option value="06">Juin</option>
-    <option value="07">Juillet</option>
-    <option value="08">Août</option>
-    <option value="09">Septembre</option>
-    <option value="10">Octobre</option>
-    <option value="11">Novembre</option>
-    <option value="12">Décembre</option>
-  </select>
+                    <div className="flex flex-wrap gap-3">
+                      <select
+                        value={moisExportAdmin.split("-")[1]}
+                        onChange={(e) => {
+                          const annee = moisExportAdmin.split("-")[0];
+                          setMoisExportAdmin(`${annee}-${e.target.value}`);
+                        }}
+                        className="rounded-full bg-black px-5 py-3 font-bold text-white border border-yellow-500/30"
+                      >
+                        <option value="01">Janvier</option>
+                        <option value="02">Février</option>
+                        <option value="03">Mars</option>
+                        <option value="04">Avril</option>
+                        <option value="05">Mai</option>
+                        <option value="06">Juin</option>
+                        <option value="07">Juillet</option>
+                        <option value="08">Août</option>
+                        <option value="09">Septembre</option>
+                        <option value="10">Octobre</option>
+                        <option value="11">Novembre</option>
+                        <option value="12">Décembre</option>
+                      </select>
 
-  <select
-    value={moisExportAdmin.split("-")[0]}
-    onChange={(e) => {
-      const mois = moisExportAdmin.split("-")[1];
-      setMoisExportAdmin(`${e.target.value}-${mois}`);
-    }}
-    className="rounded-full bg-black px-5 py-3 font-bold text-white border border-yellow-500/30"
-  >
-    {[2026, 2027, 2028, 2029, 2030].map((annee) => (
-      <option key={annee} value={annee}>
-        {annee}
-      </option>
-    ))}
-  </select>
-</div>
+                      <select
+                        value={moisExportAdmin.split("-")[0]}
+                        onChange={(e) => {
+                          const mois = moisExportAdmin.split("-")[1];
+                          setMoisExportAdmin(`${e.target.value}-${mois}`);
+                        }}
+                        className="rounded-full bg-black px-5 py-3 font-bold text-white border border-yellow-500/30"
+                      >
+                        {[2026, 2027, 2028, 2029, 2030].map((annee) => (
+                          <option key={annee} value={annee}>
+                            {annee}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-  <button
-  type="button"
-  onClick={(e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    exporterPointagesExcel();
-  }}
-  className="rounded-full bg-green-600 px-5 py-3 font-black text-white hover:bg-green-500"
->
-  Exporter Excel
-</button>
+                    <button
+                      type="button"
+                      onClick={() => exporterPointagesExcel()}
+                      className="rounded-full bg-green-600 px-5 py-3 font-black text-white hover:bg-green-500"
+                    >
+                      Exporter Excel
+                    </button>
 
-  <button
-    onClick={() => setShowPointageForce(true)}
-    className="rounded-full bg-blue-600 px-5 py-3 font-black text-white hover:bg-blue-500"
-  >
-    Ajouter
-  </button>
-</div>
+                    <button
+                      onClick={() => setShowPointageForce(true)}
+                      className="rounded-full bg-blue-600 px-5 py-3 font-black text-white hover:bg-blue-500"
+                    >
+                      Ajouter
+                    </button>
+                  </div>
                 </div>
 
                 <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -2357,78 +2408,155 @@ const supprimerCompte = async (userId) => {
           )}
         </div>
       )}
-    {showPointageForce && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-    <div className="w-full max-w-md rounded-3xl bg-zinc-900 p-6 text-white shadow-2xl">
 
-      <h2 className="mb-6 text-2xl font-bold text-yellow-400">
-        Pointage forcé
-      </h2>
+      {showPointageForce && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+          <div className="w-full max-w-md rounded-3xl bg-zinc-900 p-6 text-white shadow-2xl">
+            <h2 className="mb-6 text-2xl font-bold text-yellow-400">Pointage forcé</h2>
+            <div className="space-y-4">
+              <select
+                value={employeSelectionne}
+                onChange={(e) => setEmployeSelectionne(e.target.value)}
+                className="w-full rounded-xl bg-zinc-800 p-3"
+              >
+                <option value="">Choisir un employé</option>
+                {(listeEmployes || []).map((employe) => (
+                  <option key={employe.id} value={employe.id}>
+                    {employe.nom}
+                  </option>
+                ))}
+              </select>
 
-      <div className="space-y-4">
+              <input
+                type="date"
+                value={datePointage}
+                onChange={(e) => setDatePointage(e.target.value)}
+                className="w-full rounded-xl bg-zinc-800 p-3"
+              />
 
-        <select
-          value={employeSelectionne}
-          onChange={(e) => setEmployeSelectionne(e.target.value)}
-          className="w-full rounded-xl bg-zinc-800 p-3"
-        >
-          <option value="">Choisir un employé</option>
+              <input
+                type="time"
+                value={heureDebut}
+                onChange={(e) => setHeureDebut(e.target.value)}
+                className="w-full rounded-xl bg-zinc-800 p-3"
+              />
 
-          {(listeEmployes || []).map((employe) => (
-            <option key={employe.id} value={employe.id}>
-              {employe.nom}
-            </option>
-          ))}
-        </select>
+              <input
+                type="time"
+                value={heureFin}
+                onChange={(e) => setHeureFin(e.target.value)}
+                className="w-full rounded-xl bg-zinc-800 p-3"
+              />
 
-        <input
-          type="date"
-          value={datePointage}
-          onChange={(e) => setDatePointage(e.target.value)}
-          className="w-full rounded-xl bg-zinc-800 p-3"
-        />
+              {messagePointageForce && (
+                <p className="text-sm text-yellow-400">
+                  {messagePointageForce}
+                </p>
+              )}
 
-        <input
-          type="time"
-          value={heureDebut}
-          onChange={(e) => setHeureDebut(e.target.value)}
-          className="w-full rounded-xl bg-zinc-800 p-3"
-        />
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={ajouterPointageForce}
+                  className="flex-1 rounded-xl bg-green-600 py-3 font-bold hover:bg-green-700"
+                >
+                  Valider
+                </button>
 
-        <input
-          type="time"
-          value={heureFin}
-          onChange={(e) => setHeureFin(e.target.value)}
-          className="w-full rounded-xl bg-zinc-800 p-3"
-        />
-
-        {messagePointageForce && (
-          <p className="text-sm text-yellow-400">
-            {messagePointageForce}
-          </p>
-        )}
-
-        <div className="flex gap-3 pt-4">
-
-          <button
-            onClick={ajouterPointageForce}
-            className="flex-1 rounded-xl bg-green-600 py-3 font-bold hover:bg-green-700"
-          >
-            Valider
-          </button>
-
-          <button
-            onClick={() => setShowPointageForce(false)}
-            className="flex-1 rounded-xl bg-red-600 py-3 font-bold hover:bg-red-700"
-          >
-            Fermer
-          </button>
-
+                <button
+                  onClick={() => setShowPointageForce(false)}
+                  className="flex-1 rounded-xl bg-red-600 py-3 font-bold hover:bg-red-700"
+                >
+                  Fermer
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-  </div>
-)}  
+      )}  
+
+      {/* MODALE ADMIN MODIFICATION COMPTE SANS AUCUNE PERTE DE CODE */}
+      {showModifModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-5">
+          <div className="w-full max-w-lg rounded-[2.5rem] border border-yellow-500/20 bg-zinc-950 p-6 md:p-8 text-white shadow-2xl">
+            <h3 className="text-2xl font-black text-yellow-300">Modifier le Compte</h3>
+            <p className="mt-1 text-sm text-stone-400">Édition complète des informations de l'utilisateur.</p>
+
+            <div className="mt-6 space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="text-xs font-bold text-stone-400 uppercase tracking-wider">Prénom</label>
+                  <input 
+                    type="text" 
+                    value={editPrenom} 
+                    onChange={(e) => setEditPrenom(e.target.value)}
+                    className="mt-1 w-full rounded-2xl bg-zinc-900 border border-white/5 px-4 py-3 text-white outline-none focus:border-yellow-400"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-stone-400 uppercase tracking-wider">Nom</label>
+                  <input 
+                    type="text" 
+                    value={editNom} 
+                    onChange={(e) => setEditNom(e.target.value)}
+                    className="mt-1 w-full rounded-2xl bg-zinc-900 border border-white/5 px-4 py-3 text-white outline-none focus:border-yellow-400"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-stone-400 uppercase tracking-wider">Numéro de Téléphone</label>
+                <input 
+                  type="tel" 
+                  value={editPhone} 
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  className="mt-1 w-full rounded-2xl bg-zinc-900 border border-white/5 px-4 py-3 text-white outline-none focus:border-yellow-400"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-stone-400 uppercase tracking-wider">Adresse Email</label>
+                <input 
+                  type="email" 
+                  value={editEmail} 
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  className="mt-1 w-full rounded-2xl bg-zinc-900 border border-white/5 px-4 py-3 text-white outline-none focus:border-yellow-400"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-stone-400 uppercase tracking-wider">Réinitialiser Mot de passe</label>
+                <input 
+                  type="password" 
+                  value={editPassword} 
+                  onChange={(e) => setEditPassword(e.target.value)}
+                  placeholder="Saisir un mdp pour forcer le renouvellement"
+                  className="mt-1 w-full rounded-2xl bg-zinc-900 border border-white/5 px-4 py-3 text-white outline-none focus:border-yellow-400 text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="mt-8 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowModifModal(false)}
+                className="flex-1 rounded-full bg-white/10 px-5 py-3 font-black text-white hover:bg-white/20 transition"
+              >
+                Annuler
+              </button>
+
+              <button
+                type="button"
+                disabled={loadingModif}
+                onClick={sauvegarderCompteAdmin}
+                className="flex-1 rounded-full bg-yellow-400 px-5 py-3 font-black text-black hover:bg-yellow-300 transition flex items-center justify-center gap-2"
+              >
+                {loadingModif && <span className="h-4 w-4 animate-spin border-2 border-black border-t-transparent rounded-full" />}
+                {loadingModif ? "Enregistrement..." : "Enregistrer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

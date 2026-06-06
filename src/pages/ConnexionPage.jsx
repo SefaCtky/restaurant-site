@@ -161,6 +161,7 @@ export default function ConnexionPage({ supabase, verifierSession, setActivePage
       return;
     }
 
+    // 1. Inscription dans Supabase Auth
     const { data, error } = await supabase.auth.signUp({
       email: emailClean,
       password,
@@ -189,12 +190,13 @@ export default function ConnexionPage({ supabase, verifierSession, setActivePage
       return;
     }
 
+    // 2. CORRECTION ICI : On alimente explicitement les colonnes prenom et nom_famille
     const { error: profileError } = await supabase.from("profiles").upsert({
       id: userId,
       email: emailClean,
       phone: phoneClean,
-      prenom: prenomClean,
-      nom_famille: nomClean,
+      prenom: prenomClean,      // Envoie la valeur dans ta colonne prenom
+      nom_famille: nomClean,    // Envoie la valeur dans ta colonne nom_famille
       nom: `${prenomClean} ${nomClean}`,
       role: "client",
     });

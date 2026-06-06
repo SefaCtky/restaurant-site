@@ -489,13 +489,10 @@ const imprimerTicketCuisine = (commande) => {
           }
 
           ${
-            (
-              item.cheddar ||
-              item.supplement_cheddar ||
-              item.supplementCheddar ||
-              JSON.stringify(item).toLowerCase().includes("cheddar")
-            )
-              ? `<div class="cheddar">🧀 SUPPLÉMENT CHEDDAR</div>`
+            (item.extraCheddar === true || item.extraCheddar === "true" || item.cheddar === true || item.cheddar === "true" || item.supplement_cheddar === true)
+              ? `<div class="cheddar">
+              Ê 🧀 SUPPLÉMENT CHEDDAR
+              </div>`
               : ""
           }
           ${item.note ? `<p><strong>Note : ${item.note}</strong></p>` : ""}
@@ -806,19 +803,16 @@ const renderCommande = (commande) => (
               item.saucesSandwich?.includes?.("Sans sauce fromagère") ||
               item.sauces_frites?.includes?.("Sans sauce fromagère") ||
               item.note?.toLowerCase?.().includes("sans sauce fromagère") ||
-              JSON.stringify(item).toLowerCase().includes("sans sauce fromagère")
+              item.note?.toLowerCase?.().includes("sans sauce fromagere") ||
+              JSON.stringify(item).toLowerCase().includes("sans sauce fromagère") ||
+              JSON.stringify(item).toLowerCase().includes("sans sauce fromagere")
             ) && (
               <p className="mt-3 rounded-2xl border-2 border-red-500 bg-red-950/80 p-4 text-xl font-black text-red-200 shadow-[0_0_30px_rgba(239,68,68,0.55)]">
                 🚨 ALLERGIE / LACTOSE : SANS SAUCE FROMAGÈRE
               </p>
             )}
 
-            {(
-              item.cheddar ||
-              item.supplement_cheddar ||
-              item.supplementCheddar ||
-              JSON.stringify(item).toLowerCase().includes("cheddar")
-            ) && (
+            {(item.extraCheddar === true || item.extraCheddar === "true" || item.cheddar === true || item.cheddar === "true" || item.supplement_cheddar === true) && (
               <p className="mt-3 rounded-2xl border-2 border-yellow-400 bg-yellow-950/70 p-4 text-lg font-black text-yellow-200">
                 🧀 SUPPLÉMENT CHEDDAR
               </p>
@@ -1208,7 +1202,7 @@ const getTempsRestant = (commande) => {
         </div>
             )}
 
-    </div>
-  </main>
+      </div>
+    </main>
   );
 }
