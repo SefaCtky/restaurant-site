@@ -15,5 +15,5 @@ if ("serviceWorker" in navigator) {
 }
 import { registerSW } from "virtual:pwa-register";
 
-// Enregistre automatiquement les mises à jour du site sur le téléphone du client
-registerSW({ immediate: true });
+// Enregistrement standard sans forcer le rafraîchissement immédiat de la page
+registerSW();
