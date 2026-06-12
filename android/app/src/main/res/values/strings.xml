@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Chez Omer</string>
+    <string name="title_activity_main">Chez Omer</string>
+    <string name="package_name">com.chezomer.app</string>
+    <string name="custom_url_scheme">com.chezomer.app</string>
+</resources>
