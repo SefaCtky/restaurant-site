@@ -9,20 +9,19 @@ const corsHeaders = {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-  // 1. Initialisation rapide
-  const supabaseAdmin = createClient(
-    Deno.env.get("MY_PROJECT_URL") ?? '',
-    Deno.env.get("MY_SERVICE_ROLE") ?? ''
-  );
-
   try {
+    // Utilise les variables d'environnement de Supabase directement
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? '',
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ''
+    );
+
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("Pas de jeton");
 
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(authHeader.replace('Bearer ', ''));
     if (authError || !user) throw new Error("Non autorisé");
 
-    // 2. Suppression immédiate
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id);
     if (deleteError) throw deleteError;
 
