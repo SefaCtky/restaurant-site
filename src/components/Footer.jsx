@@ -16,15 +16,23 @@ export default function Footer({ LOGO }) {
           </div>
         </div>
 
-        {/* Partie Droite avec le lien de suppression */}
+        {/* Partie Droite avec les liens légaux */}
         <div className="flex flex-col items-center gap-2 md:items-end">
           <p>© 2026 Chez Omer. Tous droits réservés.</p>
-          <a 
-            href="/suppression.html" 
-            className="text-xs text-stone-500 hover:text-yellow-400 underline transition"
-          >
-            Supprimer mon compte
-          </a>
+          <div className="flex gap-4">
+            <a 
+              href="/confidentialite.html" 
+              className="text-xs text-stone-500 hover:text-yellow-400 underline transition"
+            >
+              Politique de Confidentialité
+            </a>
+            <a 
+              href="/suppression.html" 
+              className="text-xs text-stone-500 hover:text-yellow-400 underline transition"
+            >
+              Supprimer mon compte
+            </a>
+          </div>
         </div>
         
       </div>
