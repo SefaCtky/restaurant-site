@@ -31,7 +31,8 @@
         import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
         
         // REMPLACE BIEN PAR TES CLÉS RÉELLES
-        const supabase = createClient('https://insnsionazkpxjwaemrp.supabase.co/rest/v1/', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imluc25zaW9uYXprcHhqd2FlbXJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNjQzNTgsImV4cCI6MjA5Mzg0MDM1OH0.g5CHdOmtppZ5Lq35qlFbQgcrNvNKYE9wTcJWWidVyfk')
+        const supabase = createClient('// CORRECTION : Retire /rest/v1/
+const supabase = createClient('https://insnsionazkpxjwaemrp.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imluc25zaW9uYXprcHhqd2FlbXJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNjQzNTgsImV4cCI6MjA5Mzg0MDM1OH0.g5CHdOmtppZ5Lq35qlFbQgcrNvNKYE9wTcJWWidVyfk')
 
         document.getElementById('deleteBtn').onclick = async () => {
             if (!confirm("Attention : cette action supprimera toutes vos données. Êtes-vous sûr ?")) return;
