@@ -2,37 +2,56 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Suppression de compte - Chez Omer</title>
     <style>
-        body { font-family: sans-serif; line-height: 1.6; max-width: 800px; margin: 40px auto; padding: 20px; }
-        h1 { color: #d35400; }
-        .box { border: 1px solid #ccc; padding: 20px; border-radius: 8px; background: #f9f9f9; }
-        .button { background-color: #e74c3c; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px; }
+        body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; line-height: 1.6; }
+        .box { border: 1px solid #ddd; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+        button { background-color: #e74c3c; color: white; padding: 15px 25px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        button:hover { background-color: #c0392b; }
+        #status { margin-top: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
     <h1>Suppression de votre compte Chez Omer</h1>
-    
+
     <div class="box">
-        <h2>Suppression automatique (Bientôt disponible)</h2>
-        <p>Nous travaillons actuellement sur une fonction de suppression directe depuis l'application. Très prochainement, vous pourrez supprimer votre compte en un clic depuis vos paramètres.</p>
-        
-        <!-- Tu peux laisser le bouton mais le désactiver -->
-        <a href="#" class="button" style="background-color: #95a5a6; cursor: not-allowed;">Bouton en cours de déploiement</a>
-        
-        <p><small>Pour le moment, veuillez utiliser la procédure manuelle ci-dessous pour toute demande de suppression.</small></p>
+        <h2>Procédure automatique</h2>
+        <p>Connectez-vous à votre compte, puis cliquez sur le bouton ci-dessous :</p>
+        <button id="deleteBtn">Supprimer mon compte définitivement</button>
+        <p id="status"></p>
     </div>
 
-    <div style="margin-top: 30px;">
-        <h2>Procédure manuelle</h2>
-        <p>Si vous rencontrez des difficultés, vous pouvez demander la suppression par e-mail à : <strong>Chezomer74@gmail.com</strong></p>
-        <p>Merci d'indiquer dans votre message :</p>
-        <ul>
-            <li>Votre adresse e-mail utilisée pour le compte</li>
-            <li>Votre Nom et Prénom</li>
-            <li>L'objet : "Suppression de compte"</li>
-        </ul>
-        <p>Nous traiterons votre demande dans les plus brefs délais.</p>
+    <div class="box">
+        <h2>Procédure manuelle (Secours)</h2>
+        <p>Si vous rencontrez des difficultés, vous pouvez demander la suppression par e-mail à :</p>
+        <p><strong>Chezomer74@gmail.com</strong></p>
+        <p><small>Indiquez votre adresse e-mail, votre nom, prénom et l'objet "Suppression de compte".</small></p>
     </div>
+
+    <script type="module">
+        import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+        
+        // REMPLACE BIEN PAR TES CLÉS RÉELLES
+        const supabase = createClient('https://insnsionazkpxjwaemrp.supabase.co/rest/v1/', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imluc25zaW9uYXprcHhqd2FlbXJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNjQzNTgsImV4cCI6MjA5Mzg0MDM1OH0.g5CHdOmtppZ5Lq35qlFbQgcrNvNKYE9wTcJWWidVyfk')
+
+        document.getElementById('deleteBtn').onclick = async () => {
+            if (!confirm("Attention : cette action supprimera toutes vos données. Êtes-vous sûr ?")) return;
+
+            const { data: { session } } = await supabase.auth.getSession()
+            if (!session) return alert("Vous n'êtes pas connecté.")
+
+            document.getElementById('status').innerText = "Suppression en cours..."
+
+            const { error } = await supabase.functions.invoke('delete-user', {
+                headers: { Authorization: `Bearer ${session.access_token}` }
+            })
+
+            if (error) {
+                document.getElementById('status').innerText = "Erreur : " + error.message
+            } else {
+                alert("Compte supprimé avec succès.")
+                window.location.href = "/"
+            }
+        }
+    </script>
 </body>
 </html>
