@@ -3,6 +3,184 @@ import PageTitle from "../components/PageTitle";
 import { calculateWorkedTime } from "../utils/pointageUtils";
 import * as XLSX from "xlsx";
 
+
+// Chaque fiche possède son propre brouillon : aucun changement Supabase avant Enregistrer.
+function FicheProduitAdmin({ produit, supabase, chargerProduits, supprimerProduit }) {
+  const [draft, setDraft] = useState(() => ({ ...produit }));
+  const [imageFile, setImageFile] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const dirty = ["nom", "description", "prix", "prix_menu", "image", "type", "ordre", "actif", "in_stock"].some(
+    (champ) => String(draft[champ] ?? "") !== String(produit[champ] ?? "")
+  ) || Boolean(imageFile);
+  const changer = (champ, valeur) => setDraft((ancien) => ({ ...ancien, [champ]: valeur }));
+  const annuler = () => { setDraft({ ...produit }); setImageFile(null); };
+  const enregistrer = async () => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      let image = draft.image || "";
+      if (imageFile) {
+        const extension = imageFile.name.split(".").pop();
+        const chemin = `${Date.now()}-${produit.id}.${extension}`;
+        const { error: uploadError } = await supabase.storage.from("produits").upload(chemin, imageFile);
+        if (uploadError) throw uploadError;
+        image = supabase.storage.from("produits").getPublicUrl(chemin).data.publicUrl;
+      }
+      const payload = {
+        nom: draft.nom, description: draft.description,
+        prix: draft.prix === "" ? null : Number(String(draft.prix).replace(",", ".")),
+        prix_menu: draft.prix_menu === "" || draft.prix_menu == null ? null : Number(String(draft.prix_menu).replace(",", ".")),
+        image, type: draft.type || "", ordre: Number(draft.ordre || 0),
+        actif: draft.actif ?? true, in_stock: draft.in_stock ?? true,
+      };
+      if (!Number.isFinite(payload.prix) || (payload.prix_menu !== null && !Number.isFinite(payload.prix_menu))) {
+        throw new Error("Le prix doit être un nombre valide.");
+      }
+      const { error } = await supabase.from("produits").update(payload).eq("id", produit.id);
+      if (error) throw error;
+      setDraft((ancien) => ({ ...ancien, ...payload }));
+      setImageFile(null);
+      await chargerProduits();
+      alert("Produit enregistré ✅");
+    } catch (error) {
+      console.error(error);
+      alert("Enregistrement impossible : " + error.message);
+    } finally { setSaving(false); }
+  };
+  return (
+                      <div
+                        
+                        className="rounded-2xl border border-yellow-500/20 bg-black p-4"
+                      >
+                        <label className="text-sm font-bold text-yellow-300">Nom</label>
+
+                        <input
+                          type="text"
+                          value={draft.nom ?? ""}
+                          onChange={(e) => changer("nom", e.target.value)}
+                          className="mt-2 w-full rounded-xl bg-white/10 px-4 py-3 text-white"
+                        />
+
+                        <label className="mt-4 block text-sm font-bold text-yellow-300">
+                          Description
+                        </label>
+
+                        <textarea
+                          value={draft.description ?? ""}
+                          onChange={(e) => changer("description", e.target.value)}
+                          className="mt-2 min-h-24 w-full rounded-xl bg-white/10 px-4 py-3 text-white"
+                        />
+
+                        <div className="mt-4 grid gap-3 md:grid-cols-2">
+                          <div>
+                            <label className="text-sm font-bold text-yellow-300">Prix</label>
+
+                            <input
+                              type="text"
+                              value={draft.prix ?? ""}
+                              onChange={(e) => changer("prix", e.target.value)}
+                              className="mt-2 w-full rounded-xl bg-white/10 px-4 py-3 text-white"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-sm font-bold text-yellow-300">Prix menu</label>
+
+                            <input
+                              type="text"
+                              value={draft.prix_menu ?? ""}
+                              onChange={(e) => changer("prix_menu", e.target.value)}
+                              className="mt-2 w-full rounded-xl bg-white/10 px-4 py-3 text-white"
+                            />
+                          </div>
+                        </div>
+
+                        <label className="mt-4 block text-sm font-bold text-yellow-300">
+                          Image
+                        </label>
+
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                          className="mt-3 w-full rounded-xl bg-white/10 px-4 py-3 text-white"
+                        />
+
+                        <input
+                          type="text"
+                          value={draft.image ?? ""}
+                          onChange={(e) => changer("image", e.target.value)}
+                          className="mt-2 w-full rounded-xl bg-white/10 px-4 py-3 text-white"
+                        />
+
+                        {draft.image && (
+                          <img
+                            src={draft.image}
+                            alt={draft.nom}
+                            className="mt-4 h-40 w-full rounded-2xl object-cover"
+                          />
+                        )}
+
+                        <label className="mt-4 block text-sm font-bold text-yellow-300">Type</label>
+
+                        <input
+                          type="text"
+                          value={draft.type ?? ""}
+                          onChange={(e) => changer("type", e.target.value)}
+                          className="mt-2 w-full rounded-xl bg-white/10 px-4 py-3 text-white"
+                        />
+
+                        <label className="mt-4 block text-sm font-bold text-yellow-300">Ordre</label>
+
+                        <input
+                          type="number"
+                          value={draft.ordre ?? ""}
+                          onChange={(e) => changer("ordre", e.target.value)}
+                          className="mt-2 w-full rounded-xl bg-white/10 px-4 py-3 text-white"
+                        />
+
+                        <label className="mt-4 flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={draft.actif ?? true}
+                            onChange={(e) => changer("actif", e.target.checked)}
+                            className="h-5 w-5"
+                          />
+
+                          <span className="font-bold text-white">Produit actif</span>
+                        </label>
+
+                        <label className="mt-3 flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={draft.in_stock ?? true}
+                            onChange={(e) => changer("in_stock", e.target.checked)}
+                            className="h-5 w-5"
+                          />
+
+                          <span className="font-bold text-white">En stock</span>
+                        </label>
+
+                        <div className="mt-4 flex flex-wrap gap-3">
+                          <button
+                            onClick={enregistrer} disabled={saving}
+                            className="rounded-full bg-yellow-400 px-5 py-3 font-black text-black"
+                          >
+                            {saving ? "Enregistrement..." : "Enregistrer"}
+                          </button>
+
+                          <button type="button" onClick={annuler} disabled={!dirty || saving} className="rounded-full bg-white/15 px-5 py-3 font-black text-white disabled:opacity-40">Annuler</button>
+                          <button
+                            onClick={() => supprimerProduit(produit)}
+                            className="rounded-full bg-red-600 px-5 py-3 font-black text-white hover:bg-red-500"
+                          >
+                            Supprimer le produit
+                          </button>
+                        </div>
+                      </div>
+  );
+}
+
 export default function AdminPage({
   supabase,
   userRole,
@@ -283,6 +461,17 @@ export default function AdminPage({
     }
   };
 
+  // Conserver la catégorie ouverte, même si une mise à jour produit remonte le composant.
+  const [expandedAdminCategory, setExpandedAdminCategory] = useState(() =>
+    window.sessionStorage.getItem("chezOmerAdminCategory") || null
+  );
+  const basculerCategorieAdmin = (id) => {
+    const cle = String(id);
+    const suivante = String(expandedAdminCategory) === cle ? null : cle;
+    if (suivante === null) window.sessionStorage.removeItem("chezOmerAdminCategory");
+    else window.sessionStorage.setItem("chezOmerAdminCategory", suivante);
+    setExpandedAdminCategory(suivante);
+  };
   const [adminTab, setAdminTab] = useState(() => {
     return localStorage.getItem("adminTab") || "produits";
   });
@@ -709,11 +898,7 @@ export default function AdminPage({
     chargerProduits();
   };
 
-  const ajouterProduit = async () => {
-    const categorieId =
-      selectedAdminCategory === "all"
-        ? categoriesData[0]?.id
-        : Number(selectedAdminCategory);
+  const ajouterProduitDansCategorie = async (categorieId) => {
 
     if (!categorieId) {
       alert("Aucune catégorie trouvée ❌");
@@ -1210,179 +1395,34 @@ export default function AdminPage({
                   Produits Supabase
                 </h3>
 
-                <select
-                  value={selectedAdminCategory}
-                  onChange={(e) => setSelectedAdminCategory(e.target.value)}
-                  className="mt-4 w-full rounded-2xl border border-yellow-500/20 bg-black px-5 py-4 text-white"
-                >
-                  <option value="all">Toutes les catégories</option>
-
-                  {categoriesData.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.nom}
-                    </option>
-                  ))}
-                </select>
-
-                <button
-                  onClick={ajouterProduit}
-                  className="mt-4 rounded-full bg-green-500 px-6 py-3 font-black text-white hover:bg-green-400"
-                >
-                  + Ajouter un produit
-                </button>
-
-                <div className="mt-6 space-y-4">
-                  {produits
-                    .filter((produit) =>
-                      selectedAdminCategory === "all"
-                        ? true
-                        : produit.categorie_id === Number(selectedAdminCategory)
-                    )
-                    .map((produit) => (
-                      <div
-                        key={produit.id}
-                        className="rounded-2xl border border-yellow-500/20 bg-black p-4"
-                      >
-                        <label className="text-sm font-bold text-yellow-300">Nom</label>
-
-                        <input
-                          type="text"
-                          defaultValue={produit.nom || ""}
-                          onBlur={(e) => updateProduit(produit.id, "nom", e.target.value)}
-                          className="mt-2 w-full rounded-xl bg-white/10 px-4 py-3 text-white"
-                        />
-
-                        <label className="mt-4 block text-sm font-bold text-yellow-300">
-                          Description
-                        </label>
-
-                        <textarea
-                          defaultValue={produit.description || ""}
-                          onBlur={(e) =>
-                            updateProduit(produit.id, "description", e.target.value)
-                          }
-                          className="mt-2 min-h-24 w-full rounded-xl bg-white/10 px-4 py-3 text-white"
-                        />
-
-                        <div className="mt-4 grid gap-3 md:grid-cols-2">
-                          <div>
-                            <label className="text-sm font-bold text-yellow-300">Prix</label>
-
-                            <input
-                              type="text"
-                              defaultValue={produit.prix || ""}
-                              onBlur={(e) =>
-                                updateProduit(produit.id, "prix", e.target.value)
-                              }
-                              className="mt-2 w-full rounded-xl bg-white/10 px-4 py-3 text-white"
-                            />
+                <p className="mt-3 text-sm text-stone-400">Cliquez sur une catégorie pour modifier ses produits.</p>
+                <div className="mt-5 space-y-4">
+                  {(categoriesData || []).map((cat) => {
+                    const expanded = expandedAdminCategory === String(cat.id);
+                    const count = (produits || []).filter((p) => Number(p.categorie_id) === Number(cat.id)).length;
+                    return (
+                      <div key={cat.id} className={`overflow-hidden rounded-[2rem] border transition ${expanded ? "border-yellow-400 bg-white text-stone-950" : "border-yellow-500/20 bg-black/60 text-white"}`}>
+                        <button type="button" onClick={() => basculerCategorieAdmin(cat.id)} className="flex w-full items-center justify-between gap-4 p-6 text-left">
+                          <span className="flex items-center gap-4 text-xl font-black sm:text-2xl">
+                            <span className={expanded ? "text-yellow-700" : "text-yellow-400"}>♜</span>
+                            {cat.nom}
+                            <span className={`text-sm font-semibold ${expanded ? "text-stone-500" : "text-stone-400"}`}>({count})</span>
+                          </span>
+                          <span className={`rounded-full px-4 py-2 text-sm font-black ${expanded ? "bg-black text-yellow-300" : "bg-yellow-400 text-black"}`}>{expanded ? "Fermer" : "Voir"}</span>
+                        </button>
+                        {expanded && (
+                          <div className="border-t border-stone-200 bg-black p-4 sm:p-6">
+                            <button type="button" onClick={() => ajouterProduitDansCategorie(cat.id)} className="rounded-full bg-green-500 px-6 py-3 font-black text-white hover:bg-green-400">+ Ajouter un produit</button>
+                            <div className="mt-6 space-y-4">
+                              {(produits || []).filter((produit) => Number(produit.categorie_id) === Number(cat.id)).sort((a, b) => Number(a.ordre || 0) - Number(b.ordre || 0)).map((produit) => (
+                                <FicheProduitAdmin key={produit.id} produit={produit} supabase={supabase} chargerProduits={chargerProduits} supprimerProduit={supprimerProduit} />
+                              ))}
+                            </div>
                           </div>
-
-                          <div>
-                            <label className="text-sm font-bold text-yellow-300">Prix menu</label>
-
-                            <input
-                              type="text"
-                              defaultValue={produit.prix_menu || ""}
-                              onBlur={(e) =>
-                                updateProduit(produit.id, "prix_menu", e.target.value)
-                              }
-                              className="mt-2 w-full rounded-xl bg-white/10 px-4 py-3 text-white"
-                            />
-                          </div>
-                        </div>
-
-                        <label className="mt-4 block text-sm font-bold text-yellow-300">
-                          Image
-                        </label>
-
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => uploadImageProduit(e.target.files[0], produit.id)}
-                          className="mt-3 w-full rounded-xl bg-white/10 px-4 py-3 text-white"
-                        />
-
-                        <input
-                          type="text"
-                          defaultValue={produit.image || ""}
-                          onBlur={(e) =>
-                            updateProduit(produit.id, "image", e.target.value)
-                          }
-                          className="mt-2 w-full rounded-xl bg-white/10 px-4 py-3 text-white"
-                        />
-
-                        {produit.image && (
-                          <img
-                            src={produit.image}
-                            alt={produit.nom}
-                            className="mt-4 h-40 w-full rounded-2xl object-cover"
-                          />
                         )}
-
-                        <label className="mt-4 block text-sm font-bold text-yellow-300">Type</label>
-
-                        <input
-                          type="text"
-                          defaultValue={produit.type || ""}
-                          onBlur={(e) => updateProduit(produit.id, "type", e.target.value)}
-                          className="mt-2 w-full rounded-xl bg-white/10 px-4 py-3 text-white"
-                        />
-
-                        <label className="mt-4 block text-sm font-bold text-yellow-300">Ordre</label>
-
-                        <input
-                          type="number"
-                          defaultValue={produit.ordre || 0}
-                          onBlur={(e) =>
-                            updateProduit(produit.id, "ordre", Number(e.target.value))
-                          }
-                          className="mt-2 w-full rounded-xl bg-white/10 px-4 py-3 text-white"
-                        />
-
-                        <label className="mt-4 flex items-center gap-3">
-                          <input
-                            type="checkbox"
-                            checked={produit.actif ?? true}
-                            onChange={(e) =>
-                              updateProduit(produit.id, "actif", e.target.checked)
-                            }
-                            className="h-5 w-5"
-                          />
-
-                          <span className="font-bold text-white">Produit actif</span>
-                        </label>
-
-                        <label className="mt-3 flex items-center gap-3">
-                          <input
-                            type="checkbox"
-                            checked={produit.in_stock ?? true}
-                            onChange={(e) =>
-                              updateProduit(produit.id, "in_stock", e.target.checked)
-                            }
-                            className="h-5 w-5"
-                          />
-
-                          <span className="font-bold text-white">En stock</span>
-                        </label>
-
-                        <div className="mt-4 flex flex-wrap gap-3">
-                          <button
-                            onClick={() => saveProduit(produit)}
-                            className="rounded-full bg-yellow-400 px-5 py-3 font-black text-black"
-                          >
-                            Enregistrer
-                          </button>
-
-                          <button
-                            onClick={() => supprimerProduit(produit)}
-                            className="rounded-full bg-red-600 px-5 py-3 font-black text-white hover:bg-red-500"
-                          >
-                            Supprimer le produit
-                          </button>
-                        </div>
                       </div>
-                    ))}
+                    );
+                  })}
                 </div>
               </div>
             </>

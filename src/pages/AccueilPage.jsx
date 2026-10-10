@@ -229,15 +229,13 @@ export default function AccueilPage({
           </div>
 
           <div className="rounded-3xl border border-yellow-500/20 bg-white/5 p-6 transition duration-300 hover:-translate-y-1 hover:border-yellow-400/30 hover:shadow-[0_0_30px_rgba(250,204,21,0.15)]">
-            <h3 className="text-xl font-black text-white">Commande WhatsApp</h3>
-            <a
-              href={`https://wa.me/${whatsappNumber}`}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-4 inline-block rounded-full bg-gradient-to-r from-green-500 to-emerald-400 px-6 py-3 font-black text-white shadow-[0_0_25px_rgba(34,197,94,0.25)] transition duration-300 hover:scale-105 hover:shadow-[0_0_35px_rgba(16,185,129,0.4)]"
-            >
-              Contacter
-            </a>
+            <h3 className="text-xl font-black text-white">Commande en ligne</h3>
+            <p className="mt-4 inline-block rounded-full border border-yellow-400/30 bg-yellow-400/10 px-5 py-3 font-black text-yellow-300">
+              Bientôt disponible ! 🚀
+            </p>
+            <p className="mt-3 text-sm text-stone-300">
+              Notre service de commande en ligne arrive très bientôt.
+            </p>
           </div>
         </div>
       </section>

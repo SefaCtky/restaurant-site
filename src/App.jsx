@@ -60,7 +60,7 @@ function calculSupplementSauces(listeSauces) {
 const cruditeOptions = ["Sans salade", "Sans tomate", "Sans oignon"];
 const cruditeSauceSaladeOptions = ["Sans salade", "Sans tomate", "Sans oignon", "Sans sauce salade"];
 const burgerOptions = ["Sans salade", "Sans tomate", "Sans oignon", "Sans cheddar"];
-const accompagnementOptions = ["Riz", "Boulgour", "Frites"];
+const accompagnementOptions = ["Boulgour", "Frites"];
 const menuEnfantBoissons = ["Ayran", "Capri-Sun"];
 
 const tacosMeats = [
@@ -140,6 +140,7 @@ export default function RestaurantWebsite() {
   const [selectedMeats, setSelectedMeats] = useState([]);
   const [breadChoice, setBreadChoice] = useState("Sandwich");
   const [formulaChoice, setFormulaChoice] = useState("Seul");
+  const [extraEgg, setExtraEgg] = useState(false);
   const [accompagnementChoice, setAccompagnementChoice] = useState("");
   const [drinkSizeChoice, setDrinkSizeChoice] = useState("33cl");
   const [waterSizeChoice, setWaterSizeChoice] = useState("50cl");
@@ -155,6 +156,7 @@ export default function RestaurantWebsite() {
   const [user, setUser] = useState(null);
   const [userRole, setUserRole] = useState("client");
   const [loadingAuth, setLoadingAuth] = useState(true);
+  const isAdminTestMode = !loadingAuth && Boolean(user) && userRole === "admin";
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [newOrderFlash, setNewOrderFlash] = useState(false);
   const audioContextRef = useRef(null);
@@ -445,11 +447,11 @@ export default function RestaurantWebsite() {
 
   const isSimpleTacos = (product) => product?.type === "tacos-simple";
   const isMaxiTacos = (product) => product?.type === "maxi-tacos";
-  const needsTacosMeatChoice = (product) => isSimpleTacos(product) || isMaxiTacos(product);
+  const needsTacosMeatChoice = (product) => isMaxiTacos(product);
 
   const needsSauceChoice = (category, productName = "", productType = "") => {
     if (productType === "frite-sauce") return true;
-    if (["Boissons", "Desserts", "Soupe", "Sauces", "Mezzés et salades", "Assiettes"].includes(category)) return false;
+    if (["Boissons", "Desserts", "Soupe", "Sauces", "Mezzés et salades", "Assiettes", "Pides et lahmacun"].includes(category)) return false;
     if (category === "Accompagnements" && !["Grande frite", "Petite frite"].includes(productName)) return false;
     return true;
   };
@@ -474,12 +476,14 @@ export default function RestaurantWebsite() {
   };
 
   const needsBreadChoice = (product) => product?.category === "Sandwichs / Dürüms" && product?.type !== "durum-only";
-  const hasFormulaChoice = (product) => Boolean(product?.menuPriceLabel);
+  const isPideCategory = (product) => product?.category === "Pides et lahmacun";
+  const hasFormulaChoice = (product) => isPideCategory(product) || (product?.category !== "Boissons" && Boolean(product?.menuPriceLabel));
   const needsAccompagnementChoice = (product) => product?.type === "assiette-accompagnement";
-  const needsDrinkSizeChoice = (product) => product?.type === "drink-size";
-  const needsWaterSizeChoice = (product) => product?.type === "water-size";
+  const boissonsDeuxFormats = ["Coca Cola", "Coca-Cola", "Coca Cherry", "Coca-Cola Cherry", "Coca Cola Zéro", "Coca-Cola Zéro", "Coca-Cola Zero", "Fuze Tea Pêche", "Eau pétillante"];
+  const needsDrinkSizeChoice = (product) => product?.category === "Boissons" && boissonsDeuxFormats.includes(product?.name) && product?.menuPrice != null;
+  const needsWaterSizeChoice = (product) => false; // Plus de bouteille d’eau plate consignée
   const needsMenuEnfantDrink = (product) => product?.type === "menu-enfant" || product?.type === "menu-enfant-burger";
-  const needsExtraCheddar = (product) => product?.category === "Sandwichs / Dürüms" || product?.category === "Tacos";
+  const needsExtraCheddar = (product) => false;
   const needsSansSauceFromagere = (product) => product?.category === "Tacos";
 
   const openProduct = (product, category) => {
@@ -506,6 +510,7 @@ export default function RestaurantWebsite() {
     setSelectedCrudites([]);
     setBreadChoice("Sandwich");
     setFormulaChoice("Seul");
+    setExtraEgg(false);
     setAccompagnementChoice("");
     setDrinkSizeChoice("33cl");
     setWaterSizeChoice("50cl");
@@ -536,21 +541,20 @@ export default function RestaurantWebsite() {
       if (existingMeat?.locked) return current;
       if (existingMeat) return current.filter((item) => item.name !== meat.name);
 
-      const maxMeats = isSimpleTacos(selectedProduct) ? 2 : 3;
+      const maxMeats = isMaxiTacos(selectedProduct) ? 3 : 0;
       if (current.length >= maxMeats) return current;
 
       return [...current, meat];
     });
   };
 
-  const selectedMeatsExtra = isSimpleTacos(selectedProduct)
-    ? selectedMeats.length === 2
-      ? PRIX_DEUXIEME_VIANDE_TACOS
-      : 0
-    : selectedMeats.reduce((sum, meat) => sum + meat.extra, 0) + (selectedMeats.length === 3 ? 2 : 0);
+  const selectedMeatsExtra = isMaxiTacos(selectedProduct)
+    ? selectedMeats.reduce((sum, meat) => sum + meat.extra, 0) + (selectedMeats.length === 3 ? 2 : 0)
+    : 0;
 
   const supplementSaucesSandwich = calculSupplementSauces(selectedSaucesSandwich);
-  const supplementSaucesFrites = formulaChoice === "Menu" ? calculSupplementSauces(selectedSaucesFrites) : 0;
+  const isMenuSelected = formulaChoice !== "Seul";
+  const supplementSaucesFrites = isMenuSelected ? calculSupplementSauces(selectedSaucesFrites) : 0;
   const supplementSaucesTotal = supplementSaucesSandwich + supplementSaucesFrites;
   const supplementCheddarTotal = extraCheddar ? PRIX_SUPPLEMENT_CHEDDAR : 0;
 
@@ -570,10 +574,10 @@ export default function RestaurantWebsite() {
 
     if (selectedProduct.category === "Boissons") {
       if (selectedProduct.name === "Ayran") return "/images/Boissons/Ayran.png";
-      if (selectedProduct.name === "Eau") {
-        return waterSizeChoice === "1L verre consigné" ? "/images/Boissons/Bouteille Evian 1l.png" : "/images/Boissons/Bouteille Evian 50cl.png";
-      }
+      if (selectedProduct.name === "Eau") return "/images/Boissons/Bouteille Evian 50cl.png";
       if (needsDrinkSizeChoice(selectedProduct)) {
+        // Eau pétillante : 33 cl Perrier / 50 cl Carola. Ne pas inventer de chemins d’images.
+        if (selectedProduct.name === "Eau pétillante") return selectedProduct.image || "";
         const imageName = drinkImageNames[selectedProduct.name] || selectedProduct.name;
         return drinkSizeChoice === "50cl" ? `/images/Boissons/Bouteille/${imageName}.png` : `/images/Boissons/Canette/${imageName}.png`;
       }
@@ -583,16 +587,19 @@ export default function RestaurantWebsite() {
   };
 
   const selectedProductPrice = selectedProduct
-    ? (needsDrinkSizeChoice(selectedProduct) && drinkSizeChoice === "50cl" && selectedProduct.menuPrice
+    ? (isPideCategory(selectedProduct)
+        ? selectedProduct.basePrice + (formulaChoice === "Menu 33cl" ? 3 : formulaChoice === "Menu 50cl" ? 5 : 0)
+        : needsDrinkSizeChoice(selectedProduct) && drinkSizeChoice === "50cl" && selectedProduct.menuPrice
         ? selectedProduct.menuPrice
         : needsWaterSizeChoice(selectedProduct) && waterSizeChoice === "1L verre consigné" && selectedProduct.menuPrice
         ? selectedProduct.menuPrice
-        : formulaChoice === "Menu" && selectedProduct.menuPrice
+        : selectedProduct.category !== "Boissons" && formulaChoice === "Menu" && selectedProduct.menuPrice
         ? selectedProduct.menuPrice
         : selectedProduct.basePrice) +
       selectedMeatsExtra +
       supplementSaucesTotal +
-      supplementCheddarTotal
+      supplementCheddarTotal +
+      (isPideCategory(selectedProduct) && selectedProduct.type === "pide" && extraEgg ? 1 : 0)
     : 0;
 
   const isAddDisabled =
@@ -615,6 +622,7 @@ export default function RestaurantWebsite() {
         desc: selectedProduct.desc,
         category: selectedProduct.category,
         price: selectedProductPrice,
+        extraEgg: isPideCategory(selectedProduct) && selectedProduct.type === "pide" ? extraEgg : false,
         formulaChoice:
           hasFormulaChoice(selectedProduct) && !needsDrinkSizeChoice(selectedProduct) && !needsWaterSizeChoice(selectedProduct) ? formulaChoice : "",
         drinkSizeChoice: needsDrinkSizeChoice(selectedProduct) ? drinkSizeChoice : "",
@@ -624,7 +632,7 @@ export default function RestaurantWebsite() {
         sansSauceFromagere: needsSansSauceFromagere(selectedProduct) ? sansSauceFromagere : false,
         breadChoice: selectedProduct.type === "durum-only" ? "Dürüm" : needsBreadChoice(selectedProduct) ? breadChoice : "",
         accompagnementChoice: needsAccompagnementChoice(selectedProduct) ? accompagnementChoice : "",
-        meats: needsTacosMeatChoice(selectedProduct) ? selectedMeats : [],
+        meats: isSimpleTacos(selectedProduct) || isMaxiTacos(selectedProduct) ? selectedMeats : [],
         meatsExtra: needsTacosMeatChoice(selectedProduct) ? selectedMeatsExtra : 0,
         tacosSimple: isSimpleTacos(selectedProduct),
         saucesSandwich: selectedSaucesSandwich,
@@ -651,6 +659,7 @@ export default function RestaurantWebsite() {
   const orderLines = cart
     .map((item) => {
       const formule = item.formulaChoice ? `\n  Formule : ${item.formulaChoice}` : "";
+      const oeuf = item.extraEgg ? "\n  Supplément œuf : +1,00 €" : "";
       const formatBoisson = item.drinkSizeChoice ? `\n  Format : ${item.drinkSizeChoice}` : "";
       const formatEau = item.waterSizeChoice ? `\n  Format : ${item.waterSizeChoice}` : "";
       const boissonEnfant = item.menuEnfantBoisson ? `\n  Boisson : ${item.menuEnfantBoisson}` : "";
@@ -671,7 +680,7 @@ export default function RestaurantWebsite() {
 
       return `- ${item.quantity}x ${item.name} (${item.category}) - ${formatPrice(
         item.price * item.quantity
-      )}${formule}${formatBoisson}${formatEau}${boissonEnfant}${cheddar}${sansFromagere}${choix}${accompagnement}${meats}${crudites}${saucesSandwichText}${saucesFritesText}${supplementSaucesText}${noteText}`;
+      )}${formule}${oeuf}${formatBoisson}${formatEau}${boissonEnfant}${cheddar}${sansFromagere}${choix}${accompagnement}${meats}${crudites}${saucesSandwichText}${saucesFritesText}${supplementSaucesText}${noteText}`;
     })
     .join("\n\n");
 
@@ -899,6 +908,9 @@ export default function RestaurantWebsite() {
         setWaterSizeChoice={setWaterSizeChoice}
         hasFormulaChoice={hasFormulaChoice}
         formulaChoice={formulaChoice}
+        isPideCategory={isPideCategory}
+        extraEgg={extraEgg}
+        setExtraEgg={setExtraEgg}
         setFormulaChoice={setFormulaChoice}
         needsMenuEnfantDrink={needsMenuEnfantDrink}
         menuEnfantBoissons={menuEnfantBoissons}
@@ -949,6 +961,7 @@ export default function RestaurantWebsite() {
         fermetureActive={fermetureActive}
         whatsappNumber={whatsappNumber}
         orderMessage={orderMessage}
+        isAdminTestMode={isAdminTestMode}
       />
     </div>
   );

@@ -2,121 +2,39 @@ import React, { useState } from "react";
 import { X, ShoppingCart, Trash2, Minus, Plus } from "lucide-react";
 
 export default function CartDrawer({
-  user,
   cartOpen,
   setCartOpen,
   cart,
-  setCart,
   removeItem,
   changeQuantity,
   formatPrice,
   total,
   fermetureActive,
-  whatsappNumber,
-  orderMessage,
-  supabase,
+  isAdminTestMode = false,
 }) {
-  const [sendingOrder, setSendingOrder] = useState(false);
+  const [showComingSoon, setShowComingSoon] = useState(false);
   const [typeCommande, setTypeCommande] = useState("Sur place");
+  const [testReceipt, setTestReceipt] = useState(null);
 
   if (!cartOpen) return null;
 
-  const enregistrerEtEnvoyerCommande = async () => {
-    if (cart.length === 0 || fermetureActive || sendingOrder) return;
-
-    setSendingOrder(true);
-
-    const maintenant = new Date();
-
-    const annee = maintenant.getFullYear();
-    const mois = String(maintenant.getMonth() + 1).padStart(2, "0");
-
-    const debutMois = new Date(annee, maintenant.getMonth(), 1)
-      .toISOString();
-
-    const finMois = new Date(annee, maintenant.getMonth() + 1, 1)
-      .toISOString();
-
-    const prefix = `OMER-${annee}-${mois}-`;
-
-const { data: derniereCommande, error: numeroError } = await supabase
-  .from("commandes")
-  .select("numero_commande")
-  .like("numero_commande", `${prefix}%`)
-  .order("numero_commande", { ascending: false })
-  .limit(1);
-
-if (numeroError) {
-  console.error(numeroError);
-  alert("Erreur génération numéro de commande ❌");
-  return;
-}
-
-let dernierNumero = 0;
-
-if (derniereCommande?.length > 0) {
-  dernierNumero =
-    parseInt(derniereCommande[0].numero_commande.split("-")[3], 10) || 0;
-}
-
-const prochainNumero = String(dernierNumero + 1).padStart(5, "0");
-
-const numeroCommande = `${prefix}${prochainNumero}`;
-
-    const contenuCommande = cart.map((item) => ({
-      nom: item.name,
-      categorie: item.category,
-      quantite: item.quantity,
-      prix_unitaire: item.price,
-      total_ligne: item.price * item.quantity,
-      formule: item.formulaChoice || "",
-      format_boisson: item.drinkSizeChoice || "",
-      format_eau: item.waterSizeChoice || "",
-      boisson_menu_enfant: item.menuEnfantBoisson || "",
-      supplement_cheddar: item.extraCheddar || false,
-      sans_sauce_fromagere: item.sansSauceFromagere || false,
-      choix_pain: item.breadChoice || "",
-      accompagnement: item.accompagnementChoice || "",
-      viandes: item.meats || [],
-      crudites: item.crudites || [],
-      sauces: item.saucesSandwich || [],
-      sauces_frites: item.saucesFrites || [],
-      supplement_sauces: item.supplementSauces || 0,
-      note: item.note || "",
-    }));
-
-    console.log("USER COMMANDE :", user);
-
-    const { error } = await supabase.from("commandes").insert({
-      numero_commande: numeroCommande,
-      user_id: user?.id || null,
-      contenu: contenuCommande,
-      total,
-      statut: "En attente",
-      mode_paiement: typeCommande,
-      notes: "",
-    });
-
-    if (error) {
-      console.error(error);
-      alert("Erreur lors de l’enregistrement de la commande ❌");
-      setSendingOrder(false);
+  const afficherIndisponibilite = () => {
+    if (cart.length === 0) return;
+    if (!isAdminTestMode) {
+      setShowComingSoon(true);
       return;
     }
-
-    const messageAvecNumero = `${decodeURIComponent(orderMessage)}%0A%0ANuméro de commande : ${numeroCommande}`;
-    window.open(`https://wa.me/${whatsappNumber}?text=${messageAvecNumero}`, "_blank");
-
-    if (setCart) {
-      setCart([]);
-    }
-
-    setCartOpen(false);
-    setSendingOrder(false);
+    // Simulation locale uniquement : aucune écriture Supabase, aucun paiement, aucun WhatsApp.
+    setTestReceipt({
+      reference: `TEST-${Date.now()}`,
+      typeCommande,
+      lignes: cart.map((item) => ({ ...item })),
+      total,
+    });
   };
 
   return (
-    <div className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm" onMouseDown={(event) => { if (event.target === event.currentTarget && !showComingSoon && !testReceipt) setCartOpen(false); }}>
       <div className="ml-auto flex h-full w-full max-w-xl flex-col bg-stone-950 text-stone-100 shadow-2xl">
         <div className="flex items-center justify-between border-b border-yellow-500/20 p-5">
           <h3 className="text-2xl font-black">Votre panier</h3>
@@ -219,26 +137,66 @@ const numeroCommande = `${prefix}${prochainNumero}`;
           </div>
 
           <button
-            onClick={enregistrerEtEnvoyerCommande}
-            disabled={cart.length === 0 || fermetureActive || sendingOrder}
+            onClick={afficherIndisponibilite}
+            disabled={cart.length === 0}
             className={`block w-full rounded-full px-6 py-4 text-center font-black transition ${
-              cart.length > 0 && !fermetureActive
+              cart.length > 0
                 ? "bg-yellow-400 text-black hover:bg-yellow-300"
                 : "pointer-events-none bg-white/10 text-stone-500"
             }`}
           >
-            {fermetureActive
-              ? "Commandes temporairement fermées"
-              : sendingOrder
-              ? "Enregistrement..."
-              : "Envoyer la commande WhatsApp"}
+            {isAdminTestMode ? "Simuler la commande (admin)" : "Valider mon panier"}
           </button>
 
           <p className="mt-3 text-center text-xs text-stone-500">
-            La commande est enregistrée automatiquement avant l’envoi WhatsApp.
+            {isAdminTestMode
+              ? "MODE TEST ADMIN — Simulation locale uniquement. Aucune commande envoyée en cuisine ou enregistrée dans Supabase."
+              : "Vous pouvez consulter votre panier et son total. La commande en ligne sera bientôt disponible."}
           </p>
         </div>
       </div>
+
+      {testReceipt && (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/80 p-5">
+          <div role="dialog" aria-modal="true" aria-labelledby="test-receipt-title" className="w-full max-w-md rounded-[2rem] border border-yellow-400/40 bg-stone-950 p-7 text-white shadow-2xl">
+            <p className="text-xs font-black tracking-widest text-yellow-300">MODE TEST ADMIN — NON TRANSMIS</p>
+            <h3 id="test-receipt-title" className="mt-2 text-2xl font-black">Commande simulée</h3>
+            <p className="mt-2 text-sm text-stone-400">{testReceipt.reference} · {testReceipt.typeCommande}</p>
+            <div className="mt-5 max-h-64 space-y-2 overflow-y-auto border-y border-white/10 py-4">
+              {testReceipt.lignes.map((item, index) => (
+                <div key={`${item.id}-${index}`} className="flex justify-between gap-3 text-sm">
+                  <span>{item.quantity} × {item.name}{item.drinkSizeChoice ? ` (${item.drinkSizeChoice})` : ""}{item.formulaChoice ? ` — ${item.formulaChoice}` : ""}</span>
+                  <span className="shrink-0">{formatPrice(item.price * item.quantity)}</span>
+                </div>
+              ))}
+            </div>
+            <p className="mt-4 text-right text-xl font-black text-yellow-300">Total : {formatPrice(testReceipt.total)}</p>
+            <p className="mt-3 text-sm text-stone-400">Aucun paiement, aucun message et aucune insertion dans Supabase. Cette simulation n'apparaîtra pas en cuisine.</p>
+            <button type="button" onClick={() => setTestReceipt(null)} className="mt-6 w-full rounded-full bg-yellow-400 px-6 py-3 font-black text-black">Fermer le test</button>
+          </div>
+        </div>
+      )}
+
+      {showComingSoon && (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/80 p-5" role="presentation">
+          <div role="dialog" aria-modal="true" aria-labelledby="commande-indisponible-title" className="w-full max-w-md rounded-[2rem] border border-yellow-400/30 bg-stone-950 p-8 text-center text-white shadow-2xl">
+            <div className="mb-4 text-5xl" aria-hidden="true">🍔</div>
+            <h3 id="commande-indisponible-title" className="text-2xl font-black text-yellow-300">
+              La commande en ligne arrive bientôt !
+            </h3>
+            <p className="mt-4 text-stone-300">
+              Ce service est temporairement indisponible. Vous pourrez bientôt commander directement sur notre site !
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowComingSoon(false)}
+              className="mt-7 w-full rounded-full bg-yellow-400 px-6 py-3 font-black text-black hover:bg-yellow-300"
+            >
+              Compris !
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

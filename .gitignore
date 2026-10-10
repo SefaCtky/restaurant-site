@@ -24,3 +24,10 @@ dist-ssr
 *.sw?
 
 .vercel
+# Archives
+*.7z
+
+# Clés et informations de signature Android
+*.jks
+*.keystore
+**/CODE APP KEY.txt

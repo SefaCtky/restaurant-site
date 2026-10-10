@@ -21,6 +21,9 @@ export default function ProductModal({
   hasFormulaChoice,
   formulaChoice,
   setFormulaChoice,
+  isPideCategory,
+  extraEgg,
+  setExtraEgg,
   needsMenuEnfantDrink,
   menuEnfantBoissons,
   menuEnfantBoisson,
@@ -78,7 +81,6 @@ export default function ProductModal({
                 <p className="mt-3 text-2xl font-black text-yellow-700">{formatPrice(selectedProductPrice)}</p>
 
                 {selectedProduct.type === "durum-only" && <p className="mt-1 text-sm font-bold text-yellow-700">Dürüm imposé pour ce produit</p>}
-                {isSimpleTacos(selectedProduct) && selectedMeats.length === 2 && <p className="mt-1 text-sm font-bold text-red-600">2ème viande : +2,00 €</p>}
                 {isMaxiTacos(selectedProduct) && selectedMeats.length === 3 && <p className="mt-1 text-sm font-bold text-red-600">3ème viande : +2,00 €</p>}
                 {extraCheddar && <p className="mt-1 text-sm font-bold text-red-600">Supplément cheddar : +2,00 €</p>}
                 {supplementSaucesTotal > 0 && <p className="mt-1 text-sm font-bold text-red-600">Supplément sauces : +{formatPrice(supplementSaucesTotal)}</p>}
@@ -93,8 +95,8 @@ export default function ProductModal({
               <div className="mt-7">
                 <h4 className="font-black">Choisissez le format</h4>
                 <div className="mt-4 grid grid-cols-2 gap-3">
-                  <button onClick={() => setDrinkSizeChoice("33cl")} className={`rounded-2xl border px-5 py-3 font-bold transition ${drinkSizeChoice === "33cl" ? "border-yellow-500 bg-yellow-400 text-black" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-yellow-400"}`}>33cl • {selectedProduct.basePriceLabel}</button>
-                  <button onClick={() => setDrinkSizeChoice("50cl")} className={`rounded-2xl border px-5 py-3 font-bold transition ${drinkSizeChoice === "50cl" ? "border-yellow-500 bg-yellow-400 text-black" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-yellow-400"}`}>50cl • {selectedProduct.menuPriceLabel}</button>
+                  <button onClick={() => setDrinkSizeChoice("33cl")} className={`rounded-2xl border px-5 py-3 font-bold transition ${drinkSizeChoice === "33cl" ? "border-yellow-500 bg-yellow-400 text-black" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-yellow-400"}`}>33 cl • {selectedProduct.basePriceLabel}</button>
+                  {selectedProduct.menuPrice != null && <button onClick={() => setDrinkSizeChoice("50cl")} className={`rounded-2xl border px-5 py-3 font-bold transition ${drinkSizeChoice === "50cl" ? "border-yellow-500 bg-yellow-400 text-black" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-yellow-400"}`}>50 cl • {selectedProduct.menuPriceLabel}</button>}
                 </div>
               </div>
             )}
@@ -109,7 +111,30 @@ export default function ProductModal({
               </div>
             )}
 
-            {hasFormulaChoice(selectedProduct) && !needsDrinkSizeChoice(selectedProduct) && !needsWaterSizeChoice(selectedProduct) && (
+            {isPideCategory(selectedProduct) && (
+              <div className="mt-7">
+                <h4 className="font-black">Formule</h4>
+                <p className="mt-1 text-sm text-stone-600">Menu : frites et boisson au format choisi.</p>
+                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  {[
+                    ["Seul", 0],
+                    ["Menu 33cl", 3],
+                    ["Menu 50cl", 5],
+                  ].map(([choice, supplement]) => (
+                    <button key={choice} onClick={() => setFormulaChoice(choice)} className={`rounded-2xl border px-4 py-3 font-bold transition ${formulaChoice === choice ? "border-yellow-500 bg-yellow-400 text-black" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-yellow-400"}`}>
+                      {choice} • {formatPrice(selectedProduct.basePrice + supplement)}
+                    </button>
+                  ))}
+                </div>
+                {selectedProduct.type === "pide" && (
+                  <button onClick={() => setExtraEgg(!extraEgg)} className={`mt-4 rounded-2xl border px-5 py-3 font-bold transition ${extraEgg ? "border-yellow-500 bg-yellow-400 text-black" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-yellow-400"}`}>
+                    {extraEgg ? "✓ " : ""}Supplément œuf +1,00 €
+                  </button>
+                )}
+              </div>
+            )}
+
+            {!isPideCategory(selectedProduct) && hasFormulaChoice(selectedProduct) && !needsDrinkSizeChoice(selectedProduct) && !needsWaterSizeChoice(selectedProduct) && (
               <div className="mt-7">
                 <h4 className="font-black">Formule</h4>
                 <p className="mt-1 text-sm text-stone-600">Le menu ajoute une boisson et une frite.</p>
@@ -153,28 +178,6 @@ export default function ProductModal({
                     <button key={choice} onClick={() => setAccompagnementChoice(choice)} className={`rounded-2xl border px-5 py-3 font-bold transition ${accompagnementChoice === choice ? "border-yellow-500 bg-yellow-400 text-black" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-yellow-400"}`}>{choice}</button>
                   ))}
                 </div>
-              </div>
-            )}
-
-            {isSimpleTacos(selectedProduct) && (
-              <div className="mt-7">
-                <h4 className="font-black">Choix des viandes</h4>
-                <p className="mt-1 text-sm text-stone-600">Choisissez 1 ou 2 viandes maximum. La 2ème viande ajoute +2€.</p>
-                <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  {tacosMeats.map((meat) => {
-                    const selectedMeat = selectedMeats.find((item) => item.name === meat.name);
-                    const active = Boolean(selectedMeat);
-                    const locked = Boolean(selectedMeat?.locked);
-                    const disabled = locked || (!active && selectedMeats.length >= 2);
-
-                    return (
-                      <button key={meat.name} onClick={() => toggleMeat(meat)} disabled={disabled} className={`rounded-2xl border px-4 py-3 text-sm font-bold transition ${active ? "border-yellow-500 bg-yellow-400 text-black" : disabled ? "cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400" : "border-stone-200 bg-stone-50 text-stone-700 hover:border-yellow-400"}`}>
-                        {meat.name}{locked ? " • inclus" : ""}
-                      </button>
-                    );
-                  })}
-                </div>
-                <p className="mt-3 text-sm font-bold text-yellow-700">Viandes sélectionnées : {selectedMeats.length}/2{selectedMeats.length === 2 ? " • 2ème viande +2€" : ""}</p>
               </div>
             )}
 
@@ -233,7 +236,7 @@ export default function ProductModal({
 
                 {supplementSaucesSandwich > 0 && <p className="mt-3 text-sm font-bold text-red-600">Supplément sauces : {formatPrice(supplementSaucesSandwich)}</p>}
 
-                {formulaChoice === "Menu" && selectedProduct.category !== "Accompagnements" && (
+                {formulaChoice !== "Seul" && selectedProduct.category !== "Accompagnements" && (
                   <div className="mt-7">
                     <h4 className="font-black">Sauces frites</h4>
                     <p className="mt-1 text-sm text-stone-600">2 sauces au choix incluses. À partir de la 3ème : +0,20€ par sauce.</p>
