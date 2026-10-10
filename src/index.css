@@ -16,3 +16,21 @@ body {
 * {
   box-sizing: border-box;
 }
+/* Empêcher le débordement horizontal sur mobile */
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+}
+
+html,
+body {
+  overflow-x: clip;
+}
+
+img,
+video {
+  max-width: 100%;
+}

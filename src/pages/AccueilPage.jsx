@@ -149,18 +149,18 @@ export default function AccueilPage({
   };
 
   return (
-    <main>
-      <section className="mx-auto grid max-w-7xl items-center gap-10 px-5 py-16 lg:grid-cols-2 lg:py-24">
+    <main className="w-full min-w-0 max-w-full overflow-x-hidden">
+      <section className="mx-auto grid w-full max-w-7xl min-w-0 grid-cols-1 items-center gap-8 px-4 py-10 sm:px-5 lg:grid-cols-2 lg:gap-10 lg:py-24">
         <motion.div
+          className="min-w-0 w-full"
           initial={{ opacity: 0, y: 25 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
           {annonceSite && (
-            <div className="mb-8 overflow-hidden rounded-full bg-yellow-400 px-6 py-4 font-black text-black shadow-[0_0_40px_rgba(250,204,21,0.35)]">
+            <div className="mb-8 w-full max-w-full overflow-hidden rounded-2xl bg-yellow-400 px-4 py-4 font-black text-black shadow-[0_0_40px_rgba(250,204,21,0.35)] sm:rounded-full sm:px-6">
               <div
-                className="whitespace-nowrap text-xl"
-                style={{ animation: "reservationMarquee 12s linear infinite" }}
+                className="break-words text-center text-sm leading-relaxed sm:whitespace-nowrap sm:text-xl"
               >
                 🔥 {annonceSite}
               </div>
@@ -173,11 +173,11 @@ export default function AccueilPage({
             </div>
           )}
 
-          <div className="inline-flex items-center gap-2 rounded-full border border-yellow-400/20 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 px-6 py-3 font-black tracking-wide text-yellow-200 shadow-[0_0_25px_rgba(250,204,21,0.12)] backdrop-blur-xl">
+          <div className="flex w-fit max-w-full flex-wrap items-center justify-center gap-2 rounded-2xl text-center text-sm sm:rounded-full sm:text-base border border-yellow-400/20 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 px-6 py-3 font-black tracking-wide text-yellow-200 shadow-[0_0_25px_rgba(250,204,21,0.12)] backdrop-blur-xl">
             Restaurant HALAL • Le kebab fait maison
           </div>
 
-          <h1 className="mt-8 text-5xl font-black uppercase leading-none tracking-normal text-white drop-shadow-[0_0_25px_rgba(255,255,255,0.08)] sm:text-6xl lg:text-7xl">
+          <h1 className="mt-8 break-words text-4xl font-black uppercase leading-none tracking-normal text-white drop-shadow-[0_0_25px_rgba(255,255,255,0.08)] sm:text-6xl lg:text-7xl">
             Chez Omer
             <span className="block bg-gradient-to-r from-yellow-200 via-yellow-400 to-orange-500 bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(250,204,21,0.25)]">
               Restaurant
@@ -204,11 +204,11 @@ export default function AccueilPage({
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="relative"
+          className="relative mx-auto flex w-full min-w-0 max-w-full items-center justify-center overflow-hidden py-4 sm:overflow-visible"
         >
-          <div className="absolute -inset-8 rounded-full bg-yellow-500/20 blur-3xl" />
-          <img src={LOGO} alt="Chez Omer" className="relative mx-auto max-h-[520px] w-full object-contain" />
-          <div className="absolute bottom-6 right-6 rounded-full border border-yellow-500 bg-black/80 px-5 py-4 text-center font-black text-yellow-300">
+          <div className="pointer-events-none absolute inset-4 rounded-full bg-yellow-500/20 blur-3xl" />
+          <img src={LOGO} alt="Chez Omer" className="relative block h-auto max-h-[280px] w-auto max-w-[75%] object-contain sm:max-h-[420px] sm:max-w-[85%] lg:max-h-[520px]" />
+          <div className="absolute bottom-3 right-3 rounded-full border border-yellow-500 bg-black/80 px-3 py-2 text-center text-xs font-black text-yellow-300 sm:bottom-6 sm:right-6 sm:px-5 sm:py-4 sm:text-base">
             حلال<br />HALAL
           </div>
         </motion.div>

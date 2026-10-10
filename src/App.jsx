@@ -1,4 +1,6 @@
 import { supabase } from "./supabase";
+import { App as CapacitorApp } from "@capacitor/app";
+import { Capacitor } from "@capacitor/core";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import AccueilPage from "./pages/AccueilPage";
 import HistoriqueCommandesPage from "./pages/HistoriqueCommandesPage";
@@ -123,7 +125,15 @@ function getCategoryIcon(category) {
 
 export default function RestaurantWebsite() {
   const [open, setOpen] = useState(false);
-  const [cartOpen, setCartOpen] = useState(false);
+  const [cartOpen, setCartOpenState] = useState(false);
+
+const setCartOpen = (value) => {
+  if (value === true) {
+    console.trace("🛒 Quel code ouvre le panier ?");
+  }
+
+  setCartOpenState(value);
+};
   const [cart, setCart] = useState([]);
   const [activePage, setActivePage] = useState(
     window.location.pathname === "/cuisine"
@@ -156,7 +166,6 @@ export default function RestaurantWebsite() {
   const [user, setUser] = useState(null);
   const [userRole, setUserRole] = useState("client");
   const [loadingAuth, setLoadingAuth] = useState(true);
-  const isAdminTestMode = !loadingAuth && Boolean(user) && userRole === "admin";
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [newOrderFlash, setNewOrderFlash] = useState(false);
   const audioContextRef = useRef(null);
@@ -422,21 +431,99 @@ export default function RestaurantWebsite() {
     };
   }, []);
 
+  // Historique React synchronisé avec le bouton Retour du navigateur et Android.
   useEffect(() => {
-  const handlePopState = () => {
-    setActivePage(
+    const initialPage =
       window.location.pathname === "/cuisine"
         ? "Cuisine"
-        : "Accueil"
-    );
-  };
+        : window.location.pathname === "/reset-password"
+        ? "ResetPassword"
+        : "Accueil";
 
-  window.addEventListener("popstate", handlePopState);
+    if (!window.history.state?.chezOmerPage) {
+      window.history.replaceState(
+        { ...window.history.state, chezOmerPage: initialPage, chezOmerIndex: 0 },
+        "",
+        window.location.href
+      );
+    }
 
-  return () => {
-    window.removeEventListener("popstate", handlePopState);
-  };
-}, []);
+    const handlePopState = (event) => {
+      const page =
+        event.state?.chezOmerPage ||
+        (window.location.pathname === "/cuisine"
+          ? "Cuisine"
+          : window.location.pathname === "/reset-password"
+          ? "ResetPassword"
+          : "Accueil");
+
+      setSelectedProduct(null);
+      setCartOpen(false);
+      setOpen(false);
+      setActivePage(page);
+      window.scrollTo({ top: 0, behavior: "instant" });
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  // L'écouteur natif utilise les états les plus récents sans être réinstallé à chaque rendu.
+  const androidBackState = useRef({ selectedProduct, cartOpen, open, activePage });
+  androidBackState.current = { selectedProduct, cartOpen, open, activePage };
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    let disposed = false;
+    let subscription;
+
+    CapacitorApp.addListener("backButton", async () => {
+      const { selectedProduct, cartOpen, open, activePage } = androidBackState.current;
+
+      if (selectedProduct) {
+        setSelectedProduct(null);
+        return;
+      }
+      if (cartOpen) {
+        setCartOpen(false);
+        return;
+      }
+      if (open) {
+        setOpen(false);
+        return;
+      }
+
+      const index = Number(window.history.state?.chezOmerIndex || 0);
+      if (index > 0) {
+        window.history.back();
+        return;
+      }
+
+      if (activePage !== "Accueil") {
+        setActivePage("Accueil");
+        window.history.replaceState(
+          { ...window.history.state, chezOmerPage: "Accueil", chezOmerIndex: 0 },
+          "",
+          "/"
+        );
+        window.scrollTo({ top: 0, behavior: "instant" });
+        return;
+      }
+
+      if (window.confirm("Voulez-vous quitter l'application Chez Omer ?")) {
+        await CapacitorApp.exitApp();
+      }
+    }).then((handle) => {
+      if (disposed) handle.remove();
+      else subscription = handle;
+    }).catch((error) => console.error("Bouton Retour Android :", error));
+
+    return () => {
+      disposed = true;
+      subscription?.remove();
+    };
+  }, []);
 
   useEffect(() => {
     chargerAnnonce();
@@ -645,7 +732,8 @@ export default function RestaurantWebsite() {
     ])
 
     setSelectedProduct(null);
-    setCartOpen(true);
+    // Garder le panier fermé pour permettre de continuer les achats.
+    setCartOpen(false);
   };
 
   const changeQuantity = (id, delta) => {
@@ -687,16 +775,18 @@ export default function RestaurantWebsite() {
   const orderMessage = encodeURIComponent(`Bonjour Chez Omer, je souhaite passer commande :\n\n${orderLines}\n\nTotal : ${formatPrice(total)}`);
 
   const showPage = (page) => {
-    setActivePage(page);
     setOpen(false);
+    if (page === activePage) return;
 
-    if (page === "Cuisine") {
-      window.history.pushState({}, "", "/cuisine");
-    } else {
-      window.history.pushState({}, "", "/");
-    }
-
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    const path = page === "Cuisine" ? "/cuisine" : page === "ResetPassword" ? "/reset-password" : "/";
+    const index = Number(window.history.state?.chezOmerIndex || 0) + 1;
+    window.history.pushState(
+      { ...window.history.state, chezOmerPage: page, chezOmerIndex: index },
+      "",
+      path
+    );
+    setActivePage(page);
+    window.scrollTo({ top: 0, behavior: "instant" });
   };
 
   const CurrentPage = () => {
@@ -961,7 +1051,6 @@ export default function RestaurantWebsite() {
         fermetureActive={fermetureActive}
         whatsappNumber={whatsappNumber}
         orderMessage={orderMessage}
-        isAdminTestMode={isAdminTestMode}
       />
     </div>
   );
