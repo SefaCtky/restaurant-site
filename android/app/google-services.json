@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "644525637569",
+    "project_id": "chez-omer-436b5",
+    "storage_bucket": "chez-omer-436b5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:644525637569:android:9cdd29295fc0c8a6127940",
+        "android_client_info": {
+          "package_name": "com.chezomer.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBprnW0OhbPNmtilC6GtSzL1qDuxBnuX4Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

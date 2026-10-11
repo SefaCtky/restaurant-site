@@ -197,6 +197,38 @@ export default function AdminPage({
   saveProduit,
   chargerProduits,
 }) {
+  // Notifications clients : envoi réservé aux administrateurs, vérifié côté serveur.
+  const [pushTitre, setPushTitre] = useState("❤️ Vous nous manquez !");
+  const [pushMessage, setPushMessage] = useState("Ça fait un petit moment qu'on ne vous a pas vus ! 🥹 Et si on se retrouvait autour d'une bonne assiette İskender ? ❤️");
+  const [pushSending, setPushSending] = useState(false);
+  const [pushRetour, setPushRetour] = useState("");
+
+  const envoyerNotification = async () => {
+    const title = pushTitre.trim();
+    const body = pushMessage.trim();
+    if (!title || !body) return setPushRetour("Renseigne un titre et un message.");
+    if (title.length > 100 || body.length > 500) return setPushRetour("Titre : 100 caractères maximum ; message : 500 maximum.");
+    if (!window.confirm(`Envoyer cette notification à tous les clients ayant accepté les notifications promotionnelles ?\n\n${title}\n${body}`)) return;
+    setPushSending(true);
+    setPushRetour("");
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getSession();
+      if (authError || !authData?.session?.access_token) throw new Error("Session administrateur introuvable.");
+      const { data, error } = await supabase.functions.invoke("send-marketing-push", {
+        headers: { Authorization: `Bearer ${authData.session.access_token}` },
+        body: { title, body },
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "Envoi non confirmé.");
+      setPushRetour(`Envoi terminé : ${data.sent} notification(s) acceptée(s) par Firebase, ${data.failed} échec(s).`);
+    } catch (error) {
+      console.error("Notifications Chez Omer :", error);
+      setPushRetour(`Échec de l'envoi : ${error.message}. Vérifie que la fonction Supabase send-marketing-push est déployée.`);
+    } finally {
+      setPushSending(false);
+    }
+  };
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -1339,7 +1371,48 @@ export default function AdminPage({
             >
               Comptes
             </button>
+            <button
+              onClick={() => setAdminTab("notifications")}
+              className={`rounded-full px-6 py-3 font-black ${
+                adminTab === "notifications" ? "bg-yellow-400 text-black" : "bg-white/10 text-white hover:bg-white/20"
+              }`}
+            >
+              🔔 Notifications
+            </button>
           </div>
+
+          {adminTab === "notifications" && (
+            <div className="mt-8 rounded-3xl border border-yellow-500/20 bg-white/5 p-6">
+              <h3 className="text-2xl font-black text-yellow-300">🔔 Notifications clients</h3>
+              <p className="mt-2 text-sm text-stone-300">Envoyer un message aux clients ayant accepté les notifications promotionnelles.</p>
+              <div className="mt-6 space-y-5">
+                <div>
+                  <label className="block text-sm font-bold text-yellow-300">Titre</label>
+                  <input type="text" maxLength={100} value={pushTitre} onChange={(e) => setPushTitre(e.target.value)}
+                    className="mt-2 w-full rounded-xl border border-yellow-500/20 bg-black px-4 py-3 text-white outline-none focus:border-yellow-400" />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-yellow-300">Message</label>
+                  <textarea maxLength={500} rows={4} value={pushMessage} onChange={(e) => setPushMessage(e.target.value)}
+                    className="mt-2 w-full rounded-xl border border-yellow-500/20 bg-black px-4 py-3 text-white outline-none focus:border-yellow-400" />
+                  <p className="mt-1 text-right text-xs text-stone-400">{pushMessage.length}/500</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-black p-5">
+                  <p className="text-xs text-stone-400">Aperçu de la notification Android</p>
+                  <p className="mt-3 font-black text-yellow-300">Chez Omer</p>
+                  <p className="mt-2 font-bold text-white">{pushTitre || "Titre"}</p>
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-stone-200">{pushMessage || "Message"}</p>
+                </div>
+                <button type="button" disabled={pushSending || !pushTitre.trim() || !pushMessage.trim()}
+                  onClick={envoyerNotification}
+                  className="rounded-full bg-yellow-400 px-6 py-3 font-black text-black hover:bg-yellow-300 disabled:cursor-not-allowed disabled:opacity-50">
+                  {pushSending ? "Envoi en cours..." : "📣 Envoyer aux abonnés"}
+                </button>
+                {pushRetour && <p role="status" className="text-sm font-bold text-yellow-300">{pushRetour}</p>}
+                <p className="text-xs text-stone-400">L'envoi ne fonctionne qu'après déploiement de la fonction serveur send-marketing-push. Les relances automatiques et notifications de proximité seront ajoutées séparément.</p>
+              </div>
+            </div>
+          )}
 
           {adminTab === "produits" && (
             <>
