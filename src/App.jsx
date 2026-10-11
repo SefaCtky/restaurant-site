@@ -1,63 +1,138 @@
 import { supabase } from "./supabase";
 
+
+
 import { App as CapacitorApp } from "@capacitor/app";
+
+
 
 import { Capacitor } from "@capacitor/core";
 
+
+
+import { Browser } from "@capacitor/browser";
+
+
+
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
+
+
 import AccueilPage from "./pages/AccueilPage";
+
+
+
 import NotificationsPromo from "./components/NotificationsPromo";
+
+
 
 import HistoriqueCommandesPage from "./pages/HistoriqueCommandesPage";
 
+
+
 import MenuPage from "./pages/MenuPage";
+
+
 
 import AProposPage from "./pages/AProposPage";
 
+
+
 import StaffCommandesPage from "./pages/StaffCommandesPage";
+
+
 
 import ContactPage from "./pages/ContactPage";
 
+
+
 import PointagePage from "./pages/PointagePage";
+
+
 
 import AdminPage from "./pages/AdminPage";
 
+
+
 import ConnexionPage from "./pages/ConnexionPage";
+
+
 
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 
+
+
+import EmailConfirmationPage from "./pages/EmailConfirmationPage";
+
+
+
 import ProductModal from "./components/ProductModal";
+
+
 
 import CartDrawer from "./components/CartDrawer";
 
+
+
 import MobileCartButton from "./components/MobileCartButton";
+
+
 
 import Footer from "./components/Footer";
 
+
+
+import GestionNotifications from "./components/GestionNotifications";
+
+
+
 import Header from "./components/Header";
+
+
 
 import {
 
-  Utensils,
 
-  Sandwich,
 
-  Soup,
+  Utensils,
 
-  CupSoda,
 
-  CakeSlice,
 
-  UtensilsCrossed,
+  Sandwich,
 
-  Bell,
 
-  BellOff,
+
+  Soup,
+
+
+
+  CupSoda,
+
+
+
+  CakeSlice,
+
+
+
+  UtensilsCrossed,
+
+
+
+  Bell,
+
+
+
+  BellOff,
+
+
 
 } from "lucide-react";
 
+
+
 import CuisinePage from "./pages/CuisinePage";
+
+
 
 import DashboardPage from "./pages/DashboardPage";
 
@@ -65,7 +140,11 @@ import DashboardPage from "./pages/DashboardPage";
 
 const restaurantAddress = "15 Rue de Belfort, 90400 Sevenans";
 
+
+
 const phoneNumber = "07 49 19 49 27";
+
+
 
 const whatsappNumber = "33749194927";
 
@@ -73,31 +152,55 @@ const whatsappNumber = "33749194927";
 
 const LOGO = "/logo.png";
 
+
+
 const BACKGROUND_IMAGE = "/carte-visite.png";
 
 
 
 const sauces = [
 
-  "Blanche",
 
-  "Ketchup",
 
-  "Mayonnaise",
+  "Blanche",
 
-  "Harissa",
 
-  "Samouraï",
 
-  "Algérienne",
+  "Ketchup",
 
-  "Biggy Burger",
 
-  "Curry",
 
-  "BBQ",
+  "Mayonnaise",
 
-  "Fromagère",
+
+
+  "Harissa",
+
+
+
+  "Samouraï",
+
+
+
+  "Algérienne",
+
+
+
+  "Biggy Burger",
+
+
+
+  "Curry",
+
+
+
+  "BBQ",
+
+
+
+  "Fromagère",
+
+
 
 ];
 
@@ -105,9 +208,15 @@ const sauces = [
 
 const SAUCES_GRATUITES = 2;
 
+
+
 const PRIX_SAUCE_SUPPLEMENTAIRE = 0.2;
 
+
+
 const PRIX_SUPPLEMENT_CHEDDAR = 2;
+
+
 
 const PRIX_DEUXIEME_VIANDE_TACOS = 2;
 
@@ -115,7 +224,11 @@ const PRIX_DEUXIEME_VIANDE_TACOS = 2;
 
 function calculSupplementSauces(listeSauces) {
 
-  return Math.max(0, listeSauces.length - SAUCES_GRATUITES) * PRIX_SAUCE_SUPPLEMENTAIRE;
+
+
+  return Math.max(0, listeSauces.length - SAUCES_GRATUITES) * PRIX_SAUCE_SUPPLEMENTAIRE;
+
+
 
 }
 
@@ -123,11 +236,19 @@ function calculSupplementSauces(listeSauces) {
 
 const cruditeOptions = ["Sans salade", "Sans tomate", "Sans oignon"];
 
+
+
 const cruditeSauceSaladeOptions = ["Sans salade", "Sans tomate", "Sans oignon", "Sans sauce salade"];
+
+
 
 const burgerOptions = ["Sans salade", "Sans tomate", "Sans oignon", "Sans cheddar"];
 
+
+
 const accompagnementOptions = ["Boulgour", "Frites"];
+
+
 
 const menuEnfantBoissons = ["Ayran", "Capri-Sun"];
 
@@ -135,21 +256,39 @@ const menuEnfantBoissons = ["Ayran", "Capri-Sun"];
 
 const tacosMeats = [
 
-  { name: "Kebab poulet", extra: 0 },
 
-  { name: "Kebab veau", extra: 0 },
 
-  { name: "Poulet mariné", extra: 0 },
+  { name: "Kebab poulet", extra: 0 },
 
-  { name: "Köfte", extra: 0 },
 
-  { name: "Sucuk", extra: 0 },
 
-  { name: "Tenders", extra: 0 },
+  { name: "Kebab veau", extra: 0 },
 
-  { name: "Cordon bleu", extra: 0 },
 
-  { name: "Steak", extra: 0 },
+
+  { name: "Poulet mariné", extra: 0 },
+
+
+
+  { name: "Köfte", extra: 0 },
+
+
+
+  { name: "Sucuk", extra: 0 },
+
+
+
+  { name: "Tenders", extra: 0 },
+
+
+
+  { name: "Cordon bleu", extra: 0 },
+
+
+
+  { name: "Steak", extra: 0 },
+
+
 
 ];
 
@@ -157,21 +296,39 @@ const tacosMeats = [
 
 const maxiTacosMeats = [
 
-  { name: "Kebab poulet", extra: 0 },
 
-  { name: "Poulet mariné", extra: 0 },
 
-  { name: "Sucuk", extra: 0 },
+  { name: "Kebab poulet", extra: 0 },
 
-  { name: "Tenders", extra: 0 },
 
-  { name: "Cordon bleu", extra: 0 },
 
-  { name: "Kebab veau", extra: 0 },
+  { name: "Poulet mariné", extra: 0 },
 
-  { name: "Steak", extra: 0 },
 
-  { name: "Köfte", extra: 0 },
+
+  { name: "Sucuk", extra: 0 },
+
+
+
+  { name: "Tenders", extra: 0 },
+
+
+
+  { name: "Cordon bleu", extra: 0 },
+
+
+
+  { name: "Kebab veau", extra: 0 },
+
+
+
+  { name: "Steak", extra: 0 },
+
+
+
+  { name: "Köfte", extra: 0 },
+
+
 
 ];
 
@@ -179,29 +336,55 @@ const maxiTacosMeats = [
 
 const drinkImageNames = {
 
-  "Coca Cola": "Coca cola",
 
-  "Coca Cherry": "Coca cherry",
 
-  "Coca Cola Zéro": "Coca zero",
+  "Coca Cola": "Coca cola",
 
-  Sprite: "Sprite",
 
-  Orangina: "Orangina",
 
-  Perrier: "Perrier",
+  "Coca Cherry": "Coca cherry",
 
-  "Oasis Tropical": "Oasis Tropical",
 
-  "Oasis Pomme Cassis": "Oasis Pomme Cassis",
 
-  "Fanta orange": "Fanta orange",
+  "Coca Cola Zéro": "Coca zero",
 
-  "Schweppes pomme": "Schweppes pomme",
 
-  "Schweppes agrume": "Schweppes agrume",
 
-  "Ice Tea Pêche": "Ice Tea Pêche",
+  Sprite: "Sprite",
+
+
+
+  Orangina: "Orangina",
+
+
+
+  Perrier: "Perrier",
+
+
+
+  "Oasis Tropical": "Oasis Tropical",
+
+
+
+  "Oasis Pomme Cassis": "Oasis Pomme Cassis",
+
+
+
+  "Fanta orange": "Fanta orange",
+
+
+
+  "Schweppes pomme": "Schweppes pomme",
+
+
+
+  "Schweppes agrume": "Schweppes agrume",
+
+
+
+  "Ice Tea Pêche": "Ice Tea Pêche",
+
+
 
 };
 
@@ -209,9 +392,15 @@ const drinkImageNames = {
 
 function parsePrice(price) {
 
-  if (!price) return 0;
 
-  return Number(String(price).replace("€", "").replace(",", ".").trim()) || 0;
+
+  if (!price) return 0;
+
+
+
+  return Number(String(price).replace("€", "").replace(",", ".").trim()) || 0;
+
+
 
 }
 
@@ -219,13 +408,23 @@ function parsePrice(price) {
 
 function formatPrice(price) {
 
-  return new Intl.NumberFormat("fr-FR", {
 
-    style: "currency",
 
-    currency: "EUR",
+  return new Intl.NumberFormat("fr-FR", {
 
-  }).format(price);
+
+
+    style: "currency",
+
+
+
+    currency: "EUR",
+
+
+
+  }).format(price);
+
+
 
 }
 
@@ -233,17 +432,51 @@ function formatPrice(price) {
 
 function getCategoryIcon(category) {
 
-  if (category.includes("Sandwich") || category.includes("Dürüm") || category === "Tacos") return <Sandwich className="text-yellow-500" />;
 
-  if (category === "Assiettes") return <UtensilsCrossed className="text-yellow-500" />;
 
-  if (category === "Boissons") return <CupSoda className="text-yellow-500" />;
+  if (category.includes("Sandwich") || category.includes("Dürüm") || category === "Tacos") return <Sandwich className="text-yellow-500" />;
 
-  if (category === "Desserts") return <CakeSlice className="text-yellow-500" />;
 
-  if (category === "Soupe") return <Soup className="text-yellow-500" />;
 
-  return <Utensils className="text-yellow-500" />;
+  if (category === "Assiettes") return <UtensilsCrossed className="text-yellow-500" />;
+
+
+
+  if (category === "Boissons") return <CupSoda className="text-yellow-500" />;
+
+
+
+  if (category === "Desserts") return <CakeSlice className="text-yellow-500" />;
+
+
+
+  if (category === "Soupe") return <Soup className="text-yellow-500" />;
+
+
+
+  return <Utensils className="text-yellow-500" />;
+
+
+
+}
+
+
+
+// Reconnaît aussi les liens de récupération Supabase arrivant à la racine (/).
+
+function getInitialAuthPage() {
+
+  const pathname = window.location.pathname;
+
+  const hashParams = new URLSearchParams(window.location.hash.slice(1));
+
+  if (pathname === "/reset-password" || hashParams.get("type") === "recovery") return "ResetPassword";
+
+  if (pathname === "/auth/confirm") return "EmailConfirmation";
+
+  if (pathname === "/cuisine") return "Cuisine";
+
+  return "Accueil";
 
 }
 
@@ -251,1865 +484,3446 @@ function getCategoryIcon(category) {
 
 export default function RestaurantWebsite() {
 
-  const [open, setOpen] = useState(false);
 
-  const [cartOpen, setCartOpenState] = useState(false);
+
+  const [open, setOpen] = useState(false);
+
+
+
+  const [gestionNotificationsOpen, setGestionNotificationsOpen] = useState(false);
+
+
+
+  const [cartOpen, setCartOpenState] = useState(false);
 
 
 
 const setCartOpen = (value) => {
 
-  if (value === true) {
 
-    console.trace("🛒 Quel code ouvre le panier ?");
 
-  }
+  if (value === true) {
 
 
 
-  setCartOpenState(value);
+    console.trace("🛒 Quel code ouvre le panier ?");
+
+
+
+  }
+
+
+
+  setCartOpenState(value);
+
+
 
 };
 
-  const [cart, setCart] = useState([]);
 
-  const [activePage, setActivePage] = useState(
 
-    window.location.pathname === "/cuisine"
+  const [cart, setCart] = useState([]);
 
-      ? "Cuisine"
 
-      : window.location.pathname === "/reset-password"
 
-      ? "ResetPassword"
+  const [activePage, setActivePage] = useState(getInitialAuthPage);
 
-      : "Accueil"
+  const [recoveryMode, setRecoveryMode] = useState(() => {
 
-  );  
+    const hash = new URLSearchParams(window.location.hash.slice(1));
 
-  const [activeCategory, setActiveCategory] = useState(null);
+    const detected = hash.get("type") === "recovery" ||
 
-  const [selectedProduct, setSelectedProduct] = useState(null);
+      (window.location.pathname === "/reset-password" &&
 
-  const [selectedSaucesSandwich, setSelectedSaucesSandwich] = useState([]);
+        sessionStorage.getItem("chezOmerRecovery") === "1");
 
-  const [selectedSaucesFrites, setSelectedSaucesFrites] = useState([]);
+    if (detected) sessionStorage.setItem("chezOmerRecovery", "1");
 
-  const [selectedCrudites, setSelectedCrudites] = useState([]);
+    return detected;
 
-  const [selectedMeats, setSelectedMeats] = useState([]);
+  });
 
-  const [breadChoice, setBreadChoice] = useState("Sandwich");
 
-  const [formulaChoice, setFormulaChoice] = useState("Seul");
 
-  const [extraEgg, setExtraEgg] = useState(false);
+  const [activeCategory, setActiveCategory] = useState(null);
 
-  const [accompagnementChoice, setAccompagnementChoice] = useState("");
 
-  const [drinkSizeChoice, setDrinkSizeChoice] = useState("33cl");
 
-  const [waterSizeChoice, setWaterSizeChoice] = useState("50cl");
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
-  const [menuEnfantBoisson, setMenuEnfantBoisson] = useState("Capri-Sun");
 
-  const [extraCheddar, setExtraCheddar] = useState(false);
 
-  const [sansSauceFromagere, setSansSauceFromagere] = useState(false);
+  const [selectedSaucesSandwich, setSelectedSaucesSandwich] = useState([]);
 
-  const [note, setNote] = useState("");
 
-  const [annonceSite, setAnnonceSite] = useState("");
 
-  const [produits, setProduits] = useState([]);
+  const [selectedSaucesFrites, setSelectedSaucesFrites] = useState([]);
 
-  const [categoriesData, setCategoriesData] = useState([]);
 
-  const [selectedAdminCategory, setSelectedAdminCategory] = useState("all");
 
-  const [fermetureActive, setFermetureActive] = useState(false);
+  const [selectedCrudites, setSelectedCrudites] = useState([]);
 
-  const [user, setUser] = useState(null);
 
-  const [userRole, setUserRole] = useState("client");
 
-  const [loadingAuth, setLoadingAuth] = useState(true);
+  const [selectedMeats, setSelectedMeats] = useState([]);
 
-  const [soundEnabled, setSoundEnabled] = useState(false);
 
-  const [newOrderFlash, setNewOrderFlash] = useState(false);
 
-  const audioContextRef = useRef(null);
+  const [breadChoice, setBreadChoice] = useState("Sandwich");
 
-  const soundEnabledRef = useRef(false);
 
 
+  const [formulaChoice, setFormulaChoice] = useState("Seul");
 
-  useEffect(() => {
 
-    soundEnabledRef.current = soundEnabled;
 
-  }, [soundEnabled]);
+  const [extraEgg, setExtraEgg] = useState(false);
 
 
 
-  const nav = [
+  const [accompagnementChoice, setAccompagnementChoice] = useState("");
 
-  "Menu",
 
-  "À propos",
 
-  ...(user ? ["Historique"] : []),
+  const [drinkSizeChoice, setDrinkSizeChoice] = useState("33cl");
 
-  "Contact",
 
 
+  const [waterSizeChoice, setWaterSizeChoice] = useState("50cl");
 
-  ...(userRole === "employe"
 
-    ? ["Pointage", "Commandes", "Cuisine"]
 
-    : []),
+  const [menuEnfantBoisson, setMenuEnfantBoisson] = useState("Capri-Sun");
 
 
 
-  ...(userRole === "admin"
+  const [extraCheddar, setExtraCheddar] = useState(false);
 
-    ? [
 
-        "Pointage",
 
-        "Commandes",
+  const [sansSauceFromagere, setSansSauceFromagere] = useState(false);
 
-        "Cuisine",
 
-        "Dashboard",
 
-        "Admin",
+  const [note, setNote] = useState("");
 
-      ]
 
-    : []),
 
+  const [annonceSite, setAnnonceSite] = useState("");
 
 
-  ...(!user ? ["Connexion"] : []),
+
+  const [produits, setProduits] = useState([]);
+
+
+
+  const [categoriesData, setCategoriesData] = useState([]);
+
+
+
+  const [selectedAdminCategory, setSelectedAdminCategory] = useState("all");
+
+
+
+  const [fermetureActive, setFermetureActive] = useState(false);
+
+
+
+  const [user, setUser] = useState(null);
+
+
+
+  const [userRole, setUserRole] = useState("client");
+
+
+
+  const [loadingAuth, setLoadingAuth] = useState(true);
+
+
+
+  const [soundEnabled, setSoundEnabled] = useState(false);
+
+
+
+  const [newOrderFlash, setNewOrderFlash] = useState(false);
+
+
+
+  const audioContextRef = useRef(null);
+
+
+
+  const soundEnabledRef = useRef(false);
+
+
+
+  useEffect(() => {
+
+
+
+    soundEnabledRef.current = soundEnabled;
+
+
+
+  }, [soundEnabled]);
+
+
+
+  const nav = [
+
+
+
+  "Menu",
+
+
+
+  "À propos",
+
+
+
+  ...(user ? ["Historique"] : []),
+
+
+
+  "Contact",
+
+
+
+  ...(userRole === "employe"
+
+
+
+    ? ["Pointage", "Commandes", "Cuisine"]
+
+
+
+    : []),
+
+
+
+  ...(userRole === "admin"
+
+
+
+    ? [
+
+
+
+        "Pointage",
+
+
+
+        "Commandes",
+
+
+
+        "Cuisine",
+
+
+
+        "Dashboard",
+
+
+
+        "Admin",
+
+
+
+      ]
+
+
+
+    : []),
+
+
+
+  ...(!user ? ["Connexion"] : []),
+
+
 
 ];
 
 
 
-  const total = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart]);
+  const total = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart]);
 
-  const itemCount = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
 
 
+  const itemCount = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
 
-  const creerAudioContext = async () => {
 
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
 
+  const creerAudioContext = async () => {
 
 
-    if (!AudioContextClass) {
 
-      alert("Votre navigateur ne permet pas d'activer le son ❌");
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
 
-      return null;
 
-    }
 
+    if (!AudioContextClass) {
 
 
-    const context = audioContextRef.current || new AudioContextClass();
 
+      alert("Votre navigateur ne permet pas d'activer le son ❌");
 
 
-    if (context.state === "suspended") {
 
-      await context.resume();
+      return null;
 
-    }
 
 
+    }
 
-    audioContextRef.current = context;
 
-    return context;
 
-  };
+    const context = audioContextRef.current || new AudioContextClass();
 
 
 
-  const jouerBipTest = (context) => {
+    if (context.state === "suspended") {
 
-    const oscillator = context.createOscillator();
 
-    const gainNode = context.createGain();
 
+      await context.resume();
 
 
-    oscillator.type = "sine";
 
-    oscillator.frequency.setValueAtTime(880, context.currentTime);
+    }
 
 
 
-    gainNode.gain.setValueAtTime(0.001, context.currentTime);
+    audioContextRef.current = context;
 
-    gainNode.gain.exponentialRampToValueAtTime(0.2, context.currentTime + 0.02);
 
-    gainNode.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.25);
 
+    return context;
 
 
-    oscillator.connect(gainNode);
 
-    gainNode.connect(context.destination);
+  };
 
 
 
-    oscillator.start();
+  const jouerBipTest = (context) => {
 
-    oscillator.stop(context.currentTime + 0.25);
 
-  };
 
+    const oscillator = context.createOscillator();
 
 
-  const playNotificationSound = () => {
 
-    if (!soundEnabledRef.current || !audioContextRef.current) return;
+    const gainNode = context.createGain();
 
 
 
-    const audioContext = audioContextRef.current;
+    oscillator.type = "sine";
 
 
 
-    const playBeep = (startTime, frequency) => {
+    oscillator.frequency.setValueAtTime(880, context.currentTime);
 
-      const oscillator = audioContext.createOscillator();
 
-      const gainNode = audioContext.createGain();
 
+    gainNode.gain.setValueAtTime(0.001, context.currentTime);
 
 
-      oscillator.type = "sine";
 
-      oscillator.frequency.setValueAtTime(frequency, startTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.2, context.currentTime + 0.02);
 
 
 
-      gainNode.gain.setValueAtTime(0.001, startTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.25);
 
-      gainNode.gain.exponentialRampToValueAtTime(0.35, startTime + 0.02);
 
-      gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.35);
 
+    oscillator.connect(gainNode);
 
 
-      oscillator.connect(gainNode);
 
-      gainNode.connect(audioContext.destination);
+    gainNode.connect(context.destination);
 
 
 
-      oscillator.start(startTime);
+    oscillator.start();
 
-      oscillator.stop(startTime + 0.4);
 
-    };
 
+    oscillator.stop(context.currentTime + 0.25);
 
 
-    const now = audioContext.currentTime;
 
-    playBeep(now, 900);
+  };
 
-    playBeep(now + 0.45, 1200);
 
-    playBeep(now + 0.9, 900);
 
-  };
+  const playNotificationSound = () => {
 
 
 
-  const activerSonCommandes = async () => {
+    if (!soundEnabledRef.current || !audioContextRef.current) return;
 
-    if (soundEnabledRef.current) {
 
-      soundEnabledRef.current = false;
 
-      setSoundEnabled(false);
+    const audioContext = audioContextRef.current;
 
-      setNewOrderFlash(false);
 
-      return;
 
-    }
+    const playBeep = (startTime, frequency) => {
 
 
 
-    const context = await creerAudioContext();
+      const oscillator = audioContext.createOscillator();
 
-    if (!context) return;
 
 
+      const gainNode = audioContext.createGain();
 
-    soundEnabledRef.current = true;
 
-    setSoundEnabled(true);
 
-    jouerBipTest(context);
+      oscillator.type = "sine";
 
-  };
 
 
+      oscillator.frequency.setValueAtTime(frequency, startTime);
 
-  useEffect(() => {
 
-    if (!["admin", "employe"].includes(userRole)) return;
 
+      gainNode.gain.setValueAtTime(0.001, startTime);
 
 
-    const channel = supabase
 
-      .channel("app-commandes-sound-global")
+      gainNode.gain.exponentialRampToValueAtTime(0.35, startTime + 0.02);
 
-      .on(
 
-        "postgres_changes",
 
-        {
+      gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.35);
 
-          event: "INSERT",
 
-          schema: "public",
 
-          table: "commandes",
+      oscillator.connect(gainNode);
 
-        },
 
-        () => {
 
-          playNotificationSound();
+      gainNode.connect(audioContext.destination);
 
-          setNewOrderFlash(true);
 
-          setTimeout(() => setNewOrderFlash(false), 6000);
 
+      oscillator.start(startTime);
+
+
+
+      oscillator.stop(startTime + 0.4);
+
+
+
+    };
+
+
+
+    const now = audioContext.currentTime;
+
+
+
+    playBeep(now, 900);
+
+
+
+    playBeep(now + 0.45, 1200);
+
+
+
+    playBeep(now + 0.9, 900);
+
+
+
+  };
+
+
+
+  const activerSonCommandes = async () => {
+
+
+
+    if (soundEnabledRef.current) {
+
+
+
+      soundEnabledRef.current = false;
+
+
+
+      setSoundEnabled(false);
+
+
+
+      setNewOrderFlash(false);
+
+
+
+      return;
+
+
+
+    }
+
+
+
+    const context = await creerAudioContext();
+
+
+
+    if (!context) return;
+
+
+
+    soundEnabledRef.current = true;
+
+
+
+    setSoundEnabled(true);
+
+
+
+    jouerBipTest(context);
+
+
+
+  };
+
+
+
+  useEffect(() => {
+
+
+
+    if (!["admin", "employe"].includes(userRole)) return;
+
+
+
+    const channel = supabase
+
+
+
+      .channel("app-commandes-sound-global")
+
+
+
+      .on(
+
+
+
+        "postgres_changes",
+
+
+
+        {
+
+
+
+          event: "INSERT",
+
+
+
+          schema: "public",
+
+
+
+          table: "commandes",
+
+
+
+        },
+
+
+
+        () => {
+
+
+
+          playNotificationSound();
+
+
+
+          setNewOrderFlash(true);
+
+
+
+          setTimeout(() => setNewOrderFlash(false), 6000);
+
+
+
+        }
+
+
+
+      )
+
+
+
+      .subscribe();
+
+
+
+    return () => {
+
+
+
+      supabase.removeChannel(channel);
+
+
+
+    };
+
+
+
+  }, [userRole]);
+
+
+
+  const chargerCategories = async () => {
+
+
+
+    const { data, error } = await supabase.from("categories").select("*").order("ordre", { ascending: true });
+
+
+
+    if (error) {
+
+
+
+      console.error(error);
+
+
+
+      return;
+
+
+
+    }
+
+
+
+    setCategoriesData(data || []);
+
+
+
+  };
+
+
+
+  const chargerAnnonce = async () => {
+
+
+
+    const { data, error } = await supabase
+
+
+
+      .from("annonces")
+
+
+
+      .select("contenu, actif")
+
+
+
+      .eq("actif", true)
+
+
+
+      .order("id", { ascending: false })
+
+
+
+      .limit(1);
+
+
+
+    if (error) {
+
+
+
+      console.error(error);
+
+
+
+      return;
+
+
+
+    }
+
+
+
+    setAnnonceSite(data && data.length > 0 ? data[0].contenu : "");
+
+
+
+  };
+
+
+
+  const chargerFermeture = async () => {
+
+
+
+    const { data, error } = await supabase.from("settings").select("fermeture_active").eq("id", 1).single();
+
+
+
+    if (error) {
+
+
+
+      console.error(error);
+
+
+
+      return;
+
+
+
+    }
+
+
+
+    setFermetureActive(Boolean(data?.fermeture_active));
+
+
+
+  };
+
+
+
+  const saveFermeture = async (value) => {
+
+
+
+    const { error } = await supabase.from("settings").update({ fermeture_active: value }).eq("id", 1);
+
+
+
+    if (error) console.error(error);
+
+
+
+  };
+
+
+
+  const chargerProduits = async () => {
+
+
+
+    const { data, error } = await supabase
+
+
+
+      .from("produits")
+
+
+
+      .select("*")
+
+
+
+      .order("categorie_id", { ascending: true })
+
+
+
+      .order("ordre", { ascending: true });
+
+
+
+    if (error) {
+
+
+
+      console.error(error);
+
+
+
+      return;
+
+
+
+    }
+
+
+
+    setProduits(data || []);
+
+
+
+  };
+
+
+
+  const updateProduit = (id, field, value) => {
+
+
+
+    setProduits((current) => current.map((produit) => (produit.id === id ? { ...produit, [field]: value } : produit)));
+
+
+
+  };
+
+
+
+  const saveProduit = async (produit) => {
+
+
+
+    const { error } = await supabase
+
+
+
+      .from("produits")
+
+
+
+      .update({
+
+
+
+        nom: produit.nom,
+
+
+
+        description: produit.description,
+
+
+
+        prix: produit.prix,
+
+
+
+        prix_menu: produit.prix_menu,
+
+
+
+        type: produit.type,
+
+
+
+        image: produit.image,
+
+
+
+        ordre: produit.ordre,
+
+
+
+        actif: produit.actif,
+
+
+
+        in_stock: produit.in_stock ?? true,
+
+
+
+        categorie_id: produit.categorie_id,
+
+
+
+      })
+
+
+
+      .eq("id", produit.id);
+
+
+
+    if (error) {
+
+
+
+      console.error(error);
+
+
+
+      alert("Erreur lors de l’enregistrement ❌");
+
+
+
+    } else {
+
+
+
+      alert("Produit enregistré ✅");
+
+
+
+      chargerProduits();
+
+
+
+    }
+
+
+
+  };
+
+  const derniereMajActiviteRef = useRef(0);
+
+
+
+
+  const verifierSession = async () => {
+
+
+
+    const {
+
+
+
+      data: { user },
+
+
+
+    } = await supabase.auth.getUser();
+
+
+
+    if (!user || user.is_anonymous) {
+
+
+
+      setUser(null);
+
+
+
+      setUserRole("client");
+
+
+
+      setLoadingAuth(false);
+
+
+
+      return "client";
+
+
+
+    }
+
+
+
+    setUser(user);
+
+
+
+    const { data, error } = await supabase.from("profiles").select("id, nom, role").eq("id", user.id).maybeSingle();
+
+
+
+    if (error || !data) {
+
+
+
+      console.error(error);
+
+
+
+      setUserRole("client");
+
+
+
+      setLoadingAuth(false);
+
+
+
+      return "client";
+
+
+
+    }
+
+    // Suivi d'activité des clients uniquement (sans écriture à chaque événement Auth).
+    if (data.role === "client") {
+      const maintenant = Date.now();
+      if (maintenant - derniereMajActiviteRef.current >= 5 * 60 * 1000) {
+        derniereMajActiviteRef.current = maintenant;
+        const { error: activityError } = await supabase
+          .from("profiles")
+          .update({ last_activity_at: new Date(maintenant).toISOString() })
+          .eq("id", user.id)
+          .eq("role", "client");
+
+        if (activityError) {
+          derniereMajActiviteRef.current = 0;
+          console.error("Mise à jour activité client :", activityError);
         }
-
-      )
-
-      .subscribe();
-
-
-
-    return () => {
-
-      supabase.removeChannel(channel);
-
-    };
-
-  }, [userRole]);
-
-
-
-  const chargerCategories = async () => {
-
-    const { data, error } = await supabase.from("categories").select("*").order("ordre", { ascending: true });
-
-    if (error) {
-
-      console.error(error);
-
-      return;
-
-    }
-
-    setCategoriesData(data || []);
-
-  };
-
-
-
-  const chargerAnnonce = async () => {
-
-    const { data, error } = await supabase
-
-      .from("annonces")
-
-      .select("contenu, actif")
-
-      .eq("actif", true)
-
-      .order("id", { ascending: false })
-
-      .limit(1);
-
-
-
-    if (error) {
-
-      console.error(error);
-
-      return;
-
+      }
     }
 
 
 
-    setAnnonceSite(data && data.length > 0 ? data[0].contenu : "");
+    setUserRole(data.role);
 
-  };
 
 
+    setLoadingAuth(false);
 
-  const chargerFermeture = async () => {
 
-    const { data, error } = await supabase.from("settings").select("fermeture_active").eq("id", 1).single();
 
-    if (error) {
+    return data.role;
 
-      console.error(error);
 
-      return;
 
-    }
+  };
 
-    setFermetureActive(Boolean(data?.fermeture_active));
 
-  };
 
+  useEffect(() => {
 
 
-  const saveFermeture = async (value) => {
 
-    const { error } = await supabase.from("settings").update({ fermeture_active: value }).eq("id", 1);
+    verifierSession();
 
-    if (error) console.error(error);
 
-  };
 
+    const { data: listener } = supabase.auth.onAuthStateChange((event) => {
 
+      // Un lien de récupération doit afficher le formulaire, quel que soit le rôle.
 
-  const chargerProduits = async () => {
+      if (event === "PASSWORD_RECOVERY") {
 
-    const { data, error } = await supabase
+        sessionStorage.setItem("chezOmerRecovery", "1");
 
-      .from("produits")
+        setRecoveryMode(true);
 
-      .select("*")
+        setActivePage("ResetPassword");
 
-      .order("categorie_id", { ascending: true })
+        if (window.location.pathname !== "/reset-password") {
 
-      .order("ordre", { ascending: true });
+          window.history.replaceState(
 
+            { ...window.history.state, chezOmerPage: "ResetPassword" },
 
+            "",
 
-    if (error) {
+            "/reset-password" + window.location.search + window.location.hash
 
-      console.error(error);
+          );
 
-      return;
+        }
 
-    }
+      }
 
 
 
-    setProduits(data || []);
+      // Différer les appels Supabase hors du callback d'authentification.
 
-  };
+      setTimeout(() => {
 
+        verifierSession().catch((error) =>
 
+          console.error("Vérification de session :", error)
 
-  const updateProduit = (id, field, value) => {
+        );
 
-    setProduits((current) => current.map((produit) => (produit.id === id ? { ...produit, [field]: value } : produit)));
+      }, 0);
 
-  };
+    });
 
 
 
-  const saveProduit = async (produit) => {
+    return () => {
 
-    const { error } = await supabase
 
-      .from("produits")
 
-      .update({
+      listener?.subscription?.unsubscribe();
 
-        nom: produit.nom,
 
-        description: produit.description,
 
-        prix: produit.prix,
+    };
 
-        prix_menu: produit.prix_menu,
 
-        type: produit.type,
 
-        image: produit.image,
+  }, []);
 
-        ordre: produit.ordre,
 
-        actif: produit.actif,
 
-        in_stock: produit.in_stock ?? true,
-
-        categorie_id: produit.categorie_id,
-
-      })
-
-      .eq("id", produit.id);
-
-
-
-    if (error) {
-
-      console.error(error);
-
-      alert("Erreur lors de l’enregistrement ❌");
-
-    } else {
-
-      alert("Produit enregistré ✅");
-
-      chargerProduits();
-
-    }
-
-  };
-
-
-
-  const verifierSession = async () => {
-
-    const {
-
-      data: { user },
-
-    } = await supabase.auth.getUser();
-
-
-
-    if (!user || user.is_anonymous) {
-
-      setUser(null);
-
-      setUserRole("client");
-
-      setLoadingAuth(false);
-
-      return "client";
-
-    }
-
-
-
-    setUser(user);
-
-
-
-    const { data, error } = await supabase.from("profiles").select("id, nom, role").eq("id", user.id).maybeSingle();
-
-
-
-    if (error || !data) {
-
-      console.error(error);
-
-      setUserRole("client");
-
-      setLoadingAuth(false);
-
-      return "client";
-
-    }
-
-
-
-    setUserRole(data.role);
-
-    setLoadingAuth(false);
-
-    return data.role;
-
-  };
-
-
-
+    // Une session déjà ouverte compte aussi comme activité lorsque le client revient.
   useEffect(() => {
-
-    verifierSession();
-
-
-
-    const { data: listener } = supabase.auth.onAuthStateChange(() => {
-
-      verifierSession();
-
-    });
-
-
-
-    return () => {
-
-      listener?.subscription?.unsubscribe();
-
-    };
-
-  }, []);
-
-
-
-  // Historique React synchronisé avec le bouton Retour du navigateur et Android.
-
-  useEffect(() => {
-
-    const initialPage =
-
-      window.location.pathname === "/cuisine"
-
-        ? "Cuisine"
-
-        : window.location.pathname === "/reset-password"
-
-        ? "ResetPassword"
-
-        : "Accueil";
-
-
-
-    if (!window.history.state?.chezOmerPage) {
-
-      window.history.replaceState(
-
-        { ...window.history.state, chezOmerPage: initialPage, chezOmerIndex: 0 },
-
-        "",
-
-        window.location.href
-
-      );
-
-    }
-
-
-
-    const handlePopState = (event) => {
-
-      const page =
-
-        event.state?.chezOmerPage ||
-
-        (window.location.pathname === "/cuisine"
-
-          ? "Cuisine"
-
-          : window.location.pathname === "/reset-password"
-
-          ? "ResetPassword"
-
-          : "Accueil");
-
-
-
-      setSelectedProduct(null);
-
-      setCartOpen(false);
-
-      setOpen(false);
-
-      setActivePage(page);
-
-      window.scrollTo({ top: 0, behavior: "instant" });
-
-    };
-
-
-
-    window.addEventListener("popstate", handlePopState);
-
-    return () => window.removeEventListener("popstate", handlePopState);
-
-  }, []);
-
-
-
-  // L'écouteur natif utilise les états les plus récents sans être réinstallé à chaque rendu.
-
-  const androidBackState = useRef({ selectedProduct, cartOpen, open, activePage });
-
-  androidBackState.current = { selectedProduct, cartOpen, open, activePage };
-
-
-
-  useEffect(() => {
-
-    if (!Capacitor.isNativePlatform()) return;
-
-
-
-    let disposed = false;
-
-    let subscription;
-
-
-
-    CapacitorApp.addListener("backButton", async () => {
-
-      const { selectedProduct, cartOpen, open, activePage } = androidBackState.current;
-
-
-
-      if (selectedProduct) {
-
-        setSelectedProduct(null);
-
-        return;
-
-      }
-
-      if (cartOpen) {
-
-        setCartOpen(false);
-
-        return;
-
-      }
-
-      if (open) {
-
-        setOpen(false);
-
-        return;
-
-      }
-
-
-
-      const index = Number(window.history.state?.chezOmerIndex || 0);
-
-      if (index > 0) {
-
-        window.history.back();
-
-        return;
-
-      }
-
-
-
-      if (activePage !== "Accueil") {
-
-        setActivePage("Accueil");
-
-        window.history.replaceState(
-
-          { ...window.history.state, chezOmerPage: "Accueil", chezOmerIndex: 0 },
-
-          "",
-
-          "/"
-
+    const verifierAuRetour = () => {
+      if (document.visibilityState === "visible") {
+        verifierSession().catch((error) =>
+          console.error("Vérification activité au retour :", error)
         );
-
-        window.scrollTo({ top: 0, behavior: "instant" });
-
-        return;
-
       }
+    };
 
+    document.addEventListener("visibilitychange", verifierAuRetour);
+    window.addEventListener("focus", verifierAuRetour);
 
-
-      if (window.confirm("Voulez-vous quitter l'application Chez Omer ?")) {
-
-        await CapacitorApp.exitApp();
-
-      }
-
-    }).then((handle) => {
-
-      if (disposed) handle.remove();
-
-      else subscription = handle;
-
-    }).catch((error) => console.error("Bouton Retour Android :", error));
-
-
+    let appStateListener;
+    if (Capacitor.isNativePlatform()) {
+      CapacitorApp.addListener("appStateChange", ({ isActive }) => {
+        if (isActive) verifierAuRetour();
+      }).then((listener) => { appStateListener = listener; }).catch(console.error);
+    }
 
     return () => {
-
-      disposed = true;
-
-      subscription?.remove();
-
+      document.removeEventListener("visibilitychange", verifierAuRetour);
+      window.removeEventListener("focus", verifierAuRetour);
+      appStateListener?.remove();
     };
-
   }, []);
 
+  // Retour de Google OAuth dans l'application Android (flux PKCE).
 
 
-  useEffect(() => {
 
-    chargerAnnonce();
+  useEffect(() => {
 
-    chargerFermeture();
 
-    chargerCategories();
 
-    chargerProduits();
+    if (!Capacitor.isNativePlatform()) return;
 
-  }, []);
 
 
+    let disposed = false;
 
-  const isSimpleTacos = (product) => product?.type === "tacos-simple";
 
-  const isMaxiTacos = (product) => product?.type === "maxi-tacos";
 
-  const needsTacosMeatChoice = (product) => isMaxiTacos(product);
+    let listener;
 
 
 
-  const needsSauceChoice = (category, productName = "", productType = "") => {
+    CapacitorApp.addListener("appUrlOpen", async ({ url }) => {
 
-    if (productType === "frite-sauce") return true;
 
-    if (["Boissons", "Desserts", "Soupe", "Sauces", "Mezzés et salades", "Assiettes", "Pides et lahmacun"].includes(category)) return false;
 
-    if (category === "Accompagnements" && !["Grande frite", "Petite frite"].includes(productName)) return false;
+      if (!url?.startsWith("com.chezomer.app://auth/callback")) return;
 
-    return true;
 
-  };
 
+      try {
 
 
-  const needsCruditeChoice = (product) => {
 
-    if (!product) return false;
+        const parsed = new URL(url);
 
-    if (product.type === "menu-enfant-burger") return true;
 
-    if (product.type === "assiette-accompagnement") return true;
 
-    if (product.category === "Burgers") return true;
+        const errorDescription = parsed.searchParams.get("error_description");
 
 
 
-    const assiettesSansCrudites = ["Ali nazik", "Patlicanli iskender", "Yogurtlu iskender", "Bulgurlu iskender"];
+        if (errorDescription) throw new Error(errorDescription);
 
-    if (product.category === "Assiettes" && assiettesSansCrudites.includes(product.name)) return false;
 
 
+        const code = parsed.searchParams.get("code");
 
-    return ["Sandwichs / Dürüms", "Tacos"].includes(product.category);
 
-  };
 
+        if (!code) throw new Error("Code OAuth absent dans le retour Google");
 
 
-  const getCruditeList = (product) => {
 
-    if (!product) return cruditeOptions;
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
 
-    if (product.category === "Burgers" || product.type === "menu-enfant-burger") return burgerOptions;
 
-    if (product.type === "assiette-accompagnement") return cruditeSauceSaladeOptions;
 
-    return cruditeOptions;
+        if (error) throw error;
 
-  };
 
 
+        await Browser.close().catch(() => {});
 
-  const needsBreadChoice = (product) => product?.category === "Sandwichs / Dürüms" && product?.type !== "durum-only";
 
-  const isPideCategory = (product) => product?.category === "Pides et lahmacun";
 
-  const hasFormulaChoice = (product) => isPideCategory(product) || (product?.category !== "Boissons" && Boolean(product?.menuPriceLabel));
+        await verifierSession();
 
-  const needsAccompagnementChoice = (product) => product?.type === "assiette-accompagnement";
 
-  const boissonsDeuxFormats = ["Coca Cola", "Coca-Cola", "Coca Cherry", "Coca-Cola Cherry", "Coca Cola Zéro", "Coca-Cola Zéro", "Coca-Cola Zero", "Fuze Tea Pêche", "Eau pétillante"];
 
-  const needsDrinkSizeChoice = (product) => product?.category === "Boissons" && boissonsDeuxFormats.includes(product?.name) && product?.menuPrice != null;
+        setActivePage("Accueil");
 
-  const needsWaterSizeChoice = (product) => false; // Plus de bouteille d’eau plate consignée
 
-  const needsMenuEnfantDrink = (product) => product?.type === "menu-enfant" || product?.type === "menu-enfant-burger";
 
-  const needsExtraCheddar = (product) => false;
+      } catch (error) {
 
-  const needsSansSauceFromagere = (product) => product?.category === "Tacos";
 
 
+        console.error("Retour Google Android :", error);
 
-  const openProduct = (product, category) => {
 
-    const [name, desc, price, menuPrice, type, image, inStock] = product;
 
+        await Browser.close().catch(() => {});
 
 
-    if (!price) return;
 
-    if (inStock === false) return;
+        alert("Connexion Google impossible : " + (error?.message || "Erreur inconnue"));
 
 
 
-    setSelectedProduct({
+      }
 
-      name,
 
-      desc,
 
-      basePrice: parsePrice(price),
+    }).then((handle) => {
 
-      basePriceLabel: price,
 
-      menuPrice: menuPrice ? parsePrice(menuPrice) : null,
 
-      menuPriceLabel: menuPrice || "",
+      if (disposed) handle.remove();
 
-      category,
 
-      type: type || "",
 
-      image: image || "",
+      else listener = handle;
 
-      in_stock: inStock ?? true,
 
-    });
 
+    }).catch(console.error);
 
 
-    setSelectedSaucesSandwich([]);
 
-    setSelectedSaucesFrites([]);
+    return () => {
 
-    setSelectedCrudites([]);
 
-    setBreadChoice("Sandwich");
 
-    setFormulaChoice("Seul");
+      disposed = true;
 
-    setExtraEgg(false);
 
-    setAccompagnementChoice("");
 
-    setDrinkSizeChoice("33cl");
+      listener?.remove();
 
-    setWaterSizeChoice("50cl");
 
-    setMenuEnfantBoisson("Capri-Sun");
 
-    setExtraCheddar(false);
+    };
 
-    setSansSauceFromagere(false);
 
-    setNote("");
 
+  }, []);
 
 
-    if (type === "tacos-simple") {
 
-      setSelectedMeats([{ name, extra: 0, locked: true }]);
+  // Historique React synchronisé avec le bouton Retour du navigateur et Android.
 
-    } else {
 
-      setSelectedMeats([]);
 
-    }
+  useEffect(() => {
 
-  };
 
 
+    const initialPage = getInitialAuthPage();
 
-  const toggleSauce = (sauce, type) => {
 
-    const setter = type === "sandwich" ? setSelectedSaucesSandwich : setSelectedSaucesFrites;
 
-    setter((current) => (current.includes(sauce) ? current.filter((s) => s !== sauce) : [...current, sauce]));
+    if (!window.history.state?.chezOmerPage) {
 
-  };
 
 
+      window.history.replaceState(
 
-  const toggleCrudite = (option) => {
 
-    setSelectedCrudites((current) => (current.includes(option) ? current.filter((item) => item !== option) : [...current, option]));
 
-  };
+        { ...window.history.state, chezOmerPage: initialPage, chezOmerIndex: 0 },
 
 
 
-  const toggleMeat = (meat) => {
+        "",
 
-    setSelectedMeats((current) => {
 
-      const existingMeat = current.find((item) => item.name === meat.name);
 
-      if (existingMeat?.locked) return current;
+        window.location.href
 
-      if (existingMeat) return current.filter((item) => item.name !== meat.name);
 
 
+      );
 
-      const maxMeats = isMaxiTacos(selectedProduct) ? 3 : 0;
 
-      if (current.length >= maxMeats) return current;
 
+    }
 
 
-      return [...current, meat];
 
-    });
+    const handlePopState = (event) => {
 
-  };
 
 
+      const page = event.state?.chezOmerPage || getInitialAuthPage();
 
-  const selectedMeatsExtra = isMaxiTacos(selectedProduct)
 
-    ? selectedMeats.reduce((sum, meat) => sum + meat.extra, 0) + (selectedMeats.length === 3 ? 2 : 0)
 
-    : 0;
+      setSelectedProduct(null);
 
 
 
-  const supplementSaucesSandwich = calculSupplementSauces(selectedSaucesSandwich);
+      setCartOpen(false);
 
-  const isMenuSelected = formulaChoice !== "Seul";
 
-  const supplementSaucesFrites = isMenuSelected ? calculSupplementSauces(selectedSaucesFrites) : 0;
 
-  const supplementSaucesTotal = supplementSaucesSandwich + supplementSaucesFrites;
+      setOpen(false);
 
-  const supplementCheddarTotal = extraCheddar ? PRIX_SUPPLEMENT_CHEDDAR : 0;
 
 
+      setActivePage(recoveryMode ? "ResetPassword" : page);
 
-  const getDynamicImage = () => {
 
-    if (!selectedProduct) return "";
 
+      window.scrollTo({ top: 0, behavior: "instant" });
 
 
-    const sandwichImageNames = {
 
-      Köfte: "Kofte",
+    };
 
-    };
 
 
+    window.addEventListener("popstate", handlePopState);
 
-    if (selectedProduct.category === "Sandwichs / Dürüms") {
 
-      const imageName = sandwichImageNames[selectedProduct.name] || selectedProduct.name;
 
-      if (selectedProduct.type === "durum-only") return `/images/accompagnement/Sandwich-Durum/Durum/${imageName}.png`;
+    return () => window.removeEventListener("popstate", handlePopState);
 
-      if (breadChoice === "Dürüm") return `/images/accompagnement/Sandwich-Durum/Durum/${imageName}.png`;
 
-      return `/images/accompagnement/Sandwich-Durum/Sandwich/${imageName}.png`;
 
-    }
+  }, []);
 
 
 
-    if (selectedProduct.category === "Boissons") {
+  // L'écouteur natif utilise les états les plus récents sans être réinstallé à chaque rendu.
 
-      if (selectedProduct.name === "Ayran") return "/images/Boissons/Ayran.png";
 
-      if (selectedProduct.name === "Eau") return "/images/Boissons/Bouteille Evian 50cl.png";
 
-      if (needsDrinkSizeChoice(selectedProduct)) {
+  const androidBackState = useRef({ selectedProduct, cartOpen, open, activePage });
 
-        // Eau pétillante : 33 cl Perrier / 50 cl Carola. Ne pas inventer de chemins d’images.
 
-        if (selectedProduct.name === "Eau pétillante") return selectedProduct.image || "";
 
-        const imageName = drinkImageNames[selectedProduct.name] || selectedProduct.name;
+  androidBackState.current = { selectedProduct, cartOpen, open, activePage };
 
-        return drinkSizeChoice === "50cl" ? `/images/Boissons/Bouteille/${imageName}.png` : `/images/Boissons/Canette/${imageName}.png`;
 
-      }
 
-    }
+  useEffect(() => {
 
 
 
-    return selectedProduct.image;
+    if (!Capacitor.isNativePlatform()) return;
 
-  };
 
 
+    let disposed = false;
 
-  const selectedProductPrice = selectedProduct
 
-    ? (isPideCategory(selectedProduct)
 
-        ? selectedProduct.basePrice + (formulaChoice === "Menu 33cl" ? 3 : formulaChoice === "Menu 50cl" ? 5 : 0)
+    let subscription;
 
-        : needsDrinkSizeChoice(selectedProduct) && drinkSizeChoice === "50cl" && selectedProduct.menuPrice
 
-        ? selectedProduct.menuPrice
 
-        : needsWaterSizeChoice(selectedProduct) && waterSizeChoice === "1L verre consigné" && selectedProduct.menuPrice
+    CapacitorApp.addListener("backButton", async () => {
 
-        ? selectedProduct.menuPrice
 
-        : selectedProduct.category !== "Boissons" && formulaChoice === "Menu" && selectedProduct.menuPrice
 
-        ? selectedProduct.menuPrice
+      const { selectedProduct, cartOpen, open, activePage } = androidBackState.current;
 
-        : selectedProduct.basePrice) +
 
-      selectedMeatsExtra +
 
-      supplementSaucesTotal +
+      if (selectedProduct) {
 
-      supplementCheddarTotal +
 
-      (isPideCategory(selectedProduct) && selectedProduct.type === "pide" && extraEgg ? 1 : 0)
 
-    : 0;
+        setSelectedProduct(null);
 
 
 
-  const isAddDisabled =
+        return;
 
-    selectedProduct &&
 
-    (selectedProduct.in_stock === false ||
 
-      (needsTacosMeatChoice(selectedProduct) && selectedMeats.length === 0) ||
+      }
 
-      (needsAccompagnementChoice(selectedProduct) && !accompagnementChoice));
 
 
+      if (cartOpen) {
 
-  const addToCart = () => {
 
-    if (!selectedProduct) return;
 
-    if (selectedProduct.in_stock === false) return;
+        setCartOpen(false);
 
-    if (needsTacosMeatChoice(selectedProduct) && selectedMeats.length === 0) return;
 
-    if (needsAccompagnementChoice(selectedProduct) && !accompagnementChoice) return;
 
+        return;
 
 
-    setCart((current) => [
 
-      ...current,
+      }
 
-      {
 
-        id: `${selectedProduct.name}-${selectedProduct.category}-${Date.now()}`,
 
-        name: selectedProduct.name,
+      if (open) {
 
-        desc: selectedProduct.desc,
 
-        category: selectedProduct.category,
 
-        price: selectedProductPrice,
+        setOpen(false);
 
-        extraEgg: isPideCategory(selectedProduct) && selectedProduct.type === "pide" ? extraEgg : false,
 
-        formulaChoice:
 
-          hasFormulaChoice(selectedProduct) && !needsDrinkSizeChoice(selectedProduct) && !needsWaterSizeChoice(selectedProduct) ? formulaChoice : "",
+        return;
 
-        drinkSizeChoice: needsDrinkSizeChoice(selectedProduct) ? drinkSizeChoice : "",
 
-        waterSizeChoice: needsWaterSizeChoice(selectedProduct) ? waterSizeChoice : "",
 
-        menuEnfantBoisson: needsMenuEnfantDrink(selectedProduct) ? menuEnfantBoisson : "",
+      }
 
-        extraCheddar: needsExtraCheddar(selectedProduct) ? extraCheddar : false,
 
-        sansSauceFromagere: needsSansSauceFromagere(selectedProduct) ? sansSauceFromagere : false,
 
-        breadChoice: selectedProduct.type === "durum-only" ? "Dürüm" : needsBreadChoice(selectedProduct) ? breadChoice : "",
+      const index = Number(window.history.state?.chezOmerIndex || 0);
 
-        accompagnementChoice: needsAccompagnementChoice(selectedProduct) ? accompagnementChoice : "",
 
-        meats: isSimpleTacos(selectedProduct) || isMaxiTacos(selectedProduct) ? selectedMeats : [],
 
-        meatsExtra: needsTacosMeatChoice(selectedProduct) ? selectedMeatsExtra : 0,
+      if (index > 0) {
 
-        tacosSimple: isSimpleTacos(selectedProduct),
 
-        saucesSandwich: selectedSaucesSandwich,
 
-        saucesFrites: formulaChoice === "Menu" ? selectedSaucesFrites : [],
+        window.history.back();
 
-        supplementSauces: supplementSaucesTotal,
 
-        crudites: selectedCrudites,
 
-        note,
+        return;
 
-        quantity: 1,
 
-      },
 
-    ])
+      }
 
 
 
-    setSelectedProduct(null);
+      if (activePage !== "Accueil") {
 
-    // Garder le panier fermé pour permettre de continuer les achats.
 
-    setCartOpen(false);
 
-  };
+        setActivePage("Accueil");
 
 
 
-  const changeQuantity = (id, delta) => {
+        window.history.replaceState(
 
-    setCart((current) => current.map((item) => (item.id === id ? { ...item, quantity: item.quantity + delta } : item)).filter((item) => item.quantity > 0));
 
-  };
 
+          { ...window.history.state, chezOmerPage: "Accueil", chezOmerIndex: 0 },
 
 
-  const removeItem = (id) => {
 
-    setCart((current) => current.filter((item) => item.id !== id));
+          "",
 
-  };
 
 
+          "/"
 
-  const orderLines = cart
 
-    .map((item) => {
 
-      const formule = item.formulaChoice ? `\n  Formule : ${item.formulaChoice}` : "";
+        );
 
-      const oeuf = item.extraEgg ? "\n  Supplément œuf : +1,00 €" : "";
 
-      const formatBoisson = item.drinkSizeChoice ? `\n  Format : ${item.drinkSizeChoice}` : "";
 
-      const formatEau = item.waterSizeChoice ? `\n  Format : ${item.waterSizeChoice}` : "";
+        window.scrollTo({ top: 0, behavior: "instant" });
 
-      const boissonEnfant = item.menuEnfantBoisson ? `\n  Boisson : ${item.menuEnfantBoisson}` : "";
 
-      const cheddar = (item.extraCheddar === true || item.extraCheddar === "true") ? `\n  Supplément cheddar : +2,00 €` : "";
 
-      const sansFromagere = item.sansSauceFromagere ? `\n  Sans sauce fromagère` : "";
+        return;
 
-      const choix = item.breadChoice ? `\n  Choix : ${item.breadChoice}` : "";
 
-      const accompagnement = item.accompagnementChoice ? `\n  Accompagnement : ${item.accompagnementChoice}` : "";
 
-      const meats = item.meats?.length
+      }
 
-        ? `\n  Viandes : ${item.meats.map((meat) => `${meat.name}`).join(", ")}${item.tacosSimple && item.meats.length === 2 ? " | 2ème viande (+2€)" : ""}${
 
-            !item.tacosSimple && item.meats.length === 3 ? " | 3ème viande (+2€)" : ""
 
-          }`
+      if (window.confirm("Voulez-vous quitter l'application Chez Omer ?")) {
 
-        : "";
 
-      const crudites = item.crudites?.length ? `\n  Options : ${item.crudites.join(", ")}` : "";
 
-      const saucesSandwichText = item.saucesSandwich?.length ? `\n  Sauces : ${item.saucesSandwich.join(", ")}` : "";
+        await CapacitorApp.exitApp();
 
-      const saucesFritesText = item.saucesFrites?.length ? `\n  Sauces frites : ${item.saucesFrites.join(", ")}` : "";
 
-      const supplementSaucesText = item.supplementSauces > 0 ? `\n  Supplément sauces : ${formatPrice(item.supplementSauces)}` : "";
 
-      const noteText = item.note ? `\n  Note : ${item.note}` : "";
+      }
 
 
 
-      return `- ${item.quantity}x ${item.name} (${item.category}) - ${formatPrice(
+    }).then((handle) => {
 
-        item.price * item.quantity
 
-      )}${formule}${oeuf}${formatBoisson}${formatEau}${boissonEnfant}${cheddar}${sansFromagere}${choix}${accompagnement}${meats}${crudites}${saucesSandwichText}${saucesFritesText}${supplementSaucesText}${noteText}`;
 
-    })
+      if (disposed) handle.remove();
 
-    .join("\n\n");
 
 
+      else subscription = handle;
 
-  const orderMessage = encodeURIComponent(`Bonjour Chez Omer, je souhaite passer commande :\n\n${orderLines}\n\nTotal : ${formatPrice(total)}`);
 
 
+    }).catch((error) => console.error("Bouton Retour Android :", error));
 
-  const showPage = (page) => {
 
-    setOpen(false);
 
-    if (page === activePage) return;
+    return () => {
 
 
 
-    const path = page === "Cuisine" ? "/cuisine" : page === "ResetPassword" ? "/reset-password" : "/";
+      disposed = true;
 
-    const index = Number(window.history.state?.chezOmerIndex || 0) + 1;
 
-    window.history.pushState(
 
-      { ...window.history.state, chezOmerPage: page, chezOmerIndex: index },
+      subscription?.remove();
 
-      "",
 
-      path
 
-    );
+    };
 
-    setActivePage(page);
 
-    window.scrollTo({ top: 0, behavior: "instant" });
 
-  };
+  }, []);
 
 
 
-  const CurrentPage = () => {
+  useEffect(() => {
 
-    if (activePage === "Menu") {
 
-      return (
 
-        <MenuPage
+    chargerAnnonce();
 
-          categoriesData={categoriesData}
 
-          activeCategory={activeCategory}
 
-          setActiveCategory={setActiveCategory}
+    chargerFermeture();
 
-          produits={produits}
 
-          getCategoryIcon={getCategoryIcon}
 
-          openProduct={openProduct}
+    chargerCategories();
 
-        />
 
-      );
 
-    }
+    chargerProduits();
 
 
 
-    if (activePage === "Historique") {
+  }, []);
 
-  return (
 
-    <HistoriqueCommandesPage
 
-      supabase={supabase}
+  const isSimpleTacos = (product) => product?.type === "tacos-simple";
 
-      user={user}
 
-      formatPrice={formatPrice}
 
-      setCart={setCart}
+  const isMaxiTacos = (product) => product?.type === "maxi-tacos";
 
-      setCartOpen={setCartOpen}
 
-    />
 
-  );
+  const needsTacosMeatChoice = (product) => isMaxiTacos(product);
+
+
+
+  const needsSauceChoice = (category, productName = "", productType = "") => {
+
+
+
+    if (productType === "frite-sauce") return true;
+
+
+
+    if (["Boissons", "Desserts", "Soupe", "Sauces", "Mezzés et salades", "Assiettes", "Pides et lahmacun"].includes(category)) return false;
+
+
+
+    if (category === "Accompagnements" && !["Grande frite", "Petite frite"].includes(productName)) return false;
+
+
+
+    return true;
+
+
+
+  };
+
+
+
+  const needsCruditeChoice = (product) => {
+
+
+
+    if (!product) return false;
+
+
+
+    if (product.type === "menu-enfant-burger") return true;
+
+
+
+    if (product.type === "assiette-accompagnement") return true;
+
+
+
+    if (product.category === "Burgers") return true;
+
+
+
+    const assiettesSansCrudites = ["Ali nazik", "Patlicanli iskender", "Yogurtlu iskender", "Bulgurlu iskender"];
+
+
+
+    if (product.category === "Assiettes" && assiettesSansCrudites.includes(product.name)) return false;
+
+
+
+    return ["Sandwichs / Dürüms", "Tacos"].includes(product.category);
+
+
+
+  };
+
+
+
+  const getCruditeList = (product) => {
+
+
+
+    if (!product) return cruditeOptions;
+
+
+
+    if (product.category === "Burgers" || product.type === "menu-enfant-burger") return burgerOptions;
+
+
+
+    if (product.type === "assiette-accompagnement") return cruditeSauceSaladeOptions;
+
+
+
+    return cruditeOptions;
+
+
+
+  };
+
+
+
+  const needsBreadChoice = (product) => product?.category === "Sandwichs / Dürüms" && product?.type !== "durum-only";
+
+
+
+  const isPideCategory = (product) => product?.category === "Pides et lahmacun";
+
+
+
+  const hasFormulaChoice = (product) => isPideCategory(product) || (product?.category !== "Boissons" && Boolean(product?.menuPriceLabel));
+
+
+
+  const needsAccompagnementChoice = (product) => product?.type === "assiette-accompagnement";
+
+
+
+  const boissonsDeuxFormats = ["Coca Cola", "Coca-Cola", "Coca Cherry", "Coca-Cola Cherry", "Coca Cola Zéro", "Coca-Cola Zéro", "Coca-Cola Zero", "Fuze Tea Pêche", "Eau pétillante"];
+
+
+
+  const needsDrinkSizeChoice = (product) => product?.category === "Boissons" && boissonsDeuxFormats.includes(product?.name) && product?.menuPrice != null;
+
+
+
+  const needsWaterSizeChoice = (product) => false; // Plus de bouteille d’eau plate consignée
+
+
+
+  const needsMenuEnfantDrink = (product) => product?.type === "menu-enfant" || product?.type === "menu-enfant-burger";
+
+
+
+  const needsExtraCheddar = (product) => false;
+
+
+
+  const needsSansSauceFromagere = (product) => product?.category === "Tacos";
+
+
+
+  const openProduct = (product, category) => {
+
+
+
+    const [name, desc, price, menuPrice, type, image, inStock] = product;
+
+
+
+    if (!price) return;
+
+
+
+    if (inStock === false) return;
+
+
+
+    setSelectedProduct({
+
+
+
+      name,
+
+
+
+      desc,
+
+
+
+      basePrice: parsePrice(price),
+
+
+
+      basePriceLabel: price,
+
+
+
+      menuPrice: menuPrice ? parsePrice(menuPrice) : null,
+
+
+
+      menuPriceLabel: menuPrice || "",
+
+
+
+      category,
+
+
+
+      type: type || "",
+
+
+
+      image: image || "",
+
+
+
+      in_stock: inStock ?? true,
+
+
+
+    });
+
+
+
+    setSelectedSaucesSandwich([]);
+
+
+
+    setSelectedSaucesFrites([]);
+
+
+
+    setSelectedCrudites([]);
+
+
+
+    setBreadChoice("Sandwich");
+
+
+
+    setFormulaChoice("Seul");
+
+
+
+    setExtraEgg(false);
+
+
+
+    setAccompagnementChoice("");
+
+
+
+    setDrinkSizeChoice("33cl");
+
+
+
+    setWaterSizeChoice("50cl");
+
+
+
+    setMenuEnfantBoisson("Capri-Sun");
+
+
+
+    setExtraCheddar(false);
+
+
+
+    setSansSauceFromagere(false);
+
+
+
+    setNote("");
+
+
+
+    if (type === "tacos-simple") {
+
+
+
+      setSelectedMeats([{ name, extra: 0, locked: true }]);
+
+
+
+    } else {
+
+
+
+      setSelectedMeats([]);
+
+
+
+    }
+
+
+
+  };
+
+
+
+  const toggleSauce = (sauce, type) => {
+
+
+
+    const setter = type === "sandwich" ? setSelectedSaucesSandwich : setSelectedSaucesFrites;
+
+
+
+    setter((current) => (current.includes(sauce) ? current.filter((s) => s !== sauce) : [...current, sauce]));
+
+
+
+  };
+
+
+
+  const toggleCrudite = (option) => {
+
+
+
+    setSelectedCrudites((current) => (current.includes(option) ? current.filter((item) => item !== option) : [...current, option]));
+
+
+
+  };
+
+
+
+  const toggleMeat = (meat) => {
+
+
+
+    setSelectedMeats((current) => {
+
+
+
+      const existingMeat = current.find((item) => item.name === meat.name);
+
+
+
+      if (existingMeat?.locked) return current;
+
+
+
+      if (existingMeat) return current.filter((item) => item.name !== meat.name);
+
+
+
+      const maxMeats = isMaxiTacos(selectedProduct) ? 3 : 0;
+
+
+
+      if (current.length >= maxMeats) return current;
+
+
+
+      return [...current, meat];
+
+
+
+    });
+
+
+
+  };
+
+
+
+  const selectedMeatsExtra = isMaxiTacos(selectedProduct)
+
+
+
+    ? selectedMeats.reduce((sum, meat) => sum + meat.extra, 0) + (selectedMeats.length === 3 ? 2 : 0)
+
+
+
+    : 0;
+
+
+
+  const supplementSaucesSandwich = calculSupplementSauces(selectedSaucesSandwich);
+
+
+
+  const isMenuSelected = formulaChoice !== "Seul";
+
+
+
+  const supplementSaucesFrites = isMenuSelected ? calculSupplementSauces(selectedSaucesFrites) : 0;
+
+
+
+  const supplementSaucesTotal = supplementSaucesSandwich + supplementSaucesFrites;
+
+
+
+  const supplementCheddarTotal = extraCheddar ? PRIX_SUPPLEMENT_CHEDDAR : 0;
+
+
+
+  const getDynamicImage = () => {
+
+
+
+    if (!selectedProduct) return "";
+
+
+
+    const sandwichImageNames = {
+
+
+
+      Köfte: "Kofte",
+
+
+
+    };
+
+
+
+    if (selectedProduct.category === "Sandwichs / Dürüms") {
+
+
+
+      const imageName = sandwichImageNames[selectedProduct.name] || selectedProduct.name;
+
+
+
+      if (selectedProduct.type === "durum-only") return `/images/accompagnement/Sandwich-Durum/Durum/${imageName}.png`;
+
+
+
+      if (breadChoice === "Dürüm") return `/images/accompagnement/Sandwich-Durum/Durum/${imageName}.png`;
+
+
+
+      return `/images/accompagnement/Sandwich-Durum/Sandwich/${imageName}.png`;
+
+
+
+    }
+
+
+
+    if (selectedProduct.category === "Boissons") {
+
+
+
+      if (selectedProduct.name === "Ayran") return "/images/Boissons/Ayran.png";
+
+
+
+      if (selectedProduct.name === "Eau") return "/images/Boissons/Bouteille Evian 50cl.png";
+
+
+
+      if (needsDrinkSizeChoice(selectedProduct)) {
+
+
+
+        // Eau pétillante : 33 cl Perrier / 50 cl Carola. Ne pas inventer de chemins d’images.
+
+
+
+        if (selectedProduct.name === "Eau pétillante") return selectedProduct.image || "";
+
+
+
+        const imageName = drinkImageNames[selectedProduct.name] || selectedProduct.name;
+
+
+
+        return drinkSizeChoice === "50cl" ? `/images/Boissons/Bouteille/${imageName}.png` : `/images/Boissons/Canette/${imageName}.png`;
+
+
+
+      }
+
+
+
+    }
+
+
+
+    return selectedProduct.image;
+
+
+
+  };
+
+
+
+  const selectedProductPrice = selectedProduct
+
+
+
+    ? (isPideCategory(selectedProduct)
+
+
+
+        ? selectedProduct.basePrice + (formulaChoice === "Menu 33cl" ? 3 : formulaChoice === "Menu 50cl" ? 5 : 0)
+
+
+
+        : needsDrinkSizeChoice(selectedProduct) && drinkSizeChoice === "50cl" && selectedProduct.menuPrice
+
+
+
+        ? selectedProduct.menuPrice
+
+
+
+        : needsWaterSizeChoice(selectedProduct) && waterSizeChoice === "1L verre consigné" && selectedProduct.menuPrice
+
+
+
+        ? selectedProduct.menuPrice
+
+
+
+        : selectedProduct.category !== "Boissons" && formulaChoice === "Menu" && selectedProduct.menuPrice
+
+
+
+        ? selectedProduct.menuPrice
+
+
+
+        : selectedProduct.basePrice) +
+
+
+
+      selectedMeatsExtra +
+
+
+
+      supplementSaucesTotal +
+
+
+
+      supplementCheddarTotal +
+
+
+
+      (isPideCategory(selectedProduct) && selectedProduct.type === "pide" && extraEgg ? 1 : 0)
+
+
+
+    : 0;
+
+
+
+  const isAddDisabled =
+
+
+
+    selectedProduct &&
+
+
+
+    (selectedProduct.in_stock === false ||
+
+
+
+      (needsTacosMeatChoice(selectedProduct) && selectedMeats.length === 0) ||
+
+
+
+      (needsAccompagnementChoice(selectedProduct) && !accompagnementChoice));
+
+
+
+  const addToCart = () => {
+
+
+
+    if (!selectedProduct) return;
+
+
+
+    if (selectedProduct.in_stock === false) return;
+
+
+
+    if (needsTacosMeatChoice(selectedProduct) && selectedMeats.length === 0) return;
+
+
+
+    if (needsAccompagnementChoice(selectedProduct) && !accompagnementChoice) return;
+
+
+
+    setCart((current) => [
+
+
+
+      ...current,
+
+
+
+      {
+
+
+
+        id: `${selectedProduct.name}-${selectedProduct.category}-${Date.now()}`,
+
+
+
+        name: selectedProduct.name,
+
+
+
+        desc: selectedProduct.desc,
+
+
+
+        category: selectedProduct.category,
+
+
+
+        price: selectedProductPrice,
+
+
+
+        extraEgg: isPideCategory(selectedProduct) && selectedProduct.type === "pide" ? extraEgg : false,
+
+
+
+        formulaChoice:
+
+
+
+          hasFormulaChoice(selectedProduct) && !needsDrinkSizeChoice(selectedProduct) && !needsWaterSizeChoice(selectedProduct) ? formulaChoice : "",
+
+
+
+        drinkSizeChoice: needsDrinkSizeChoice(selectedProduct) ? drinkSizeChoice : "",
+
+
+
+        waterSizeChoice: needsWaterSizeChoice(selectedProduct) ? waterSizeChoice : "",
+
+
+
+        menuEnfantBoisson: needsMenuEnfantDrink(selectedProduct) ? menuEnfantBoisson : "",
+
+
+
+        extraCheddar: needsExtraCheddar(selectedProduct) ? extraCheddar : false,
+
+
+
+        sansSauceFromagere: needsSansSauceFromagere(selectedProduct) ? sansSauceFromagere : false,
+
+
+
+        breadChoice: selectedProduct.type === "durum-only" ? "Dürüm" : needsBreadChoice(selectedProduct) ? breadChoice : "",
+
+
+
+        accompagnementChoice: needsAccompagnementChoice(selectedProduct) ? accompagnementChoice : "",
+
+
+
+        meats: isSimpleTacos(selectedProduct) || isMaxiTacos(selectedProduct) ? selectedMeats : [],
+
+
+
+        meatsExtra: needsTacosMeatChoice(selectedProduct) ? selectedMeatsExtra : 0,
+
+
+
+        tacosSimple: isSimpleTacos(selectedProduct),
+
+
+
+        saucesSandwich: selectedSaucesSandwich,
+
+
+
+        saucesFrites: formulaChoice === "Menu" ? selectedSaucesFrites : [],
+
+
+
+        supplementSauces: supplementSaucesTotal,
+
+
+
+        crudites: selectedCrudites,
+
+
+
+        note,
+
+
+
+        quantity: 1,
+
+
+
+      },
+
+
+
+    ])
+
+
+
+    setSelectedProduct(null);
+
+
+
+    // Garder le panier fermé pour permettre de continuer les achats.
+
+
+
+    setCartOpen(false);
+
+
+
+  };
+
+
+
+  const changeQuantity = (id, delta) => {
+
+
+
+    setCart((current) => current.map((item) => (item.id === id ? { ...item, quantity: item.quantity + delta } : item)).filter((item) => item.quantity > 0));
+
+
+
+  };
+
+
+
+  const removeItem = (id) => {
+
+
+
+    setCart((current) => current.filter((item) => item.id !== id));
+
+
+
+  };
+
+
+
+  const orderLines = cart
+
+
+
+    .map((item) => {
+
+
+
+      const formule = item.formulaChoice ? `\n  Formule : ${item.formulaChoice}` : "";
+
+
+
+      const oeuf = item.extraEgg ? "\n  Supplément œuf : +1,00 €" : "";
+
+
+
+      const formatBoisson = item.drinkSizeChoice ? `\n  Format : ${item.drinkSizeChoice}` : "";
+
+
+
+      const formatEau = item.waterSizeChoice ? `\n  Format : ${item.waterSizeChoice}` : "";
+
+
+
+      const boissonEnfant = item.menuEnfantBoisson ? `\n  Boisson : ${item.menuEnfantBoisson}` : "";
+
+
+
+      const cheddar = (item.extraCheddar === true || item.extraCheddar === "true") ? `\n  Supplément cheddar : +2,00 €` : "";
+
+
+
+      const sansFromagere = item.sansSauceFromagere ? `\n  Sans sauce fromagère` : "";
+
+
+
+      const choix = item.breadChoice ? `\n  Choix : ${item.breadChoice}` : "";
+
+
+
+      const accompagnement = item.accompagnementChoice ? `\n  Accompagnement : ${item.accompagnementChoice}` : "";
+
+
+
+      const meats = item.meats?.length
+
+
+
+        ? `\n  Viandes : ${item.meats.map((meat) => `${meat.name}`).join(", ")}${item.tacosSimple && item.meats.length === 2 ? " | 2ème viande (+2€)" : ""}${
+
+
+
+            !item.tacosSimple && item.meats.length === 3 ? " | 3ème viande (+2€)" : ""
+
+
+
+          }`
+
+
+
+        : "";
+
+
+
+      const crudites = item.crudites?.length ? `\n  Options : ${item.crudites.join(", ")}` : "";
+
+
+
+      const saucesSandwichText = item.saucesSandwich?.length ? `\n  Sauces : ${item.saucesSandwich.join(", ")}` : "";
+
+
+
+      const saucesFritesText = item.saucesFrites?.length ? `\n  Sauces frites : ${item.saucesFrites.join(", ")}` : "";
+
+
+
+      const supplementSaucesText = item.supplementSauces > 0 ? `\n  Supplément sauces : ${formatPrice(item.supplementSauces)}` : "";
+
+
+
+      const noteText = item.note ? `\n  Note : ${item.note}` : "";
+
+
+
+      return `- ${item.quantity}x ${item.name} (${item.category}) - ${formatPrice(
+
+
+
+        item.price * item.quantity
+
+
+
+      )}${formule}${oeuf}${formatBoisson}${formatEau}${boissonEnfant}${cheddar}${sansFromagere}${choix}${accompagnement}${meats}${crudites}${saucesSandwichText}${saucesFritesText}${supplementSaucesText}${noteText}`;
+
+
+
+    })
+
+
+
+    .join("\n\n");
+
+
+
+  const orderMessage = encodeURIComponent(`Bonjour Chez Omer, je souhaite passer commande :\n\n${orderLines}\n\nTotal : ${formatPrice(total)}`);
+
+
+
+  const showPage = (page) => {
+
+
+
+    if (recoveryMode && page !== "ResetPassword") return;
+
+    setOpen(false);
+
+
+
+    if (page === activePage) return;
+
+
+
+    const path = page === "Cuisine" ? "/cuisine" : page === "ResetPassword" ? "/reset-password" : page === "EmailConfirmation" ? "/auth/confirm" : "/";
+
+
+
+    const index = Number(window.history.state?.chezOmerIndex || 0) + 1;
+
+
+
+    window.history.pushState(
+
+
+
+      { ...window.history.state, chezOmerPage: page, chezOmerIndex: index },
+
+
+
+      "",
+
+
+
+      path
+
+
+
+    );
+
+
+
+    setActivePage(page);
+
+
+
+    window.scrollTo({ top: 0, behavior: "instant" });
+
+
+
+  };
+
+
+
+  const CurrentPage = () => {
+
+
+
+    if (activePage === "EmailConfirmation") return <EmailConfirmationPage supabase={supabase} />;
+
+
+
+    if (activePage === "Menu") {
+
+
+
+      return (
+
+
+
+        <MenuPage
+
+
+
+          categoriesData={categoriesData}
+
+
+
+          activeCategory={activeCategory}
+
+
+
+          setActiveCategory={setActiveCategory}
+
+
+
+          produits={produits}
+
+
+
+          getCategoryIcon={getCategoryIcon}
+
+
+
+          openProduct={openProduct}
+
+
+
+        />
+
+
+
+      );
+
+
+
+    }
+
+
+
+    if (activePage === "Historique") {
+
+
+
+  return (
+
+
+
+    <HistoriqueCommandesPage
+
+
+
+      supabase={supabase}
+
+
+
+      user={user}
+
+
+
+      formatPrice={formatPrice}
+
+
+
+      setCart={setCart}
+
+
+
+      setCartOpen={setCartOpen}
+
+
+
+    />
+
+
+
+  );
+
+
 
 }
 
 
 
-    if (activePage === "À propos") return <AProposPage BACKGROUND_IMAGE={BACKGROUND_IMAGE} />;
+    if (activePage === "À propos") return <AProposPage BACKGROUND_IMAGE={BACKGROUND_IMAGE} />;
 
 
 
-    if (activePage === "Contact") {
+    if (activePage === "Contact") {
 
-      return <ContactPage restaurantAddress={restaurantAddress} phoneNumber={phoneNumber} whatsappNumber={whatsappNumber} />;
 
-    }
 
+      return <ContactPage restaurantAddress={restaurantAddress} phoneNumber={phoneNumber} whatsappNumber={whatsappNumber} />;
 
 
-    if (activePage === "Pointage") return <PointagePage supabase={supabase} />;
 
+    }
 
 
-    if (activePage === "Commandes") {
 
-      return (
+    if (activePage === "Pointage") return <PointagePage supabase={supabase} />;
 
-        <StaffCommandesPage
 
-          supabase={supabase}
 
-          userRole={userRole}
+    if (activePage === "Commandes") {
 
-          formatPrice={formatPrice}
 
-          soundEnabled={soundEnabled}
 
-          activerSonCommandes={activerSonCommandes}
+      return (
 
-        />
 
-      );
 
-    }
+        <StaffCommandesPage
 
 
 
-    if (activePage === "Cuisine") {
+          supabase={supabase}
 
-      return (
 
-        <CuisinePage
 
-          supabase={supabase}
+          userRole={userRole}
 
-          formatPrice={formatPrice}
 
-          soundEnabled={soundEnabled}
 
-          activerSonCommandes={activerSonCommandes}
+          formatPrice={formatPrice}
 
-        />
 
-      );
 
-    }
+          soundEnabled={soundEnabled}
 
 
 
-    if (activePage === "Dashboard") {
+          activerSonCommandes={activerSonCommandes}
 
-      return (
 
-        <DashboardPage
 
-          supabase={supabase}
+        />
 
-          formatPrice={formatPrice}
 
-        />
 
-      );
+      );
 
-    }
 
 
+    }
 
-    if (activePage === "Admin") {
 
-      return (
 
-        <AdminPage
+    if (activePage === "Cuisine") {
 
-          supabase={supabase}
 
-          userRole={userRole}
 
-          verifierSession={verifierSession}
+      return (
 
-          chargerAnnonce={chargerAnnonce}
 
-          fermetureActive={fermetureActive}
 
-          setFermetureActive={setFermetureActive}
+        <CuisinePage
 
-          saveFermeture={saveFermeture}
 
-          categoriesData={categoriesData}
 
-          selectedAdminCategory={selectedAdminCategory}
+          supabase={supabase}
 
-          setSelectedAdminCategory={setSelectedAdminCategory}
 
-          produits={produits}
 
-          updateProduit={updateProduit}
+          formatPrice={formatPrice}
 
-          saveProduit={saveProduit}
 
-          chargerProduits={chargerProduits}
 
-        />
+          soundEnabled={soundEnabled}
 
-      );
 
-    }
 
+          activerSonCommandes={activerSonCommandes}
 
 
-    if (activePage === "Connexion") {
 
-      return <ConnexionPage supabase={supabase} verifierSession={verifierSession} setActivePage={setActivePage} />;
+        />
 
-    }
 
 
+      );
 
-    if (activePage === "ResetPassword") {
 
-      return <ResetPasswordPage supabase={supabase} />;
 
-    }
+    }
 
 
 
-    return (
+    if (activePage === "Dashboard") {
 
-      <AccueilPage
-        notificationsPromo={<NotificationsPromo />}
 
-        supabase={supabase}
 
-        fermetureActive={fermetureActive}
+      return (
 
-        annonceSite={annonceSite}
 
-        whatsappNumber={whatsappNumber}
 
-        showPage={showPage}
+        <DashboardPage
 
-        LOGO={LOGO}
 
-        restaurantAddress={restaurantAddress}
 
-        phoneNumber={phoneNumber}
+          supabase={supabase}
 
-      />
 
-    );
 
-  };
+          formatPrice={formatPrice}
 
 
 
-  if (window.location.pathname === "/cuisine") {
+        />
 
-    if (loadingAuth) {
 
-      return (
 
-        <main className="min-h-screen bg-black px-5 py-16 text-white">
+      );
 
-          <p className="text-center text-xl font-black text-yellow-300">
 
-            Chargement de l’espace cuisine...
 
-          </p>
+    }
 
-        </main>
 
-      );
 
-    }
+    if (activePage === "Admin") {
 
 
 
-    if (!user) {
+      return (
 
-      return (
 
-        <ConnexionPage
 
-          supabase={supabase}
+        <AdminPage
 
-          verifierSession={verifierSession}
 
-          setActivePage={setActivePage}
 
-        />
+          supabase={supabase}
 
-      );
 
-    }
 
+          userRole={userRole}
 
 
-    if (!["admin", "employe"].includes(userRole)) {
 
-      return (
+          verifierSession={verifierSession}
 
-        <main className="min-h-screen bg-black px-5 py-16 text-white">
 
-          <div className="mx-auto max-w-xl rounded-[2rem] border border-red-500/40 bg-red-950/20 p-8 text-center">
 
-            <h1 className="text-3xl font-black text-red-400">
+          chargerAnnonce={chargerAnnonce}
 
-              Accès refusé
 
-            </h1>
 
-            <p className="mt-3 text-stone-300">
+          fermetureActive={fermetureActive}
 
-              Cette page est réservée aux employés Chez Omer.
 
-            </p>
 
-          </div>
+          setFermetureActive={setFermetureActive}
 
-        </main>
 
-      );
 
-    }
+          saveFermeture={saveFermeture}
 
 
 
-    return (
+          categoriesData={categoriesData}
 
-      <CuisinePage
 
-        supabase={supabase}
 
-        formatPrice={formatPrice}
+          selectedAdminCategory={selectedAdminCategory}
 
-      />
 
-    );
 
-  }
+          setSelectedAdminCategory={setSelectedAdminCategory}
 
 
 
-  return (
+          produits={produits}
 
-    <div className="min-h-screen bg-black text-stone-100">
 
-      <div className="fixed inset-0 -z-10 bg-black" />
 
-      <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(234,179,8,0.18),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(249,115,22,0.13),transparent_36%),linear-gradient(to_bottom,#050505,#0a0803,#000)]" />
+          updateProduit={updateProduit}
 
-      <div className="fixed inset-0 -z-10 opacity-[0.07] bg-[url('/carte-visite.png')] bg-cover bg-center" />
 
-      <style>{`@keyframes reservationMarquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }`}</style>
 
+          saveProduit={saveProduit}
 
 
-      {activePage !== "Cuisine" && (
 
-        <Header
+          chargerProduits={chargerProduits}
 
-          LOGO={LOGO}
 
-          nav={nav}
 
-          activePage={activePage}
+        />
 
-          showPage={showPage}
 
-          user={user}
 
-          setUser={setUser}
+      );
 
-          setUserRole={setUserRole}
 
-          setActivePage={setActivePage}
 
-          setOpen={setOpen}
+    }
 
-          open={open}
 
-          itemCount={itemCount}
 
-          setCartOpen={setCartOpen}
+    if (activePage === "Connexion") {
 
-          supabase={supabase}
 
-        />
 
-      )}
+      return <ConnexionPage supabase={supabase} verifierSession={verifierSession} setActivePage={setActivePage} />;
 
 
 
+    }
 
 
-      {activePage !== "Cuisine" && (
 
-        <MobileCartButton
+    if (activePage === "ResetPassword") {
 
-          itemCount={itemCount}
 
-          setCartOpen={setCartOpen}
 
-        />
+      return <ResetPasswordPage supabase={supabase} />;
 
-      )}
 
-      <CurrentPage />
 
-      {activePage !== "Cuisine" && (
+    }
 
-        <Footer LOGO={LOGO} />
 
-      )}
 
+    return (
 
 
-      <ProductModal
 
-        selectedProduct={selectedProduct}
+      <AccueilPage
 
-        setSelectedProduct={setSelectedProduct}
 
-        getDynamicImage={getDynamicImage}
 
-        formatPrice={formatPrice}
+        notificationsPromo={<NotificationsPromo />}
 
-        selectedProductPrice={selectedProductPrice}
 
-        isSimpleTacos={isSimpleTacos}
 
-        isMaxiTacos={isMaxiTacos}
+        supabase={supabase}
 
-        selectedMeats={selectedMeats}
 
-        extraCheddar={extraCheddar}
 
-        supplementSaucesTotal={supplementSaucesTotal}
+        fermetureActive={fermetureActive}
 
-        needsDrinkSizeChoice={needsDrinkSizeChoice}
 
-        drinkSizeChoice={drinkSizeChoice}
 
-        setDrinkSizeChoice={setDrinkSizeChoice}
+        annonceSite={annonceSite}
 
-        needsWaterSizeChoice={needsWaterSizeChoice}
 
-        waterSizeChoice={waterSizeChoice}
 
-        setWaterSizeChoice={setWaterSizeChoice}
+        whatsappNumber={whatsappNumber}
 
-        hasFormulaChoice={hasFormulaChoice}
 
-        formulaChoice={formulaChoice}
 
-        isPideCategory={isPideCategory}
+        showPage={showPage}
 
-        extraEgg={extraEgg}
 
-        setExtraEgg={setExtraEgg}
 
-        setFormulaChoice={setFormulaChoice}
+        LOGO={LOGO}
 
-        needsMenuEnfantDrink={needsMenuEnfantDrink}
 
-        menuEnfantBoissons={menuEnfantBoissons}
 
-        menuEnfantBoisson={menuEnfantBoisson}
+        restaurantAddress={restaurantAddress}
 
-        setMenuEnfantBoisson={setMenuEnfantBoisson}
 
-        needsExtraCheddar={needsExtraCheddar}
 
-        setExtraCheddar={setExtraCheddar}
+        phoneNumber={phoneNumber}
 
-        needsSansSauceFromagere={needsSansSauceFromagere}
 
-        sansSauceFromagere={sansSauceFromagere}
 
-        setSansSauceFromagere={setSansSauceFromagere}
+      />
 
-        needsAccompagnementChoice={needsAccompagnementChoice}
 
-        accompagnementOptions={accompagnementOptions}
 
-        accompagnementChoice={accompagnementChoice}
+    );
 
-        setAccompagnementChoice={setAccompagnementChoice}
 
-        tacosMeats={tacosMeats}
 
-        maxiTacosMeats={maxiTacosMeats}
+  };
 
-        toggleMeat={toggleMeat}
 
-        needsBreadChoice={needsBreadChoice}
 
-        breadChoice={breadChoice}
+  if (window.location.pathname === "/cuisine") {
 
-        setBreadChoice={setBreadChoice}
 
-        needsCruditeChoice={needsCruditeChoice}
 
-        getCruditeList={getCruditeList}
+    if (loadingAuth) {
 
-        selectedCrudites={selectedCrudites}
 
-        toggleCrudite={toggleCrudite}
 
-        needsSauceChoice={needsSauceChoice}
+      return (
 
-        sauces={sauces}
 
-        selectedSaucesSandwich={selectedSaucesSandwich}
 
-        selectedSaucesFrites={selectedSaucesFrites}
+        <main className="min-h-screen bg-black px-5 py-16 text-white">
 
-        toggleSauce={toggleSauce}
 
-        supplementSaucesSandwich={supplementSaucesSandwich}
 
-        note={note}
+          <p className="text-center text-xl font-black text-yellow-300">
 
-        setNote={setNote}
 
-        addToCart={addToCart}
 
-        isAddDisabled={isAddDisabled}
+            Chargement de l’espace cuisine...
 
-      />
 
 
+          </p>
 
-      <CartDrawer
 
-        user={user}
 
-        setCart={setCart}
+        </main>
 
-        supabase={supabase}
 
-        cartOpen={cartOpen}
 
-        setCartOpen={setCartOpen}
+      );
 
-        cart={cart}
 
-        removeItem={removeItem}
 
-        changeQuantity={changeQuantity}
+    }
 
-        formatPrice={formatPrice}
 
-        total={total}
 
-        fermetureActive={fermetureActive}
+    if (!user) {
 
-        whatsappNumber={whatsappNumber}
 
-        orderMessage={orderMessage}
 
-      />
+      return (
 
-    </div>
 
-  );
+
+        <ConnexionPage
+
+
+
+          supabase={supabase}
+
+
+
+          verifierSession={verifierSession}
+
+
+
+          setActivePage={setActivePage}
+
+
+
+        />
+
+
+
+      );
+
+
+
+    }
+
+
+
+    if (!["admin", "employe"].includes(userRole)) {
+
+
+
+      return (
+
+
+
+        <main className="min-h-screen bg-black px-5 py-16 text-white">
+
+
+
+          <div className="mx-auto max-w-xl rounded-[2rem] border border-red-500/40 bg-red-950/20 p-8 text-center">
+
+
+
+            <h1 className="text-3xl font-black text-red-400">
+
+
+
+              Accès refusé
+
+
+
+            </h1>
+
+
+
+            <p className="mt-3 text-stone-300">
+
+
+
+              Cette page est réservée aux employés Chez Omer.
+
+
+
+            </p>
+
+
+
+          </div>
+
+
+
+        </main>
+
+
+
+      );
+
+
+
+    }
+
+
+
+    return (
+
+
+
+      <CuisinePage
+
+
+
+        supabase={supabase}
+
+
+
+        formatPrice={formatPrice}
+
+
+
+      />
+
+
+
+    );
+
+
+
+  }
+
+
+
+  // Pendant une récupération, aucun élément de navigation ni page de compte
+
+  // n'est rendu. Supabase a créé une session limitée au parcours UI ici.
+
+  if (recoveryMode) {
+
+    return <ResetPasswordPage supabase={supabase} />;
+
+  }
+
+
+
+  return (
+
+
+
+    <div className="min-h-screen bg-black text-stone-100">
+
+
+
+      <div className="fixed inset-0 -z-10 bg-black" />
+
+
+
+      <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(234,179,8,0.18),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(249,115,22,0.13),transparent_36%),linear-gradient(to_bottom,#050505,#0a0803,#000)]" />
+
+
+
+      <div className="fixed inset-0 -z-10 opacity-[0.07] bg-[url('/carte-visite.png')] bg-cover bg-center" />
+
+
+
+      <style>{`@keyframes reservationMarquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }`}</style>
+
+
+
+      {activePage !== "Cuisine" && activePage !== "EmailConfirmation" && (
+
+
+
+        <Header
+
+
+
+          LOGO={LOGO}
+
+
+
+          nav={nav}
+
+
+
+          activePage={activePage}
+
+
+
+          showPage={showPage}
+
+
+
+          user={user}
+
+
+
+          setUser={setUser}
+
+
+
+          setUserRole={setUserRole}
+
+
+
+          setActivePage={setActivePage}
+
+
+
+          setOpen={setOpen}
+
+
+
+          open={open}
+
+
+
+          itemCount={itemCount}
+
+
+
+          setCartOpen={setCartOpen}
+
+
+
+          supabase={supabase}
+
+
+
+        />
+
+
+
+      )}
+
+
+
+      {activePage !== "Cuisine" && activePage !== "EmailConfirmation" && (
+
+
+
+        <MobileCartButton
+
+
+
+          itemCount={itemCount}
+
+
+
+          setCartOpen={setCartOpen}
+
+
+
+        />
+
+
+
+      )}
+
+
+
+      <CurrentPage />
+
+
+
+      {activePage !== "Cuisine" && activePage !== "EmailConfirmation" && (
+
+
+
+        <>
+
+
+
+          <Footer
+
+
+
+            LOGO={LOGO}
+
+
+
+            onManageNotifications={() => setGestionNotificationsOpen(true)}
+
+
+
+          />
+
+
+
+          {gestionNotificationsOpen && (
+
+
+
+            <GestionNotifications
+
+
+
+              onClose={() => setGestionNotificationsOpen(false)}
+
+
+
+            />
+
+
+
+          )}
+
+
+
+        </>
+
+
+
+      )}
+
+
+
+      <ProductModal
+
+
+
+        selectedProduct={selectedProduct}
+
+
+
+        setSelectedProduct={setSelectedProduct}
+
+
+
+        getDynamicImage={getDynamicImage}
+
+
+
+        formatPrice={formatPrice}
+
+
+
+        selectedProductPrice={selectedProductPrice}
+
+
+
+        isSimpleTacos={isSimpleTacos}
+
+
+
+        isMaxiTacos={isMaxiTacos}
+
+
+
+        selectedMeats={selectedMeats}
+
+
+
+        extraCheddar={extraCheddar}
+
+
+
+        supplementSaucesTotal={supplementSaucesTotal}
+
+
+
+        needsDrinkSizeChoice={needsDrinkSizeChoice}
+
+
+
+        drinkSizeChoice={drinkSizeChoice}
+
+
+
+        setDrinkSizeChoice={setDrinkSizeChoice}
+
+
+
+        needsWaterSizeChoice={needsWaterSizeChoice}
+
+
+
+        waterSizeChoice={waterSizeChoice}
+
+
+
+        setWaterSizeChoice={setWaterSizeChoice}
+
+
+
+        hasFormulaChoice={hasFormulaChoice}
+
+
+
+        formulaChoice={formulaChoice}
+
+
+
+        isPideCategory={isPideCategory}
+
+
+
+        extraEgg={extraEgg}
+
+
+
+        setExtraEgg={setExtraEgg}
+
+
+
+        setFormulaChoice={setFormulaChoice}
+
+
+
+        needsMenuEnfantDrink={needsMenuEnfantDrink}
+
+
+
+        menuEnfantBoissons={menuEnfantBoissons}
+
+
+
+        menuEnfantBoisson={menuEnfantBoisson}
+
+
+
+        setMenuEnfantBoisson={setMenuEnfantBoisson}
+
+
+
+        needsExtraCheddar={needsExtraCheddar}
+
+
+
+        setExtraCheddar={setExtraCheddar}
+
+
+
+        needsSansSauceFromagere={needsSansSauceFromagere}
+
+
+
+        sansSauceFromagere={sansSauceFromagere}
+
+
+
+        setSansSauceFromagere={setSansSauceFromagere}
+
+
+
+        needsAccompagnementChoice={needsAccompagnementChoice}
+
+
+
+        accompagnementOptions={accompagnementOptions}
+
+
+
+        accompagnementChoice={accompagnementChoice}
+
+
+
+        setAccompagnementChoice={setAccompagnementChoice}
+
+
+
+        tacosMeats={tacosMeats}
+
+
+
+        maxiTacosMeats={maxiTacosMeats}
+
+
+
+        toggleMeat={toggleMeat}
+
+
+
+        needsBreadChoice={needsBreadChoice}
+
+
+
+        breadChoice={breadChoice}
+
+
+
+        setBreadChoice={setBreadChoice}
+
+
+
+        needsCruditeChoice={needsCruditeChoice}
+
+
+
+        getCruditeList={getCruditeList}
+
+
+
+        selectedCrudites={selectedCrudites}
+
+
+
+        toggleCrudite={toggleCrudite}
+
+
+
+        needsSauceChoice={needsSauceChoice}
+
+
+
+        sauces={sauces}
+
+
+
+        selectedSaucesSandwich={selectedSaucesSandwich}
+
+
+
+        selectedSaucesFrites={selectedSaucesFrites}
+
+
+
+        toggleSauce={toggleSauce}
+
+
+
+        supplementSaucesSandwich={supplementSaucesSandwich}
+
+
+
+        note={note}
+
+
+
+        setNote={setNote}
+
+
+
+        addToCart={addToCart}
+
+
+
+        isAddDisabled={isAddDisabled}
+
+
+
+      />
+
+
+
+      <CartDrawer
+
+
+
+        user={user}
+
+
+
+        setCart={setCart}
+
+
+
+        supabase={supabase}
+
+
+
+        cartOpen={cartOpen}
+
+
+
+        setCartOpen={setCartOpen}
+
+
+
+        cart={cart}
+
+
+
+        removeItem={removeItem}
+
+
+
+        changeQuantity={changeQuantity}
+
+
+
+        formatPrice={formatPrice}
+
+
+
+        total={total}
+
+
+
+        fermetureActive={fermetureActive}
+
+
+
+        whatsappNumber={whatsappNumber}
+
+
+
+        orderMessage={orderMessage}
+
+
+
+      />
+
+
+
+    </div>
+
+
+
+  );
+
+
 
 }
