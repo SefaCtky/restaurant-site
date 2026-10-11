@@ -1,40 +1,643 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Politique de Confidentialité - Chez Omer</title>
+
+    <meta
+        name="description"
+        content="Politique de confidentialité du restaurant Chez Omer : données personnelles, commandes, comptes clients, pointages et droits des utilisateurs."
+    >
+
+    <title>Politique de confidentialité | Chez Omer</title>
+
     <style>
-        body { font-family: sans-serif; line-height: 1.6; max-width: 800px; margin: 40px auto; padding: 20px; color: #333; }
-        h1 { color: #2c3e50; }
-        h2 { color: #e67e22; margin-top: 30px; }
+        :root {
+            --orange: #e67e22;
+            --orange-dark: #b95e0e;
+            --dark: #17212b;
+            --text: #344054;
+            --muted: #667085;
+            --border: #e5e7eb;
+            --background: #f6f7f9;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--background);
+            color: var(--text);
+            line-height: 1.8;
+        }
+
+        header {
+            background: var(--dark);
+            color: #fff;
+            text-align: center;
+            padding: 52px 20px 60px;
+        }
+
+        header h1 {
+            margin: 0 0 12px;
+            font-size: clamp(28px, 5vw, 40px);
+            line-height: 1.25;
+        }
+
+        header p {
+            margin: 4px 0;
+            color: #d0d5dd;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: -20px auto 50px;
+            padding: 40px;
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, .06);
+        }
+
+        h2 {
+            color: var(--dark);
+            font-size: 21px;
+            margin-top: 40px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border);
+            line-height: 1.4;
+        }
+
+        h3 {
+            color: var(--orange-dark);
+            font-size: 17px;
+            margin-top: 24px;
+            line-height: 1.5;
+        }
+
+        p,
+        li {
+            font-size: 15px;
+        }
+
+        ul {
+            padding-left: 24px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        a {
+            color: var(--orange-dark);
+            text-decoration: underline;
+            overflow-wrap: anywhere;
+        }
+
+        a:hover {
+            color: #843e04;
+        }
+
+        a:focus-visible {
+            outline: 3px solid var(--orange);
+            outline-offset: 3px;
+        }
+
+        .notice {
+            background: #fff7ed;
+            border-left: 4px solid var(--orange);
+            border-radius: 6px;
+            padding: 16px 20px;
+            margin: 22px 0;
+        }
+
+        .notice p {
+            margin-bottom: 0;
+        }
+
+        .info {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .contact {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        footer {
+            text-align: center;
+            color: var(--muted);
+            padding: 0 20px 30px;
+            font-size: 13px;
+        }
+
+        @media (max-width: 650px) {
+            .container {
+                margin: -12px 12px 30px;
+                padding: 25px 20px;
+            }
+
+            header {
+                padding: 38px 15px 48px;
+            }
+
+            h2 {
+                font-size: 19px;
+            }
+
+            h3 {
+                font-size: 16px;
+            }
+        }
     </style>
 </head>
+
 <body>
-    <h1>Politique de Confidentialité</h1>
-    <p>Dernière mise à jour : 12 juin 2026</p>
 
-    <h2>1. Données collectées</h2>
-    <p>Chez Omer collecte les informations suivantes :</p>
+<header>
+    <h1>Politique de confidentialité</h1>
+    <p>Chez Omer — Restaurant</p>
+    <p>Dernière mise à jour : 11 octobre 2026</p>
+</header>
+
+<main class="container">
+
+    <a class="back-link" href="/">
+        ← Retour à l'accueil
+    </a>
+
+    <div class="notice">
+        Chez Omer accorde une importance particulière à
+        la protection de vos données personnelles.
+
+        Cette politique explique quelles informations
+        sont collectées, pourquoi elles sont utilisées,
+        combien de temps elles sont conservées
+        et comment exercer vos droits.
+
+        Elle concerne les clients et les employés utilisant
+        le site internet ou l'application mobile Chez Omer.
+    </div>
+
+    <!-- SECTION 1 -->
+
+    <h2>1. Responsable du traitement</h2>
+
+    <p>
+        Le responsable du traitement des données personnelles est :
+    </p>
+
+    <div class="info">
+        <strong>Chez Omer Restaurant — SARL</strong><br>
+        15 rue de Belfort<br>
+        90400 Sevenans, France<br>
+        E-mail :
+        <a href="mailto:Chezomer74@gmail.com">
+            Chezomer74@gmail.com
+        </a>
+    </div>
+
+    <!-- SECTION 2 -->
+
+    <h2>2. Données personnelles collectées</h2>
+
+    <h3>2.1. Données des clients</h3>
+
+    <p>
+        Lors de la création d'un compte ou de l'utilisation
+        de nos services, nous pouvons collecter :
+    </p>
+
     <ul>
-        <li><strong>Données de compte</strong> : E-mail et identifiant utilisateur si vous choisissez de créer un compte.</li>
-        <li><strong>Localisation</strong> : Votre position GPS est traitée de manière <strong>éphémère</strong> uniquement lors du pointage pour vérifier votre présence dans une zone de 150 mètres. Ces données ne sont jamais stockées ni conservées.</li>
+        <li>Nom et prénom ;</li>
+        <li>Numéro de téléphone ;</li>
+        <li>Adresse e-mail ;</li>
+        <li>Identifiant du compte utilisateur ;</li>
+        <li>Détails des commandes passées ;</li>
+        <li>Historique des achats.</li>
     </ul>
 
-    <h2>2. Utilisation des données</h2>
-    <p>Les données collectées servent exclusivement à :</p>
+    <p>
+        Ces informations sont utilisées pour assurer
+        le fonctionnement des comptes clients,
+        la préparation et le suivi des commandes,
+        ainsi que la consultation des achats précédents.
+    </p>
+
+    <h3>2.2. Données des employés</h3>
+
+    <p>
+        Les fonctionnalités professionnelles
+        peuvent nécessiter le traitement :
+    </p>
+
     <ul>
-        <li>Gérer l'accès à votre compte utilisateur.</li>
-        <li>Vérifier la conformité de votre pointage par rapport à la zone autorisée.</li>
+        <li>Des informations d'identification et de connexion ;</li>
+        <li>Des dates et heures d'arrivée et de départ ;</li>
+        <li>Des informations liées aux plannings ;</li>
+        <li>Des demandes de modification de pointage ;</li>
+        <li>
+            De la position GPS au moment de
+            la vérification du pointage.
+        </li>
     </ul>
 
-    <h2>3. Partage des données</h2>
-    <p>Nous ne partageons, ne vendons et ne transférons aucune de vos données personnelles à des tiers.</p>
+    <h3>2.3. Géolocalisation des employés</h3>
 
-    <h2>4. Droits des utilisateurs et suppression</h2>
-    <p>Vous disposez d'un droit d'accès et de suppression sur vos données. Vous pouvez supprimer votre compte et toutes les données associées à tout moment via notre <a href="/suppression.html">page de suppression de compte</a> dédiée ou en nous contactant à <strong>Chezomer74@gmail.com</strong>.</p>
+    <p>
+        Lorsqu'un employé effectue un pointage,
+        l'application peut accéder à sa position GPS
+        afin de vérifier qu'il se trouve dans un rayon
+        de <strong>150 mètres</strong> autour du restaurant.
+    </p>
 
-    <h2>5. Contact</h2>
-    <p>Pour toute question concernant cette politique, veuillez nous contacter à : <strong>Chezomer74@gmail.com</strong>.</p>
+    <p>
+        Dans le système de pointage actuellement mis en œuvre,
+        les coordonnées GPS servent au calcul de la distance
+        et ne sont pas incluses dans les informations
+        enregistrées lors du pointage.
+    </p>
+
+    <p>
+        En revanche, les dates et heures de pointage
+        sont enregistrées pour permettre la gestion
+        du temps de travail.
+    </p>
+
+    <p>
+        Cette fonctionnalité ne constitue pas
+        un suivi permanent des déplacements des employés.
+    </p>
+
+    <!-- SECTION 3 -->
+
+    <h2>3. Utilisation des données</h2>
+
+    <p>
+        Les données personnelles sont utilisées notamment pour :
+    </p>
+
+    <ul>
+        <li>Créer et gérer les comptes utilisateurs ;</li>
+        <li>Permettre une connexion sécurisée ;</li>
+        <li>Enregistrer et préparer les commandes ;</li>
+        <li>Assurer le suivi des commandes ;</li>
+        <li>Consulter l'historique des achats ;</li>
+        <li>Contacter les clients au sujet de leurs commandes ;</li>
+        <li>Gérer les accès du personnel ;</li>
+        <li>Gérer les plannings et les pointages ;</li>
+        <li>Traiter les demandes de correction des pointages ;</li>
+        <li>
+            Envoyer des notifications liées au fonctionnement
+            du service, lorsque cette fonctionnalité est activée ;
+        </li>
+        <li>Respecter les obligations légales et comptables.</li>
+    </ul>
+
+    <!-- SECTION 4 -->
+
+    <h2>4. Bases légales des traitements</h2>
+
+    <p>
+        Les traitements de données reposent,
+        selon leur finalité, sur les bases légales suivantes :
+    </p>
+
+    <ul>
+        <li>
+            <strong>Exécution d'un contrat :</strong>
+            gestion des commandes, des comptes et
+            des relations contractuelles.
+        </li>
+
+        <li>
+            <strong>Obligation légale :</strong>
+            conservation des justificatifs comptables
+            et de certaines informations professionnelles.
+        </li>
+
+        <li>
+            <strong>Intérêt légitime :</strong>
+            sécurité des accès et bon fonctionnement
+            des services, lorsque cette base est applicable.
+        </li>
+
+        <li>
+            <strong>Consentement :</strong>
+            traitements nécessitant une autorisation
+            ou un accord spécifique, lorsque requis.
+        </li>
+    </ul>
+
+    <!-- SECTION 5 -->
+
+    <h2>5. Prestataires et partage des données</h2>
+
+    <p>
+        Les données personnelles sont accessibles
+        aux personnes habilitées qui en ont besoin
+        pour assurer le fonctionnement du restaurant.
+    </p>
+
+    <p>
+        Chez Omer utilise notamment
+        <strong>Supabase</strong> pour certaines fonctionnalités
+        d'authentification et de stockage des données.
+    </p>
+
+    <p>
+        Le site et l'application peuvent également
+        faire appel à des prestataires techniques
+        pour l'hébergement, les notifications
+        et le fonctionnement des services.
+    </p>
+
+    <p>
+        Les informations relatives aux prestataires
+        et aux éventuels transferts de données
+        hors de l'Espace économique européen
+        doivent être précisées selon les services
+        effectivement utilisés et leurs configurations.
+    </p>
+
+    <p>
+        <strong>
+            Chez Omer ne vend pas les données personnelles
+            de ses utilisateurs.
+        </strong>
+    </p>
+
+    <!-- SECTION 6 -->
+
+    <h2>6. Durées de conservation des données</h2>
+
+    <p>
+        Chez Omer applique le principe de limitation
+        de la conservation des données personnelles.
+        Les durées ci-dessous constituent les règles
+        de conservation retenues ou prévues,
+        sous réserve des obligations légales applicables.
+    </p>
+
+    <h3>6.1. Comptes clients</h3>
+
+    <p>
+        Les informations personnelles associées
+        à un compte client sont conservées
+        pendant la période d'utilisation du compte.
+    </p>
+
+    <p>
+        Une suppression du compte après
+        <strong>3 années d'inactivité</strong>
+        est prévue, avec information préalable
+        du client et sous réserve des données
+        devant être conservées légalement.
+    </p>
+
+    <p>
+        Le dispositif de détection des comptes inactifs
+        et de suppression automatique
+        n'est pas encore activé.
+    </p>
+
+    <h3>6.2. Historique des commandes</h3>
+
+    <p>
+        La durée cible de conservation
+        de l'historique des commandes accessible
+        dans le compte client est de
+        <strong>3 ans après chaque commande</strong>.
+    </p>
+
+    <p>
+        Le nettoyage automatique de cet historique
+        reste à mettre en place.
+        Certaines informations nécessaires
+        aux obligations comptables ou fiscales
+        peuvent être conservées séparément.
+    </p>
+
+    <h3>6.3. Documents comptables</h3>
+
+    <p>
+        Les livres, registres et pièces justificatives
+        comptables soumis à l'obligation correspondante
+        sont conservés pendant
+        <strong>10 ans à compter de la clôture
+        de l'exercice comptable concerné</strong>,
+        conformément aux règles applicables.
+    </p>
+
+    <h3>6.4. Pointages des employés</h3>
+
+    <p>
+        Les informations nécessaires
+        à la justification du temps de travail
+        peuvent être conservées
+        jusqu'à <strong>5 ans</strong>,
+        selon leur finalité et les obligations applicables.
+    </p>
+
+    <h3>6.5. Coordonnées GPS</h3>
+
+    <p>
+        Dans les opérations de pointage actuellement
+        mises en œuvre, les coordonnées GPS
+        sont utilisées pour vérifier la distance
+        avec le restaurant et ne sont pas
+        enregistrées avec les données de pointage.
+    </p>
+
+    <div class="notice">
+        <strong>Information importante :</strong>
+        les durées de conservation prévues
+        pour les comptes inactifs et les historiques
+        de commandes nécessitent encore
+        la mise en place de procédures techniques
+        de suppression ou d'archivage.
+
+        Les utilisateurs peuvent dès à présent
+        demander l'effacement de leurs données,
+        dans les limites prévues par la loi.
+    </div>
+
+    <!-- SECTION 7 -->
+
+    <h2>7. Sécurité des données</h2>
+
+    <p>
+        Chez Omer met en œuvre des mesures techniques
+        et organisationnelles destinées à protéger
+        les informations personnelles contre :
+    </p>
+
+    <ul>
+        <li>Les accès non autorisés ;</li>
+        <li>Les pertes accidentelles ;</li>
+        <li>Les modifications non autorisées ;</li>
+        <li>Les divulgations non autorisées.</li>
+    </ul>
+
+    <p>
+        Les accès aux informations sont limités
+        selon les autorisations attribuées
+        aux utilisateurs.
+    </p>
+
+    <!-- SECTION 8 -->
+
+    <h2>8. Droits des utilisateurs</h2>
+
+    <p>
+        Conformément au Règlement général
+        sur la protection des données (RGPD),
+        vous disposez, selon votre situation,
+        des droits suivants :
+    </p>
+
+    <ul>
+        <li>Droit d'accès à vos données ;</li>
+        <li>Droit de rectification ;</li>
+        <li>Droit à l'effacement ;</li>
+        <li>Droit à la limitation du traitement ;</li>
+        <li>Droit d'opposition ;</li>
+        <li>Droit à la portabilité, lorsque applicable ;</li>
+        <li>
+            Droit de retrait du consentement,
+            lorsque le traitement repose sur celui-ci.
+        </li>
+    </ul>
+
+    <p>
+        Pour exercer vos droits,
+        contactez-nous à l'adresse :
+        <a href="mailto:Chezomer74@gmail.com">
+            Chezomer74@gmail.com
+        </a>.
+    </p>
+
+    <p>
+        Vous pouvez également introduire
+        une réclamation auprès de la
+        Commission nationale de l'informatique
+        et des libertés (CNIL) :
+        <a
+            href="https://www.cnil.fr"
+            target="_blank"
+            rel="noopener noreferrer"
+        >
+            www.cnil.fr
+        </a>.
+    </p>
+
+    <!-- SECTION 9 -->
+
+    <h2>9. Suppression du compte utilisateur</h2>
+
+    <p>
+        Les utilisateurs peuvent demander
+        la suppression de leur compte
+        et de leurs données personnelles,
+        sous réserve des obligations légales
+        imposant la conservation
+        de certaines informations.
+    </p>
+
+    <div class="notice">
+        <strong>Vous souhaitez supprimer votre compte ?</strong>
+
+        <p>
+            Rendez-vous sur notre
+            <a href="/suppression.html">
+                page de suppression de compte
+            </a>
+            ou contactez-nous par e-mail à
+            <a href="mailto:Chezomer74@gmail.com">
+                Chezomer74@gmail.com
+            </a>.
+        </p>
+    </div>
+
+    <!-- SECTION 10 -->
+
+    <h2>10. Notifications</h2>
+
+    <p>
+        L'application peut envoyer des notifications
+        relatives aux commandes et aux activités
+        professionnelles du restaurant.
+    </p>
+
+    <p>
+        Les autorisations de notification
+        peuvent être gérées depuis
+        les paramètres de l'appareil.
+    </p>
+
+    <p>
+        La présente version de l'application
+        ne prévoit pas de notifications
+        déclenchées par la proximité GPS
+        des clients avec le restaurant.
+    </p>
+
+    <!-- SECTION 11 -->
+
+    <h2>11. Modifications de la politique</h2>
+
+    <p>
+        Cette politique peut être mise à jour
+        afin de tenir compte de l'évolution
+        de nos services, de nos fonctionnalités
+        ou de la réglementation applicable.
+    </p>
+
+    <p>
+        La date de dernière mise à jour
+        figure en haut de cette page.
+    </p>
+
+    <!-- SECTION 12 -->
+
+    <h2>12. Contact</h2>
+
+    <div class="contact">
+        <strong>Chez Omer Restaurant</strong><br>
+        15 rue de Belfort<br>
+        90400 Sevenans, France<br>
+        E-mail :
+        <a href="mailto:Chezomer74@gmail.com">
+            Chezomer74@gmail.com
+        </a>
+    </div>
+
+</main>
+
+<footer>
+    © 2026 Chez Omer — Tous droits réservés.
+</footer>
+
 </body>
 </html>
